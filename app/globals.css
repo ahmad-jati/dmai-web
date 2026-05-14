@@ -94,7 +94,7 @@
 
 .dark {
   --background: hsla(36, 6.3%, 15.5%, 1);
-  --foreground: hsla(40, 18%, 88%, 1);
+  --foreground: hsl(60, 4%, 11%);
 
   --card: hsla(30, 10%, 16%, 1);
   --card-foreground: hsla(40, 18%, 88%, 1);

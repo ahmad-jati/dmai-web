@@ -27,18 +27,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${urbanistSans.className} antialiased flex flex-col items-center px-16 w-full gap-8 lg:max-w-7xl mx-auto`}>
+      <body className={`${urbanistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <MainNavbar/>
-          <main className=" *:border *:border-foreground *:rounded-5xl *:p-8">
-            {children}
-          </main>
-          <Footer />
+          <div className="flex flex-col items-center px-16 w-full gap-8 lg:max-w-7xl mx-auto">
+            <MainNavbar/>
+            <main className=" *:border *:border-foreground *:rounded-5xl *:p-8">
+              {children}
+            </main>
+            <Footer />
+          </div>
         </ThemeProvider>
       </body>
     </html>
