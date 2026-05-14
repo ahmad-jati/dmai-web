@@ -31,23 +31,32 @@ const ThemeSwitcher = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size={"sm"}>
           {theme === "light" ? (
-            <SunIcon
-              key="light"
-              size={ICON_SIZE}
-              className={"text-muted-foreground"}
-            />
+            <div className="flex gap-2 items-center text-muted-foreground">
+              <SunIcon
+                key="light"
+                size={ICON_SIZE}
+                className={"text-muted-foreground"}
+                />
+              <p>Light</p>
+            </div>
           ) : theme === "dark" ? (
-            <MoonIcon
-              key="dark"
-              size={ICON_SIZE}
-              className={"text-muted-foreground"}
-            />
+            <div className="flex gap-2 items-center text-muted-foreground">
+              <MoonIcon
+                key="dark"
+                size={ICON_SIZE}
+                className={"text-muted-foreground"}
+              />
+              <p>Dark</p>
+            </div>
           ) : (
-            <LaptopIcon
-              key="system"
-              size={ICON_SIZE}
-              className={"text-muted-foreground"}
-            />
+            <div className="flex gap-2 items-center text-muted-foreground">
+              <LaptopIcon
+                key="system"
+                size={ICON_SIZE}
+                className={"text-muted-foreground"}
+              />
+              <p>System</p>
+            </div>
           )}
         </Button>
       </DropdownMenuTrigger>
