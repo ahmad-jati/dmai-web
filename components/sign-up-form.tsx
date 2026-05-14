@@ -16,16 +16,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
+
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const [fullname, setFullname] = useState("")
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +51,9 @@ export function SignUpForm({
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/protected`,
+          data: {
+            full_name: fullname,
+          },
         },
       });
       if (error) throw error;
@@ -67,6 +76,24 @@ export function SignUpForm({
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
+                <Label htmlFor="fullname">Fullname</Label>
+                <Input
+                  id="fullname"
+                  type="text"
+                  placeholder="Your name"
+                  required
+                  value={fullname}
+                  onChange={(e) => {
+                    const value = e.target.value
+                      .toLowerCase()
+                      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+                    setFullname(value);
+                  }}
+                  autoComplete="off"
+                  />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -75,31 +102,68 @@ export function SignUpForm({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                />
+                  autoComplete="off"
+                  />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    autoComplete="off"
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pr-10"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
+                  >
+                    {showPassword ? (
+                      <EyeIcon className="h-4 w-4" />
+                    ) : (
+                      <EyeSlashIcon className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="repeat-password">Repeat Password</Label>
                 </div>
-                <Input
-                  id="repeat-password"
-                  type="password"
-                  required
-                  value={repeatPassword}
-                  onChange={(e) => setRepeatPassword(e.target.value)}
-                />
+
+                <div className="relative">
+                  <Input
+                    id="repeat-password"
+                    type={showRepeatPassword ? "text" : "password"}
+                    required
+                    value={repeatPassword}
+                    autoComplete="off"
+                    onChange={(e) => setRepeatPassword(e.target.value)}
+                    className="pr-10"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowRepeatPassword(!showRepeatPassword)
+                    }
+                    className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
+                  >
+                    {showRepeatPassword ? (
+                      <EyeIcon className="h-4 w-4" />
+                    ) : (
+                      <EyeSlashIcon className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>

@@ -3,27 +3,6 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* typography */
-  --text-app-name: 1.75rem;      /* 28px */
-
-  --text-h1: 2rem;               /* 32px */
-  --text-h1-mobile: 1.625rem;    /* 26px */
-  --text-h2: 1.5rem;             /* 24px */
-
-  --text-lg: 1.125rem;           /* 18px */
-  --text-base: 1rem;             /* 16px */
-  --text-sm: 0.875rem;           /* 14px */
-  --text-xs: 0.75rem;            /* 12px */
-  --text-2xs: 0.625rem;          /* 10px */
-
-  --button-base: 0.875rem;       /* 14px */
-  --button-sm: 0.75rem;          /* 12px */
-  --button-xs: 0.625rem;         /* 10px */
-
-  --card-title-base: 1rem;       /* 16px */
-  --card-title-sm: 0.75rem;      /* 12px */
-
-
   /* light mode */
   --background: hsla(38, 40.7%, 94.7%, 1);
   --foreground: hsla(60, 3.6%, 11%, 1);
@@ -224,14 +203,30 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+    /* semantic colors */
+  --color-tangerine: var(--tangerine);
+  --color-baby-blue: var(--baby-blue);
+  --color-blue: var(--blue);
+
+  --color-green: var(--green);
+  --color-green-soft: var(--green-soft);
+  --color-celeste: var(--celeste);
+
+  --color-lavender: var(--lavender);
+  --color-pink: var(--pink);
+  --color-lemon: var(--lemon);
+
+  --color-red: var(--red);
+
   --font-sans: var(--font-sans);
   --font-serif: var(--font-serif);
   --font-mono: var(--font-mono);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: calc(var(--radius) - 4px);  /* 8px */
+  --radius-md: calc(var(--radius) - 2px);  /* 10px */
+  --radius-lg: var(--radius);              /* 12px */
+  --radius-xl: calc(var(--radius) + 4px);  /* 16px */
+  --radius-5xl: 2.5rem; /* 40px */
 
   --shadow-2xs: var(--shadow-2xs);
   --shadow-xs: var(--shadow-xs);
@@ -241,7 +236,29 @@
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
-}
+
+  /* typography */
+  --text-app-name: 1.75rem;      /* 28px */
+
+  --text-h1: 2rem;               /* 32px */
+  --text-h1-mobile: 1.625rem;    /* 26px */
+  --text-h2: 1.5rem;             /* 24px */
+
+  --text-lg: 1.125rem;           /* 18px */
+  --text-base: 1rem;             /* 16px */
+  --text-sm: 0.875rem;           /* 14px */
+  --text-xs: 0.75rem;            /* 12px */
+  --text-2xs: 0.625rem;          /* 10px */
+
+  --button-base: 0.875rem;       /* 14px */
+  --button-sm: 0.75rem;          /* 12px */
+  --button-xs: 0.625rem;         /* 10px */
+
+  --card-title-base: 1rem;       /* 16px */
+  --card-title-sm: 0.75rem;      /* 12px */
+
+  --border-stroke: var(--foreground);
+} 
 
 @layer base {
   * {
