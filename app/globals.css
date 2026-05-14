@@ -269,3 +269,20 @@
     @apply bg-background text-foreground font-sans;
   }
 }
+
+h1 {
+  line-height: 105%;
+  font-size: var(--text-h1);
+  font-weight: 600;
+}
+
+h2 {
+  line-height: 105%;
+  font-size: var(--text-h2);
+  font-weight: 600;
+}
+
+p {
+  line-height: 108%;
+  font-weight: 500;
+}

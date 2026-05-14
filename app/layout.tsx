@@ -36,7 +36,7 @@ export default function RootLayout({
         >
           <div className="flex flex-col items-center px-16 w-full gap-8 lg:max-w-7xl mx-auto">
             <MainNavbar/>
-            <main className=" *:border *:border-foreground *:rounded-5xl *:p-8">
+            <main className=" *:border *:border-foreground *:rounded-5xl *:p-8 w-full">
               {children}
             </main>
             <Footer />

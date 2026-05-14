@@ -1,10 +1,46 @@
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+
 export default function Home() {
   return (
-    <main className="min-h-[calc(90svh-64px)] md:min-h-[calc(90dvh-64px)] flex flex-col items-center bg-celeste">
-      <div className="flex-1 w-full flex flex-col gap-20 items-center">
-        <div>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fuga deserunt ducimus consequatur dolore maiores! Tempora obcaecati omnis laboriosam laudantium aspernatur hic facilis est mollitia, non ipsa fugit quis quo autem? Lorem ipsum dolor sit amet, consectetur adipisicing elit. Veniam dolor eveniet voluptas labore dolores! Ipsa doloribus dolor, soluta harum dignissimos adipisci suscipit laboriosam eius dolore in, quod iste vel numquam. Lorem ipsum, dolor sit amet consectetur adipisicing elit. Iusto nesciunt porro, rerum debitis perspiciatis minima distinctio laudantium! Ipsum ullam illo necessitatibus! Pariatur commodi illum sit sint eaque temporibus non repudiandae. Lorem ipsum dolor sit, amet consectetur adipisicing elit. Obcaecati, cumque quam pariatur sed saepe eos eveniet impedit perspiciatis. Natus, officiis. Nobis eos, magni consequatur ad voluptatem ducimus perferendis non tempora? Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequuntur ipsa magni architecto quam expedita non nam, beatae enim corrupti voluptatibus recusandae unde, doloremque sapiente asperiores fugiat, quo temporibus minima molestiae?
+    <main className="min-h-[calc(90svh-64px)] md:min-h-[calc(90dvh-52px)] bg-celeste">
+      <div className="flex flex-col items-center gap-4">
+        <Image 
+          src={'/tropicaline/Being-Happy2.png'}
+          alt=""
+          width={2000}
+          height={2000}
+          className="w-132 h-100 object-cover"
+        />
+
+        <div className="flex-1 flex flex-col gap-3.5 items-center text-center text-foreground">
+          <h1 className="text-h1 max-w-90">Digital Mindful Autogenic Intervention.</h1>
+          <p className="text-lg max-w-160">
+            Platform mindful yang dirancang untuk membantu kamu menjalani sesi latihan refleksi diri dengan suasana yang lebih tenang dan tidak terasa melelahkan.
+          </p>
         </div>
+
+        <Button
+          variant={'default'}
+        >COBA SEKARANG 
+        <ArrowRightIcon className="w-4 h-4"/>
+        </Button>
+        <Button
+          variant={'destructive'}
+        >Tes</Button>
+        <Button
+          variant={'ghost'}
+        >Tes</Button>
+        <Button
+          variant={'link'}
+        >Tes</Button>
+        <Button
+          variant={'outline'}
+        >Tes</Button>
+        <Button
+          variant={'secondary'}
+        >Tes</Button>
       </div>
     </main>
   );
