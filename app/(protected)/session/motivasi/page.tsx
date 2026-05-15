@@ -49,7 +49,7 @@ export default function Page(){
             className="w-fit [&_svg]:size-3"
           >
             <Link
-              href={'/session/motivasi/pelatihan'}
+              href={'/session/motivasi/exercise'}
               className="flex items-center gap-2"
             >
               MULAI SESI
