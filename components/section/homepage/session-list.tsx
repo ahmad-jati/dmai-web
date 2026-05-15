@@ -7,7 +7,7 @@ import { PlayIcon } from "@phosphor-icons/react";
 
 export function SessionList() {
   return (
-    <div className="flex flex-col gap-4 items-start">
+    <div id="session-list" className="flex flex-col gap-4 items-start" >
       <h2>All Session</h2>
 
       <div className="grid grid-cols-4 gap-3.5">

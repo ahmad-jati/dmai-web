@@ -14,8 +14,17 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  if (hour >= 17 && hour < 21) return "Good evening";
+  return "Good night";
+}
+
 export function ProtectedNavbar() {
   const [userName, setUserName] = useState<string | null>(null);
+  const [greeting, setGreeting] = useState(getGreeting());
   const router = useRouter();
 
   useEffect(() => {
@@ -25,6 +34,10 @@ export function ProtectedNavbar() {
       setUserName(user?.user_metadata?.full_name ?? null);
     };
     getUser();
+
+    // Update greeting every minute in case user keeps tab open across time boundaries
+    const interval = setInterval(() => setGreeting(getGreeting()), 60_000);
+    return () => clearInterval(interval);
   }, []);
 
   const logout = async () => {
@@ -45,7 +58,7 @@ export function ProtectedNavbar() {
       <div className="flex gap-3 items-center">
         {userName && (
           <p className="text-md font-medium text-foreground">
-            Good morning, <span className="font-bold">{userName}</span>!
+            {greeting}, <span className="font-bold">{userName}</span>!
           </p>
         )}
 
@@ -62,7 +75,6 @@ export function ProtectedNavbar() {
                 Homepage
               </Link>
             </DropdownMenuItem>
-            {/* <DropdownMenuSeparator /> */}
             <DropdownMenuItem>
               <Link href="/homepage" className="flex gap-2 items-center cursor-pointer">
                 <ClockCounterClockwiseIcon className="w-4 h-4" />
