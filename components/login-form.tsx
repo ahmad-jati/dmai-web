@@ -45,7 +45,7 @@ export function LoginForm({
         return;
       }
 
-      router.push("/protected");
+      router.push("/homepage");
     } catch (error: unknown) {
       setError(
         error instanceof Error
@@ -85,7 +85,7 @@ export function LoginForm({
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
                 <Link
-                  href={'/auth/forgot-password'}
+                  href={'/forgot-password'}
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                 >
                   Forgot your password?
@@ -125,7 +125,7 @@ export function LoginForm({
           <div className="mt-4 text-center text-sm">
             Belum punya akun?{" "}
             <Link
-              href={'/auth/sign-up'}
+              href={'/sign-up'}
               className="hover:underline underline-offset-3 font-bold text-green"
             >
               Daftar disini
