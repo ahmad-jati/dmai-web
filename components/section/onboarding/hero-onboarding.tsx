@@ -10,7 +10,7 @@ export function HeroOnboarding(){
     <div className="flex flex-col items-center gap-4">
       <Image
         src={'/tropicaline/Being-Happy2.png'}
-        alt=""
+        alt="Being Happy 2 (Tropicaline Illustrations)"
         width={2000}
         height={2000}
         className="w-102 h-83 object-cover"

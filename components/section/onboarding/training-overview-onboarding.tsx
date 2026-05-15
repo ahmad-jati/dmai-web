@@ -8,7 +8,7 @@ export function TrainingOverviewOnboarding() {
         <div className="w-76 h-102">
           <Image
             src={'/tropicaline/Being-okay.png'}
-            alt=""
+            alt="Being Okay (Tropicaline Illustrations)"
             width={2000}
             height={2000}
             className="w-full h-full object-cover"
