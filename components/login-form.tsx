@@ -23,7 +23,9 @@ export function LoginForm({
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const supabase = createClient();
+
     setIsLoading(true);
     setError(null);
 
@@ -32,11 +34,24 @@ export function LoginForm({
         email,
         password,
       });
-      if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
+
+      if (error) {
+        if (error.status === 400) {
+          setError("Email atau password yang kamu masukkan salah.");
+          return;
+        }
+
+        setError(error.message);
+        return;
+      }
+
       router.push("/protected");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan. Silakan coba lagi."
+      );
     } finally {
       setIsLoading(false);
     }
