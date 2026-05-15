@@ -69,7 +69,7 @@ export function LoginForm({
               <div className="flex items-center">
                 {/* <Label htmlFor="password">Password</Label> */}
                 <Link
-                  href={{ pathname: '/forgot-password' }}
+                  href={'/auth/forgot-password'}
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                 >
                   Forgot your password?
@@ -97,7 +97,7 @@ export function LoginForm({
               </div>
             </div>
             {error && <p className="text-sm text-red">{error}</p>}
-            <Button asChild
+            <Button 
               type="submit" 
               className="w-full bg-green" 
               disabled={isLoading}
@@ -109,7 +109,7 @@ export function LoginForm({
           <div className="mt-4 text-center text-sm">
             Belum punya akun?{" "}
             <Link
-              href={{ pathname: '/sign-up'}}
+              href={'/auth/sign-up'}
               className="hover:underline underline-offset-3 font-bold text-green"
             >
               Daftar disini
