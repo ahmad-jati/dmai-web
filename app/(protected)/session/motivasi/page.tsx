@@ -46,10 +46,15 @@ export default function Page(){
           </div>
 
           <Button
-            className="w-fit [&_svg]:size-3 flex items-center"
+            className="w-fit [&_svg]:size-3"
           >
-            MULAI SESI
-            <PlayIcon className="w-5 h-5" weight="fill"/>
+            <Link
+              href={'/session/motivasi/pelatihan'}
+              className="flex items-center gap-2"
+            >
+              MULAI SESI
+              <PlayIcon className="w-5 h-5" weight="fill"/>  
+            </Link>
           </Button>
         </div>
 
