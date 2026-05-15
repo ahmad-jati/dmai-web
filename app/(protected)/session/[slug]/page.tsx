@@ -5,15 +5,12 @@ import { use } from "react";
 import { notFound } from "next/navigation";
 import { Section } from "@/components/layout/section-wrapper";
 import { Button } from "@/components/ui/button";
-import { OtherSessionList } from "@/components/other-session-list";
+import { SessionList } from "@/components/session-list";
 import { data_session } from "@/lib/data-detail-session";
+import { toSlug } from "@/components/session-grid";
 
 import { PersonSimpleTaiChiIcon, TimerIcon, PlayIcon, HeartIcon } from "@phosphor-icons/react";
 import { Route } from "next";
-
-function toSlug(name: string) {
-  return name.toLowerCase().replace(/\s+/g, "-");
-}
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -30,7 +27,7 @@ export default function Page({ params }: Props) {
       <Section className="flex gap-8 bg-celeste">
         <div className="flex flex-col justify-between max-w-xl">
           <div className="flex items-center gap-1 font-semibold text-sm">
-            <Link href={"/session" as Route}>ALL SESSION</Link>
+            <Link href={'/session'}>ALL SESSION</Link>
             <p>/</p>
             <p>{session.session_name.toUpperCase()}</p>
           </div>
@@ -79,7 +76,8 @@ export default function Page({ params }: Props) {
       </Section>
 
       <Section className="bg-pink">
-        <OtherSessionList excludeSlug={slug} />
+        {/* Show all sessions except the current one */}
+        <SessionList excludeSlug={slug} />
       </Section>
     </div>
   );

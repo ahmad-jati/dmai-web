@@ -58,7 +58,7 @@ export function ProtectedNavbar() {
       <div className="flex gap-3 items-center">
         {userName && (
           <p className="text-md font-medium text-foreground">
-            {greeting}, <span className="font-bold">{userName}</span>!
+            {greeting}, <span className="">{userName}</span>!
           </p>
         )}
 
