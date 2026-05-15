@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Urbanist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import { Footer } from "@/components/footer";
-import { MainNavbar } from "@/components/main-navbar";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -34,11 +32,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex flex-col items-center px-16 gap-8 lg:max-w-7xl mx-auto min-h-dvh">
-            <MainNavbar/>
-            {children}
-            <Footer />
-          </div>
+          {children}
         </ThemeProvider>
       </body>
     </html>
