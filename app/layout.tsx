@@ -11,8 +11,8 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "Digital Mindful Autogenic Intervention",
+  description: "A calm mindfulness platform for guided reflective training sessions.",
 };
 
 const urbanistSans = Urbanist({
@@ -34,7 +34,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex flex-col items-center px-16 w-screen gap-8 lg:max-w-7xl mx-auto">
+          <div className="flex flex-col items-center px-16 gap-8 lg:max-w-7xl mx-auto min-h-dvh">
             <MainNavbar/>
             {children}
             <Footer />
