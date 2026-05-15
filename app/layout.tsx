@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Urbanist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
+import { Footer } from "@/components/footer";
+import { MainNavbar } from "@/components/main-navbar";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -13,11 +15,10 @@ export const metadata: Metadata = {
   description: "The fastest way to build apps with Next.js and Supabase",
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  display: "swap",
+const urbanistSans = Urbanist({
+  variable: '--font-urbanist',
   subsets: ["latin"],
-});
+})
 
 export default function RootLayout({
   children,
@@ -26,14 +27,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+      <body className={`${urbanistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <div className="flex flex-col items-center px-16 w-screen gap-8 lg:max-w-7xl mx-auto">
+            <MainNavbar/>
+            {children}
+            <Footer />
+          </div>
         </ThemeProvider>
       </body>
     </html>

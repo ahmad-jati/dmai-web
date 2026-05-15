@@ -16,12 +16,12 @@ export default function Page() {
               <CardTitle className="text-2xl">
                 Thank you for signing up!
               </CardTitle>
-              <CardDescription>Check your email to confirm</CardDescription>
+              <CardDescription>Satu langkah lagi untuk mulai masuk</CardDescription>
             </CardHeader>
+
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                You&apos;ve successfully signed up. Please check your email to
-                confirm your account before signing in.
+                Silakan <span className="font-bold">cek email</span> untuk mengonfirmasi akun sebelum masuk ke platform. Setelah itu, kamu bisa menutup tab ini.
               </p>
             </CardContent>
           </Card>
