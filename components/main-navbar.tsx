@@ -2,13 +2,19 @@
 
 import { useRouter } from 'next/navigation'
 import { Button } from './ui/button'
+import Link from 'next/link'
 
 export function MainNavbar(){
   const router = useRouter()
 
   return(
     <nav className="w-full flex justify-center items-center py-4 bg-white rounded-b-5xl border border-foreground border-t-0">
-      <h1 className="text-app-name">DMAI</h1>
+      <Link
+        href={'/'}
+        className="text-app-name hover:font-bold font-semibold"
+      >
+        DMAI
+      </Link>
 
       {/* <div className="flex items-center gap-3">
         <Button
