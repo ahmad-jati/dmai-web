@@ -34,11 +34,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex flex-col items-center px-16 w-full gap-8 lg:max-w-7xl mx-auto">
+          <div className="flex flex-col items-center px-16 w-screen gap-8 lg:max-w-7xl mx-auto">
             <MainNavbar/>
-            <main className=" *:border *:border-foreground *:rounded-5xl *:p-8 w-full">
-              {children}
-            </main>
+            {children}
             <Footer />
           </div>
         </ThemeProvider>

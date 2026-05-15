@@ -32,6 +32,7 @@ const ThemeSwitcher = () => {
         <Button variant="ghost" size={"sm"}>
           {theme === "light" ? (
             <div className="flex gap-2 items-center text-muted-foreground">
+              <p>Theme: </p>
               <SunIcon
                 key="light"
                 size={ICON_SIZE}
@@ -41,6 +42,7 @@ const ThemeSwitcher = () => {
             </div>
           ) : theme === "dark" ? (
             <div className="flex gap-2 items-center text-muted-foreground">
+              <p>Theme: </p>
               <MoonIcon
                 key="dark"
                 size={ICON_SIZE}
@@ -50,11 +52,12 @@ const ThemeSwitcher = () => {
             </div>
           ) : (
             <div className="flex gap-2 items-center text-muted-foreground">
+              <p>Theme: </p>
               <LaptopIcon
                 key="system"
                 size={ICON_SIZE}
                 className={"text-muted-foreground"}
-              />
+                />
               <p>System</p>
             </div>
           )}

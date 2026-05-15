@@ -7,7 +7,6 @@ export function Footer() {
       <p>@2026</p>
 
       <div className="mt-2 flex gap-1 items-center text-muted-foreground">
-        <p className="text-xs">Theme: </p>
         <ThemeSwitcher />
       </div>
     </footer>
