@@ -1,22 +1,14 @@
 "use client";
-
-import { cn } from "@/lib/utils";
+;
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { Eye, EyeSlash } from "@phosphor-icons/react";
+import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 
 export function LoginForm({
   className,
@@ -51,75 +43,80 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+    <div className='flex flex-col items-center gap-8'>
+      <div className="flex flex-col gap-4">
+        <h2>Good to see you again.</h2>
+        <p className="font-medium">
+          Terima kasih sudah kembali dan memberi ruang untuk dirimu sendiri hari ini. Mari lanjutkan sesi dengan tenang.
+        </p>
+      </div>
+      <div className="w-full">
+        <form onSubmit={handleLogin} className="w-full">
+          <div className="flex flex-col gap-4">
+            <div className="grid gap-2">
+              {/* <Label htmlFor="email">Email</Label> */}
+              <Input
+                id="email"
+                type="email"
+                placeholder="me@dmai.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="rounded-full px-3"
+              />
+            </div>
+            <div className="grid gap-2">
+              <div className="flex items-center">
+                {/* <Label htmlFor="password">Password</Label> */}
+                <Link
+                  href={{ pathname: '/forgot-password' }}
+                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+
+              <div className="relative">
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
+                  id="password"
+                  placeholder="●●●●●●●●"
+                  type={showPassword ? "text" : "password"}
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10 rounded-full"
                 />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
 
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pr-10"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  >
-                    {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {showPassword ? <EyeSlashIcon size={18} /> : <EyeIcon size={18} />}
+                </button>
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
-              </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/auth/sign-up"
-                className="underline underline-offset-4"
-              >
-                Sign up
-              </Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            {error && <p className="text-sm text-red">{error}</p>}
+            <Button asChild
+              type="submit" 
+              className="w-full bg-green" 
+              disabled={isLoading}
+            >
+              {isLoading ? "Logging in..." : "Login"}
+            </Button>
+          </div>
+
+          <div className="mt-4 text-center text-sm">
+            Belum punya akun?{" "}
+            <Link
+              href={{ pathname: '/sign-up'}}
+              className="hover:underline underline-offset-3 font-bold text-green"
+            >
+              Daftar disini
+            </Link>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

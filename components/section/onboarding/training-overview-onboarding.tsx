@@ -19,7 +19,7 @@ export function TrainingOverviewOnboarding() {
         <div className="flex-1 flex flex-col gap-6">
           <div className="flex flex-col gap-3 max-w-180">
             <h2>Discover 7 mindful sessions designed to support your journey.</h2>
-            <p>Setiap sesi dirancang khusus untuk membantumu lebih dalam memahami, menerima, dan mengubah apa yang kamu rasakan.</p>
+            <p className="font-medium">Setiap sesi dirancang khusus untuk membantumu lebih dalam memahami, menerima, dan mengubah apa yang kamu rasakan.</p>
           </div>
 
           <div className="grid grid-cols-4 gap-3.5">
@@ -31,7 +31,7 @@ export function TrainingOverviewOnboarding() {
                 >
                   <div className="flex flex-col gap-1 text-sm">
                     <p className="font-bold">{session.session_name}</p>
-                    <p>{session.detail_short}</p>
+                    <p className="font-medium">{session.detail_short}</p>
                   </div>
 
                   <div>
