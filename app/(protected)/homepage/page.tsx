@@ -1,17 +1,20 @@
-'use client'
-
-import { InfoIcon } from "@phosphor-icons/react";
+import { HeroHomepage } from "@/components/section/homepage/hero-homepage";
+import { Section } from "@/components/layout/section-wrapper";
+import { SessionList } from "@/components/section/homepage/session-list";
 
 export default function ProtectedPage() {
   return (
-    <div className="flex-1 w-full flex flex-col gap-12">
-      <div className="w-full">
-        <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">
-          <InfoIcon size={16} weight="bold" />
-          This is a protected page that you can only see as an authenticated
-          user
-        </div>
-      </div>
+    <div className="flex flex-col gap-8 w-full">
+      <Section
+        className="bg-lemon"
+      >
+        <HeroHomepage/>
+      </Section>
+      <Section
+        className="bg-lavender"
+      >
+        <SessionList/>
+      </Section>
     </div>
   );
 }
