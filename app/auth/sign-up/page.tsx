@@ -7,13 +7,13 @@ export default function Page() {
     <div className="min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] w-full">
       <div className="flex gap-8">
         <Section className="bg-white p-4">
-          <div className="h-full w-full rounded-3xl bg-green flex items-center justify-center p-2">
+          <div className="h-full w-full rounded-3xl bg-tangerine flex items-center justify-center p-2">
             <Image
-              src={'/tropicaline/Diversity.png'}
+              src={'/tropicaline/Together.png'}
               alt=""
               width={2000}
               height={2000}
-              className="w-126 h-full object-cover"
+              className="w-136 h-118 object-cover"
               loading="eager"
             />
           </div>

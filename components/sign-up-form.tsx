@@ -25,13 +25,13 @@ export function SignUpForm({
   const [fullname, setFullname] = useState("")
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [repeatPassword, setRepeatPassword] = useState("");
+  // const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
+  // const [showRepeatPassword, setShowRepeatPassword] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,11 +39,11 @@ export function SignUpForm({
     setIsLoading(true);
     setError(null);
 
-    if (password !== repeatPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
+    // if (password !== repeatPassword) {
+    //   setError("Passwords do not match");
+    //   setIsLoading(false);
+    //   return;
+    // }
 
     try {
       const { error } = await supabase.auth.signUp({
@@ -66,14 +66,15 @@ export function SignUpForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignUp}>
+    <div className='flex flex-col items-center gap-8'>
+      <div className="flex flex-col gap-4">
+        <h2>Glad you&apos;re here.</h2>
+        <p className="font-medium">
+          Mulailah perlahan dan jalani semua sesuai kenyamananmu sendiri.
+        </p>
+      </div>
+      <div className="w-full">
+        <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="fullname">Fullname</Label>
@@ -81,6 +82,7 @@ export function SignUpForm({
                   id="fullname"
                   type="text"
                   placeholder="Your name"
+                  className="rounded-full px-3"
                   required
                   value={fullname}
                   onChange={(e) => {
@@ -98,11 +100,12 @@ export function SignUpForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="me@dmai.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="off"
+                  className="rounded-full px-3"
                   />
               </div>
               <div className="grid gap-2">
@@ -118,7 +121,7 @@ export function SignUpForm({
                     value={password}
                     autoComplete="off"
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pr-10"
+                    className="pr-10 rounded-full"
                   />
 
                   <button
@@ -134,7 +137,7 @@ export function SignUpForm({
                   </button>
                 </div>
               </div>
-              <div className="grid gap-2">
+              {/* <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="repeat-password">Repeat Password</Label>
                 </div>
@@ -147,7 +150,7 @@ export function SignUpForm({
                     value={repeatPassword}
                     autoComplete="off"
                     onChange={(e) => setRepeatPassword(e.target.value)}
-                    className="pr-10"
+                    className="pr-10 rounded-full"
                   />
 
                   <button
@@ -164,21 +167,20 @@ export function SignUpForm({
                     )}
                   </button>
                 </div>
-              </div>
+              </div> */}
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-tangerine" disabled={isLoading}>
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
-                Login
+              Sudah punya akun?{" "}
+              <Link href="/auth/login" className="hover:underline underline-offset-4 font-bold text-tangerine">
+                Masuk disini
               </Link>
             </div>
           </form>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

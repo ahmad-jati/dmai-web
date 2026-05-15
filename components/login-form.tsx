@@ -54,7 +54,7 @@ export function LoginForm({
         <form onSubmit={handleLogin} className="w-full">
           <div className="flex flex-col gap-4">
             <div className="grid gap-2">
-              {/* <Label htmlFor="email">Email</Label> */}
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -63,11 +63,12 @@ export function LoginForm({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="rounded-full px-3"
+                autoComplete="off"
               />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
-                {/* <Label htmlFor="password">Password</Label> */}
+                <Label htmlFor="password">Password</Label>
                 <Link
                   href={'/auth/forgot-password'}
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
@@ -79,12 +80,12 @@ export function LoginForm({
               <div className="relative">
                 <Input
                   id="password"
-                  placeholder="●●●●●●●●"
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pr-10 rounded-full"
+                  autoComplete="off"
                 />
 
                 <button 

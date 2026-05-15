@@ -13,7 +13,7 @@ export function HeroOnboarding(){
         alt=""
         width={2000}
         height={2000}
-        className="w-102 h-80 object-cover"
+        className="w-102 h-83 object-cover"
         loading="eager"
       />
 
