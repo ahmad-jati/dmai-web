@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Section } from "./layout/section-wrapper";
+import Image from "next/image";
 
 export function UpdatePasswordForm({
   className,
@@ -43,16 +45,14 @@ export function UpdatePasswordForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Reset Your Password</CardTitle>
-          <CardDescription>
-            Please enter your new password below.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleForgotPassword}>
+    <div className="w-full">
+      <Section className="flex items-center justify-center gap-8 bg-white">
+        <div className="flex-1 flex flex-col gap-3.5 items-start text-foreground max-w-120">
+          <h2>Set your new password</h2>
+          <p className="text-lg">
+            Masukkan password baru yang ingin kamu gunakan untuk kembali mengakses akunmu.
+          </p>
+          <form onSubmit={handleForgotPassword} className="w-full">
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="password">New password</Label>
@@ -63,6 +63,7 @@ export function UpdatePasswordForm({
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="rounded-full px-3"
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
@@ -71,8 +72,18 @@ export function UpdatePasswordForm({
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+
+        <Image
+          src={'/tropicaline/Send.png'}
+          alt=""
+          width={2000}
+          height={2000}
+          className="w-107 h-96 object-contain "
+          loading="eager"
+        />
+
+      </Section>
     </div>
   );
 }
