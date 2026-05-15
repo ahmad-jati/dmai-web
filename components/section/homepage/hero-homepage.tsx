@@ -25,6 +25,9 @@ export function HeroHomepage(){
       <Button
         variant={'default'}
         className="flex gap-2 items-center"
+        onClick={() => {
+          document.getElementById("session-list")?.scrollIntoView({ behavior: "smooth" });
+        }}
       >
         JELAJAHI SESI 
         <ArrowCircleDownIcon className="w-6 h-6"/>
