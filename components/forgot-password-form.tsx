@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useState } from "react";
+import { Section } from "./layout/section-wrapper";
+import Image from "next/image";
 
 export function ForgotPasswordForm({
   className,
@@ -45,60 +47,67 @@ export function ForgotPasswordForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className="flex flex-col gap-6 w-full">
       {success ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription>Password reset instructions sent</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              If you registered using your email and password, you will receive
-              a password reset email.
-            </p>
-          </CardContent>
-        </Card>
+        <Section className="flex items-center justify-center gap-8 bg-white">
+            <div className="flex-1 flex flex-col gap-3.5 items-start text-foreground max-w-120">
+              <h2>Reset link is on its way</h2>
+              <p className="text-lg">
+                Tautan reset password sudah kami kirimkan. Silakan buka email kamu dan ikuti langkah berikutnya untuk membuat password baru. Kamu bisa menutup tab ini.
+              </p>
+            </div>
+            <Image
+              src={'/tropicaline/Email.png'}
+              alt=""
+              width={2000}
+              height={2000}
+              className="w-107 h-96 object-contain "
+              loading="eager"
+            />
+            
+
+          </Section>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Reset Your Password</CardTitle>
-            <CardDescription>
-              Type in your email and we&apos;ll send you a link to reset your
-              password
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleForgotPassword}>
-              <div className="flex flex-col gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
+        <div className="w-full">
+          <Section className="flex items-center justify-center gap-8 bg-white">
+            <div className="flex-1 flex flex-col gap-3.5 items-start text-foreground max-w-120">
+              <h2>Find your way back</h2>
+              <p className="text-lg">
+                Masukkan email kamu, lalu kami akan bantu kirimkan tautan reset agar kamu bisa kembali mengakses akunmu.
+              </p>
+              <form onSubmit={handleForgotPassword} className="w-full">
+                <div className="flex flex-col gap-6">
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="m@example.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="rounded-full px-3"
+                    />
+                  </div>
+                  {error && <p className="text-sm text-red-500">{error}</p>}
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Sending..." : "Send reset email"}
+                  </Button>
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send reset email"}
-                </Button>
-              </div>
-              <div className="mt-4 text-center text-sm">
-                Already have an account?{" "}
-                <Link
-                  href="/auth/login"
-                  className="underline underline-offset-4"
-                >
-                  Login
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+              </form>
+            </div>
+
+            <Image
+              src={'/tropicaline/Email.png'}
+              alt=""
+              width={2000}
+              height={2000}
+              className="w-107 h-96 object-contain "
+              loading="eager"
+            />
+
+          </Section>
+        </div>
       )}
     </div>
   );
