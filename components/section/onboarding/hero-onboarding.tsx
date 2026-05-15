@@ -28,7 +28,7 @@ export function HeroOnboarding(){
         variant={'default'}
       >
         <Link 
-          href={{ pathname: '/login' }}
+          href={'/auth/login'}
           className="flex gap-2 items-center"
         >
           COBA SEKARANG 
