@@ -2,9 +2,9 @@ export type SessionInstruction = {
   step: number;
   title: string;
   description: string;
-  duration_seconds: number; // how long this step lasts
-  image: string;            // /serene1.png, /serene2.png, etc.
-};
+  duration_seconds: number; 
+  image: string;     
+} 
 
 export type SessionData = {
   session_name: string;
@@ -14,6 +14,7 @@ export type SessionData = {
   total_instruction: number;
   duration: string;
   instructions: SessionInstruction[];
+  image_cover: string;
 };
 
 export const data_session: SessionData[] = [
@@ -85,6 +86,7 @@ export const data_session: SessionData[] = [
         image: '/serene4.png',
       },
     ],
+    image_cover: '/serene1.png',
   },
 
   {
@@ -104,6 +106,7 @@ export const data_session: SessionData[] = [
       { step: 5, title: 'Kebutuhan Saat Ini', description: 'Apa yang paling kamu butuhkan sekarang? Istirahat? Terhubung dengan orang lain? Ketenangan? Akui kebutuhanmu itu.', duration_seconds: 90, image: '/serene1.png' },
       { step: 6, title: 'Tutup dengan Baik', description: 'Terima kondisimu apa adanya hari ini. Kamu tidak harus merasa baik-baik saja. Cukup hadir adalah cukup.', duration_seconds: 60, image: '/serene2.png' },
     ],
+    image_cover: '/serene1.png',
   },
 
   {
@@ -123,6 +126,7 @@ export const data_session: SessionData[] = [
       { step: 5, title: 'Satu Langkah Konkret', description: 'Tentukan satu tindakan kecil yang bisa kamu ambil dalam 24 jam ke depan untuk mendekat ke tujuanmu.', duration_seconds: 90, image: '/serene1.png' },
       { step: 6, title: 'Afirmasi Kemampuan', description: '"Aku telah melewati hal-hal sulit sebelumnya, dan aku bisa melewati ini juga." Ucapkan tiga kali dengan penuh keyakinan.', duration_seconds: 60, image: '/serene2.png' },
     ],
+    image_cover: '/serene1.png',
   },
 
   {
@@ -141,6 +145,7 @@ export const data_session: SessionData[] = [
       { step: 4, title: 'Satu Koneksi Kecil', description: 'Pikirkan satu orang yang peduli padamu — bahkan jika kamu belum bicara lama. Boleh hanya membayangkan wajahnya.', duration_seconds: 90, image: '/serene4.png' },
       { step: 5, title: 'Penutup Hangat', description: 'Kamu telah menemani dirimu hari ini. Itu adalah bentuk cinta pada diri sendiri. Buka mata dengan perlahan dan lembut.', duration_seconds: 60, image: '/serene1.png' },
     ],
+    image_cover: '/serene1.png',
   },
 
   {
@@ -160,6 +165,7 @@ export const data_session: SessionData[] = [
       { step: 5, title: 'Satu Tugas, Satu Waktu', description: 'Multitasking menurunkan kualitas. Komitmenkan dirimu untuk fokus pada satu hal di satu waktu, lalu pindah setelah selesai.', duration_seconds: 90, image: '/serene1.png' },
       { step: 6, title: 'Tutup dengan Niat', description: 'Niatkan: hari ini aku akan bekerja sesuai kapasitasku, tidak lebih. Yang tidak selesai hari ini, bisa dilanjutkan besok.', duration_seconds: 60, image: '/serene2.png' },
     ],
+    image_cover: '/serene1.png',
   },
 
   {
@@ -179,6 +185,7 @@ export const data_session: SessionData[] = [
       { step: 5, title: 'Tiga Hal yang Berjalan Baik', description: 'Sebutkan tiga hal — sekecil apa pun — yang berjalan baik hari ini atau kemarin. Latih perhatianmu pada yang positif.', duration_seconds: 90, image: '/serene1.png' },
       { step: 6, title: 'Komitmen Mental', description: 'Pilih satu pikiran positif yang ingin kamu pegang hari ini. Buat itu sebagai peganganmu ketika pikiran negatif kembali datang.', duration_seconds: 60, image: '/serene2.png' },
     ],
+    image_cover: '/serene1.png',
   },
 
   {
@@ -197,5 +204,6 @@ export const data_session: SessionData[] = [
       { step: 4, title: 'Terima Kekuranganmu', description: 'Kamu tidak perlu sempurna untuk layak dicintai. Ucapkan: "Aku menerima diriku apa adanya — kelebihan dan kekuranganku."', duration_seconds: 90, image: '/serene4.png' },
       { step: 5, title: 'Sebarkan Kehangatan', description: 'Bayangkan kehangatan itu menyebar ke semua orang di sekitarmu. Kamu adalah sumber kebaikan — mulai dari dirimu sendiri.', duration_seconds: 90, image: '/serene1.png' },
     ],
+    image_cover: '/serene1.png',
   },
 ];
