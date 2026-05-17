@@ -11,7 +11,7 @@ import { Button } from "./ui/button";
 
 export function BackgroundMusicPlayer(){
   return(
-    <div className="bg-background flex items-center gap-2 justify-between w-100 px-4 py-2 rounded-xl border border-foreground">
+    <div className="bg-background flex items-center gap-2 justify-between w-full px-4 py-2 rounded-xl border border-foreground">
       <MusicNotesIcon className="w-4 h-4"/>
 
       <div className="flex-1 text-sm flex flex-col gap-0.5 items-center">

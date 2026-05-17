@@ -2,7 +2,7 @@ import { HeroHomepage } from "@/components/section/homepage/hero-homepage";
 import { Section } from "@/components/layout/section-wrapper";
 import { SessionList } from "@/components/section/homepage/session-list";
 
-export default function ProtectedPage() {
+export default function Page() {
   return (
     <div className="flex flex-col gap-8 w-full">
       <Section className="bg-lemon">
