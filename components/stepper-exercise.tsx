@@ -6,7 +6,16 @@ import { Button } from "@/components/ui/button"
 import { RepeatIcon, SpeakerSlashIcon, SpeakerHighIcon, PauseIcon, PlayIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon } from "@phosphor-icons/react"
 import type { SessionInstruction } from "@/lib/data-detail-session"
 import { BackgroundMusicPlayer } from "./background-music-player"
+import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
+
+type Track = {
+  id: string
+  title: string
+  composer: string | null
+  audio_url: string
+  duration_seconds: number | null
+}
 
 type Props = {
   instructions: SessionInstruction[]
@@ -22,12 +31,80 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const [elapsed, setElapsed] = useState(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // BGM state — owned here so pause/play/done can control it
+  const [tracks, setTracks] = useState<Track[]>([])
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0)
+  const [isBgmStopped, setIsBgmStopped] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
   const step = instructions[currentStep]
   const totalSteps = instructions.length
   const progress = Math.min((elapsed / step.duration_seconds) * 100, 100)
   const isLastStep = currentStep === totalSteps - 1
 
-  const goNext = useCallback(() => {
+  // ─── BGM setup ───────────────────────────────────────────────
+  useEffect(() => {
+    const fetchTracks = async () => {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('background_music')
+        .select('id, title, composer, audio_url, duration_seconds')
+        .order('created_at')
+      if (data && data.length > 0) {
+        setTracks(data as Track[])
+      }
+    }
+    fetchTracks()
+  }, [])
+
+  useEffect(() => {
+    audioRef.current = new Audio()
+    audioRef.current.loop = true
+    return () => {
+      // Stop BGM when component unmounts (page change)
+      audioRef.current?.pause()
+      audioRef.current = null
+    }
+  }, [])
+
+  // Auto-play first track when tracks load
+  useEffect(() => {
+    if (!audioRef.current || tracks.length === 0) return
+    audioRef.current.src = tracks[0].audio_url
+    audioRef.current.load()
+    audioRef.current.play().catch(() => {})
+  }, [tracks])
+
+  // Sync BGM with stepper play/pause
+  useEffect(() => {
+    if (!audioRef.current || isBgmStopped) return
+    if (isPlaying) {
+      audioRef.current.play().catch(() => {})
+    } else {
+      audioRef.current.pause()
+    }
+  }, [isPlaying, isBgmStopped])
+
+  const handleSelectTrack = (index: number) => {
+    if (!audioRef.current || tracks.length === 0) return
+    setCurrentTrackIndex(index)
+    setIsBgmStopped(false)
+    audioRef.current.src = tracks[index].audio_url
+    audioRef.current.load()
+    if (isPlaying) {
+      audioRef.current.play().catch(() => {})
+    }
+  }
+
+  const handleStopBgm = () => {
+    if (!audioRef.current) return
+    audioRef.current.pause()
+    audioRef.current.currentTime = 0
+    setIsBgmStopped(true)
+  }
+
+  // ─── Stepper logic ───────────────────────────────────────────
+  const handleTimerEnd = useCallback(() => {
     if (isLooping) {
       setElapsed(0)
       setIsPlaying(true)
@@ -36,27 +113,43 @@ export function StepperExercise({ instructions, onDone }: Props) {
       setElapsed(0)
     } else {
       setIsPlaying(false)
+      // Stop BGM when session ends
+      audioRef.current?.pause()
       onDone()
     }
   }, [currentStep, totalSteps, onDone, isLooping])
 
+  const goNextManual = () => {
+    setIsLooping(false)
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep((s) => s + 1)
+      setElapsed(0)
+    } else {
+      setIsPlaying(false)
+      audioRef.current?.pause()
+      onDone()
+    }
+  }
+
   const goPrev = () => {
     if (currentStep > 0) {
+      setIsLooping(false)
       setCurrentStep((s) => s - 1)
       setElapsed(0)
     }
   }
 
-  const repeatStep = () => {
+  const jumpToStep = (i: number) => {
+    setIsLooping(false)
+    setCurrentStep(i)
     setElapsed(0)
-    setIsPlaying(true)
   }
 
   useEffect(() => {
     if (elapsed >= step.duration_seconds) {
-      goNext()
+      handleTimerEnd()
     }
-  }, [elapsed, step.duration_seconds, goNext])
+  }, [elapsed, step.duration_seconds, handleTimerEnd])
 
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current)
@@ -72,6 +165,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
   useEffect(() => {
     setElapsed(0)
+    setIsPlaying(true)
   }, [currentStep])
 
   const formatTime = () => {
@@ -86,7 +180,14 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
   return (
     <div className="flex flex-col gap-8 items-center max-w-3xl">
-      <BackgroundMusicPlayer />
+      <BackgroundMusicPlayer
+        audioRef={audioRef}
+        tracks={tracks}
+        currentIndex={currentTrackIndex}
+        isStopped={isBgmStopped}
+        onSelectTrack={handleSelectTrack}
+        onStop={handleStopBgm}
+      />
 
       <div className="flex gap-4 w-full items-center">
         <div className="shrink-0">
@@ -130,7 +231,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
             {instructions.map((_, i) => (
               <button
                 key={i}
-                onClick={() => { setCurrentStep(i); setElapsed(0) }}
+                onClick={() => jumpToStep(i)}
                 className={`rounded-full transition-all ${
                   i === currentStep
                     ? 'w-6 h-2 bg-foreground'
@@ -190,8 +291,8 @@ export function StepperExercise({ instructions, onDone }: Props) {
             )}
           >
             {isMuted
-              ? <SpeakerSlashIcon weight="fill" />    
-              : <SpeakerHighIcon weight="fill" />   
+              ? <SpeakerSlashIcon weight="fill" />
+              : <SpeakerHighIcon weight="fill" />
             }
             {isMuted ? "Hening" : "Suara"}
           </Button>
@@ -200,7 +301,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={goNext}
+              onClick={goNextManual}
               className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-foreground font-semibold border border-foreground rounded-full"
             >
               <CheckIcon weight="bold" />
@@ -209,7 +310,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
           ) : (
             <Button
               variant="ghost"
-              onClick={goNext}
+              onClick={goNextManual}
               className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:bg-background font-medium"
             >
               Selanjutnya
