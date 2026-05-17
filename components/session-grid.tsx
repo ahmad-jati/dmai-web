@@ -1,17 +1,17 @@
 'use client'
 
 import Link from "next/link";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { data_session } from "@/lib/data-detail-session";
+import { Button } from "./ui/button";
+import { PlayIcon } from "@phosphor-icons/react";
 
 type SessionGridProps = {
-  excludeSlug?: string;         // e.g. "motivasi" – hides that card
-  className?: string;           // extra wrapper classes
-  gridClassName?: string;       // override grid cols, e.g. "grid-cols-2 lg:grid-cols-4"
+  excludeSlug?: string;         
+  className?: string;            
+  gridClassName?: string;        
 };
 
-/** Convert a session_name to a URL slug, e.g. "Self Reported" → "self-reported" */
 export function toSlug(name: string) {
   return name.toLowerCase().replace(/\s+/g, "-");
 }
@@ -31,29 +31,24 @@ export function SessionGrid({
         const slug = toSlug(session.session_name);
         return (
           <Link
-            key={slug}
-            href={`/session/${slug}`}
-            className="group flex flex-col gap-3 rounded-3xl border border-foreground bg-background p-4 transition-shadow hover:shadow-md active:scale-[0.98]"
-          >
-            <div className="w-10 h-10 flex-shrink-0">
-              <Image
-                src={session.icon}
-                alt={session.session_name}
-                width={40}
-                height={40}
-                className="w-full h-full object-contain"
-              />
-            </div>
+              key={session.session_name}
+              href={`/session/${slug}`}
+              className="flex flex-col justify-between items-end gap-4 bg-background p-3 rounded-lg border border-foreground w-full h-40"
+            >
+              <div className="flex flex-col gap-1">
+                <p className="font-bold text-md">{session.session_name}</p>
+                <p className="font-medium text-sm">{session.detail_short}</p>
+                <p className="font-medium text-xs text-muted-foreground">{session.total_instruction} Pelatihan ● {session.duration}</p>
+              </div>
 
-            <div className="flex flex-col gap-1">
-              <p className="font-semibold text-sm leading-tight group-hover:underline underline-offset-2">
-                {session.session_name}
-              </p>
-              <p className="text-xs text-muted-foreground leading-snug">
-                {session.detail_short}
-              </p>
-            </div>
-          </Link>
+              <div>
+                <Button className="p-2 bg-white" asChild>
+                  <span>
+                    <PlayIcon className="w-5 h-5" weight="fill"/>
+                  </span>
+                </Button>
+              </div>
+            </Link>
         );
       })}
     </div>

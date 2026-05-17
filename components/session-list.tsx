@@ -10,7 +10,7 @@ export function SessionList({ excludeSlug }: Props) {
       <h2>Pilih Sesi Pelatihan</h2>
       <SessionGrid
         excludeSlug={excludeSlug}
-        gridClassName="grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+        gridClassName="grid-cols-2 md:grid-cols-3"
       />
     </div>
   );
