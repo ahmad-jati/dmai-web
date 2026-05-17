@@ -76,7 +76,7 @@ export function ProtectedNavbar() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Link href="/homepage" className="flex gap-2 items-center cursor-pointer">
+              <Link href="/history" className="flex gap-2 items-center cursor-pointer">
                 <ClockCounterClockwiseIcon className="w-4 h-4" />
                 Riwayat Sesi
               </Link>

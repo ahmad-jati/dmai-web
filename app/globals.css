@@ -226,6 +226,7 @@
   --radius-md: calc(var(--radius) - 2px);  /* 10px */
   --radius-lg: var(--radius);              /* 12px */
   --radius-xl: calc(var(--radius) + 4px);  /* 16px */
+  --radius-2xl: calc(var(--radius) + 8px);  /* 16px */
   --radius-5xl: 2.5rem; /* 40px */
 
   --shadow-2xs: var(--shadow-2xs);
