@@ -9,13 +9,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { HamburgerIcon, HouseIcon, SignOutIcon } from "@phosphor-icons/react";
+import { ListIcon, HouseIcon, SignOutIcon, ClockCounterClockwiseIcon} from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  if (hour >= 17 && hour < 21) return "Good evening";
+  return "Good night";
+}
+
 export function ProtectedNavbar() {
   const [userName, setUserName] = useState<string | null>(null);
+  const [greeting, setGreeting] = useState(getGreeting());
   const router = useRouter();
 
   useEffect(() => {
@@ -25,6 +34,10 @@ export function ProtectedNavbar() {
       setUserName(user?.user_metadata?.full_name ?? null);
     };
     getUser();
+
+    // Update greeting every minute in case user keeps tab open across time boundaries
+    const interval = setInterval(() => setGreeting(getGreeting()), 60_000);
+    return () => clearInterval(interval);
   }, []);
 
   const logout = async () => {
@@ -36,7 +49,7 @@ export function ProtectedNavbar() {
   return (
     <nav className="w-full flex justify-between items-center py-4 px-8 bg-white rounded-b-5xl border border-foreground border-t-0">
       <Link
-        href={'/homepage'}
+        href={'/'}
         className="text-app-name hover:font-bold font-semibold"
       >
         DMAI
@@ -44,28 +57,34 @@ export function ProtectedNavbar() {
 
       <div className="flex gap-3 items-center">
         {userName && (
-          <p className="text-sm font-medium text-foreground">
-            Good morning, <span className="font-bold">{userName}</span>!
+          <p className="text-md font-medium text-foreground">
+            {greeting}, <span className="">{userName}</span>!
           </p>
         )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="p-2">
-              <HamburgerIcon className="w-5 h-5" />
+            <Button variant="ghost" size="sm" className="rounded-sm p-2">
+              <ListIcon className="w-7 h-7" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuContent align="end" className="w-44 bg-background">
             <DropdownMenuItem asChild>
               <Link href="/homepage" className="flex gap-2 items-center cursor-pointer">
                 <HouseIcon className="w-4 h-4" />
-                Dashboard
+                Homepage
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="/homepage" className="flex gap-2 items-center cursor-pointer">
+                <ClockCounterClockwiseIcon className="w-4 h-4" />
+                Riwayat Sesi
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={logout}
-              className="flex gap-2 items-center cursor-pointer text-red focus:text-red"
+              className="flex gap-2 items-center cursor-pointer text-background hover:text-background border border-foreground bg-red"
             >
               <SignOutIcon className="w-4 h-4" />
               Logout
