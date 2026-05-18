@@ -11,6 +11,7 @@ import { data_session } from "@/lib/data-detail-session"
 import { notFound } from "next/navigation"
 import { RepeatIcon, HouseIcon } from "@phosphor-icons/react"
 import { Route } from "next"
+import { createClient } from "@/lib/supabase/client"
 
 function toSlug(name: string) {
   return name.toLowerCase().replace(/\s+/g, "-")
@@ -27,11 +28,28 @@ export default function ExercisePage({ params }: Props) {
   if (!session) notFound()
 
   const [isDone, setIsDone] = useState(false)
-  const [key, setKey] = useState(0) // remount stepper on repeat
+  const [key, setKey] = useState(0)
 
   const handleRepeat = () => {
     setKey((k) => k + 1)
     setIsDone(false)
+  }
+
+  const handleDone = async () => {
+    const supabase = createClient()
+
+    const { data: userData } = await supabase.auth.getUser()
+    const user = userData?.user
+
+    if (user) {
+      await supabase.from("session_completions").insert({
+        user_id: user.id,
+        session_slug: slug,
+        session_name: session.session_name,
+      })
+    }
+
+    setIsDone(true)
   }
 
   if (isDone) {
@@ -45,7 +63,6 @@ export default function ExercisePage({ params }: Props) {
             <h2 className="text-h2 font-semibold">
               {session.session_name}
             </h2>
-
           </div>
 
           <div className="rounded-4xl border border-foreground bg-background p-2 w-100 h-68">
@@ -80,12 +97,11 @@ export default function ExercisePage({ params }: Props) {
   return (
     <div className="w-full">
       <Section className="bg-celeste flex flex-col items-center justify-center gap-6">
-        {/* <BackgroundMusicPlayer /> */}
         <StepperExercise
           key={key}
           instructions={session.instructions}
           sessionName={session.session_name}
-          onDone={() => setIsDone(true)}
+          onDone={handleDone}
         />
       </Section>
     </div>

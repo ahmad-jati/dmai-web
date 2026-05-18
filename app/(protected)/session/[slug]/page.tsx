@@ -1,13 +1,15 @@
 'use client'
+
 import Image from "next/image";
 import Link from "next/link";
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import { Section } from "@/components/layout/section-wrapper";
 import { Button } from "@/components/ui/button";
 import { SessionList } from "@/components/session-list";
 import { data_session } from "@/lib/data-detail-session";
 import { toSlug } from "@/components/session-grid";
+import { createClient } from "@/lib/supabase/client";
 
 import { PersonSimpleTaiChiIcon, TimerIcon, PlayIcon, HeartIcon } from "@phosphor-icons/react";
 import { Route } from "next";
@@ -19,6 +21,28 @@ type Props = {
 export default function Page({ params }: Props) {
   const { slug } = use(params);
   const session = data_session.find((s) => toSlug(s.session_name) === slug);
+
+  const [completionCount, setCompletionCount] = useState<number>(0)
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const supabase = createClient()
+      const { data: userData } = await supabase.auth.getUser()
+      const user = userData?.user
+
+      if (!user) return
+
+      const { count } = await supabase
+        .from("session_completions")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("session_slug", slug)
+
+      setCompletionCount(count ?? 0)
+    }
+
+    fetchCount()
+  }, [slug])
 
   if (!session) notFound();
 
@@ -50,7 +74,11 @@ export default function Page({ params }: Props) {
               </div>
               <div className="flex items-center gap-1">
                 <HeartIcon className="w-5 h-5" weight="fill" />
-                <p className="font-medium text-sm">Kamu telah mengikuti sesi ini 3 kali</p>
+                <p className="font-medium text-sm">
+                  {completionCount === 0
+                    ? "Kamu belum pernah mengikuti sesi ini"
+                    : `Kamu telah mengikuti sesi ini ${completionCount} kali`}
+                </p>
               </div>
             </div>
           </div>
@@ -76,7 +104,6 @@ export default function Page({ params }: Props) {
       </Section>
 
       <Section className="bg-pink">
-        {/* Show all sessions except the current one */}
         <SessionList excludeSlug={slug} />
       </Section>
     </div>
