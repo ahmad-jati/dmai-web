@@ -29,6 +29,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const [isMuted, setIsMuted] = useState(false)
   const [isLooping, setIsLooping] = useState(false)
   const [elapsed, setElapsed] = useState(0)
+  const [tracksLoaded, setTracksLoaded] = useState(false) 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // BGM state — owned here so pause/play/done can control it
@@ -42,16 +43,26 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const progress = Math.min((elapsed / step.duration_seconds) * 100, 100)
   const isLastStep = currentStep === totalSteps - 1
 
-  // ─── BGM setup ───────────────────────────────────────────────
   useEffect(() => {
     const fetchTracks = async () => {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('background_music')
-        .select('id, title, composer, audio_url, duration_seconds')
-        .order('created_at')
-      if (data && data.length > 0) {
-        setTracks(data as Track[])
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('background_music')
+          .select('id, title, composer, audio_url, duration_seconds')
+          .order('created_at')
+
+        if (error) {
+          console.error('BGM fetch error:', error)
+        }
+
+        if (data && data.length > 0) {
+          setTracks(data as Track[])
+        }
+      } catch (err) {
+        console.error('BGM fetch exception:', err)
+      } finally {
+        setTracksLoaded(true)   // ← always mark as done
       }
     }
     fetchTracks()
@@ -72,16 +83,18 @@ export function StepperExercise({ instructions, onDone }: Props) {
     if (!audioRef.current || tracks.length === 0) return
     audioRef.current.src = tracks[0].audio_url
     audioRef.current.load()
-    audioRef.current.play().catch(() => {})
+    audioRef.current.addEventListener('canplay', () => {
+      fadeIn(audioRef.current!)
+    }, { once: true })
   }, [tracks])
 
   // Sync BGM with stepper play/pause
   useEffect(() => {
     if (!audioRef.current || isBgmStopped) return
     if (isPlaying) {
-      audioRef.current.play().catch(() => {})
+      fadeIn(audioRef.current, 800)
     } else {
-      audioRef.current.pause()
+      fadeOut(audioRef.current, 800)
     }
   }, [isPlaying, isBgmStopped])
 
@@ -89,17 +102,20 @@ export function StepperExercise({ instructions, onDone }: Props) {
     if (!audioRef.current || tracks.length === 0) return
     setCurrentTrackIndex(index)
     setIsBgmStopped(false)
-    audioRef.current.src = tracks[index].audio_url
-    audioRef.current.load()
-    if (isPlaying) {
-      audioRef.current.play().catch(() => {})
-    }
+    fadeOut(audioRef.current, 600, () => {
+      audioRef.current!.src = tracks[index].audio_url
+      audioRef.current!.load()
+      audioRef.current!.addEventListener('canplay', () => {
+        fadeIn(audioRef.current!, 800)
+      }, { once: true })
+    })
   }
 
   const handleStopBgm = () => {
     if (!audioRef.current) return
-    audioRef.current.pause()
-    audioRef.current.currentTime = 0
+    fadeOut(audioRef.current, 1000, () => {
+      audioRef.current!.currentTime = 0
+    })
     setIsBgmStopped(true)
   }
 
@@ -145,6 +161,36 @@ export function StepperExercise({ instructions, onDone }: Props) {
     setElapsed(0)
   }
 
+  const fadeIn = (audio: HTMLAudioElement, duration = 1500) => {
+    audio.volume = 0
+    audio.play().catch(() => {})
+    const steps = 30
+    const interval = duration / steps
+    let step = 0
+    const timer = setInterval(() => {
+      step++
+      audio.volume = Math.min(step / steps, 1)
+      if (step >= steps) clearInterval(timer)
+    }, interval)
+  }
+
+  const fadeOut = (audio: HTMLAudioElement, duration = 1500, onDone?: () => void) => {
+    const steps = 30
+    const interval = duration / steps
+    const startVolume = audio.volume
+    let step = 0
+    const timer = setInterval(() => {
+      step++
+      audio.volume = Math.max(startVolume * (1 - step / steps), 0)
+      if (step >= steps) {
+        clearInterval(timer)
+        audio.pause()
+        audio.volume = 1
+        onDone?.()
+      }
+    }, interval)
+  }
+
   useEffect(() => {
     if (elapsed >= step.duration_seconds) {
       handleTimerEnd()
@@ -187,6 +233,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
         isStopped={isBgmStopped}
         onSelectTrack={handleSelectTrack}
         onStop={handleStopBgm}
+        isLoaded={tracksLoaded} 
       />
 
       <div className="flex gap-4 w-full items-center">
@@ -303,13 +350,14 @@ export function StepperExercise({ instructions, onDone }: Props) {
               size="sm"
               onClick={goNextManual}
               className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-foreground font-semibold border border-foreground rounded-full"
-            >
+              >
               <CheckIcon weight="bold" />
               Selesai
             </Button>
           ) : (
             <Button
               variant="ghost"
+              size="sm"
               onClick={goNextManual}
               className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:bg-background font-medium"
             >

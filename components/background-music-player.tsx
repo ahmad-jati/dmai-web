@@ -26,6 +26,7 @@ type Props = {
   isStopped: boolean
   onSelectTrack: (index: number) => void
   onStop: () => void
+  isLoaded: boolean  
 }
 
 export function BackgroundMusicPlayer({
@@ -35,6 +36,7 @@ export function BackgroundMusicPlayer({
   isStopped,
   onSelectTrack,
   onStop,
+  isLoaded
 }: Props) {
   const currentTrack = tracks[currentIndex]
 
@@ -45,14 +47,16 @@ export function BackgroundMusicPlayer({
       <div className="flex-1 text-sm flex flex-col gap-0.5 items-center">
         {isStopped ? (
           <p className="text-muted-foreground">Musik dimatikan</p>
+        ) : !isLoaded ? (
+          <p className="text-muted-foreground">Memuat musik...</p>
+        ) : tracks.length === 0 ? (
+          <p className="text-muted-foreground">Tidak ada musik tersedia</p>
         ) : currentTrack ? (
           <>
             <p className="font-semibold">{currentTrack.title}</p>
             <p className="">{currentTrack.composer}</p>
           </>
-        ) : (
-          <p className="text-muted-foreground">Memuat musik...</p>
-        )}
+        ) : null}
       </div>
 
       <DropdownMenu>
