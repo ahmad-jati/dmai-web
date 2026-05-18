@@ -1,7 +1,16 @@
+'use client'
+
 import Image from "next/image";
-import { data_session } from "@/lib/data-detail-session";
+import { useEffect, useState } from "react";
+import { fetchAllSessions, type SessionData } from "@/lib/data-detail-session";
 
 export function TrainingOverviewOnboarding() {
+  const [sessions, setSessions] = useState<SessionData[]>([])
+
+  useEffect(() => {
+    fetchAllSessions().then(setSessions)
+  }, [])
+
   return (
     <section className="bg-lemon">
       <div className="flex gap-4 items-start">
@@ -23,34 +32,28 @@ export function TrainingOverviewOnboarding() {
           </div>
 
           <div className="grid grid-cols-4 gap-3.5">
-            {
-              data_session.map((session) => (
-                <div
-                  key={session.session_name}
-                  className="flex flex-col justify-between items-end gap-4 bg-background p-3 rounded-lg border border-foreground"
-                >
-                  <div className="flex flex-col gap-1 text-sm">
-                    <p className="font-bold">{session.session_name}</p>
-                    <p className="font-medium">{session.detail_short}</p>
-                  </div>
-
-                  <div>
-                    <Image
-                      src={session.icon}
-                      alt={`${session.session_name} icon`}
-                      width={400}
-                      height={400}
-                      className="w-full h-8 object-contain"
-                    />
-                  </div>
-
+            {sessions.map((session) => (
+              <div
+                key={session.slug}
+                className="flex flex-col justify-between items-end gap-4 bg-background p-3 rounded-lg border border-foreground"
+              >
+                <div className="flex flex-col gap-1 text-sm">
+                  <p className="font-bold">{session.session_name}</p>
+                  <p className="font-medium">{session.detail_short}</p>
                 </div>
-              ))
-            }
+                <div>
+                  <Image
+                    src={session.icon}
+                    alt={`${session.session_name} icon`}
+                    width={400}
+                    height={400}
+                    className="w-full h-8 object-contain"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
-
         </div>
-        
       </div>
     </section>
   )
