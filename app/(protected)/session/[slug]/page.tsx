@@ -7,10 +7,8 @@ import { notFound } from "next/navigation";
 import { Section } from "@/components/layout/section-wrapper";
 import { Button } from "@/components/ui/button";
 import { SessionList } from "@/components/session-list";
-import { data_session } from "@/lib/data-detail-session";
-import { toSlug } from "@/components/session-grid";
+import { fetchSessionBySlug, type SessionData } from "@/lib/data-detail-session";
 import { createClient } from "@/lib/supabase/client";
-
 import { PersonSimpleTaiChiIcon, TimerIcon, PlayIcon, HeartIcon } from "@phosphor-icons/react";
 import { Route } from "next";
 
@@ -20,38 +18,50 @@ type Props = {
 
 export default function Page({ params }: Props) {
   const { slug } = use(params);
-  const session = data_session.find((s) => toSlug(s.session_name) === slug);
 
+  const [session, setSession] = useState<SessionData | null | undefined>(undefined)
   const [completionCount, setCompletionCount] = useState<number>(0)
+
+  useEffect(() => {
+    fetchSessionBySlug(slug).then((data) => setSession(data ?? null))
+  }, [slug])
 
   useEffect(() => {
     const fetchCount = async () => {
       const supabase = createClient()
       const { data: userData } = await supabase.auth.getUser()
       const user = userData?.user
-
       if (!user) return
-
       const { count } = await supabase
         .from("session_completions")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
         .eq("session_slug", slug)
-
       setCompletionCount(count ?? 0)
     }
-
     fetchCount()
   }, [slug])
 
-  if (!session) notFound();
+  // still loading
+  if (session === undefined) {
+    return (
+      <div className="flex flex-col gap-8 w-full">
+        <Section className="bg-celeste">
+          <p className="text-sm text-muted-foreground">Memuat sesi...</p>
+        </Section>
+      </div>
+    )
+  }
+
+  // not found
+  if (session === null) notFound()
 
   return (
     <div className="flex flex-col gap-8 w-full">
       <Section className="flex gap-8 bg-celeste">
         <div className="flex flex-col justify-between max-w-xl">
           <div className="flex items-center gap-1 font-semibold text-sm">
-            <Link href={'/session'}>ALL SESSION</Link>
+            <Link href={'/session' as Route}>ALL SESSION</Link>
             <p>/</p>
             <p>{session.session_name.toUpperCase()}</p>
           </div>
