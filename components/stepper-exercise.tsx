@@ -41,6 +41,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
   // Narration
   const narrationRef = useRef<HTMLAudioElement | null>(null)
   const audioUnlockedRef = useRef(false)
+  const narrationListenerCleanupRef = useRef<() => void>(() => {})
 
   const step = instructions[currentStep]
   const totalSteps = instructions.length
@@ -152,48 +153,62 @@ export function StepperExercise({ instructions, onDone }: Props) {
     }
   }, [isPlaying, isBgmStopped])
 
-  // ─── Narration per step ───────────────────────────────────────
-  useEffect(() => {
-    if (!narrationRef.current || !step.audio) return
+  // ─── Narration per step (with explicit replay trigger) ────────
+  const playNarration = useCallback(() => {
+    if (!narrationRef.current || !step.audio || !audioUnlockedRef.current) return
+
     const narration = narrationRef.current
 
-    const playNarration = () => {
-      if (!audioUnlockedRef.current) return
+    // Clean up previous listeners
+    narrationListenerCleanupRef.current()
 
-      narration.pause()
-      narration.currentTime = 0
-      narration.src = step.audio
-      narration.volume = isMuted ? 0 : 1
-      narration.load()
+    narration.pause()
+    narration.currentTime = 0
+    narration.src = step.audio
+    narration.volume = isMuted ? 0 : 1
+    narration.load()
 
-      narration.addEventListener('canplaythrough', () => {
-        narration.play().catch((e) => console.warn('Narration blocked:', e))
+    const onCanPlayThrough = () => {
+      narration.play().catch((e) => console.warn('Narration blocked:', e))
 
-        // Duck BGM while narration plays
-        if (bgmRef.current && !isBgmStopped && bgmRef.current.volume > 0) {
-          bgmRef.current.volume = 0.2
-          narration.onended = () => {
-            if (!bgmRef.current || isBgmStopped || !isPlaying) return
-            const restore = setInterval(() => {
-              if (!bgmRef.current) return clearInterval(restore)
-              bgmRef.current.volume = Math.min(bgmRef.current.volume + 0.05, 1)
-              if (bgmRef.current.volume >= 1) clearInterval(restore)
-            }, 50)
-          }
-        }
-      }, { once: true })
+      // Duck BGM while narration plays
+      if (bgmRef.current && !isBgmStopped && bgmRef.current.volume > 0) {
+        bgmRef.current.volume = 0.2
+      }
     }
 
-    const timeout = setTimeout(playNarration, 400)
-    return () => {
-      clearTimeout(timeout)
+    const onNarrationEnded = () => {
+      // Restore BGM after narration ends
+      if (bgmRef.current && !isBgmStopped && isPlaying) {
+        const restore = setInterval(() => {
+          if (!bgmRef.current) return clearInterval(restore)
+          bgmRef.current.volume = Math.min(bgmRef.current.volume + 0.05, 1)
+          if (bgmRef.current.volume >= 1) clearInterval(restore)
+        }, 50)
+      }
+    }
+
+    narration.addEventListener('canplaythrough', onCanPlayThrough, { once: true })
+    narration.addEventListener('ended', onNarrationEnded, { once: true })
+
+    // Cleanup function for this narration
+    narrationListenerCleanupRef.current = () => {
+      narration.removeEventListener('canplaythrough', onCanPlayThrough)
+      narration.removeEventListener('ended', onNarrationEnded)
       narration.pause()
-      narration.onended = null
       if (bgmRef.current && !isBgmStopped && isPlaying) {
         bgmRef.current.volume = 1
       }
     }
-  }, [currentStep]) // only fires on step change
+  }, [step.audio, isMuted, isBgmStopped, isPlaying])
+
+  useEffect(() => {
+    // Play narration immediately on step change (no 400ms delay)
+    playNarration()
+    return () => {
+      narrationListenerCleanupRef.current()
+    }
+  }, [currentStep, playNarration])
 
   // ─── Sync mute to narration ───────────────────────────────────
   useEffect(() => {
@@ -229,9 +244,11 @@ export function StepperExercise({ instructions, onDone }: Props) {
     if (isLooping) {
       setElapsed(0)
       setIsPlaying(true)
+      // Narration will replay via the isLooping + elapsed === 0 effect
     } else if (currentStep < totalSteps - 1) {
       setCurrentStep((s) => s + 1)
       setElapsed(0)
+      // Narration will play via currentStep change effect
     } else {
       setIsPlaying(false)
       if (bgmRef.current) fadeOut(bgmRef.current, 2000, () => onDone())
@@ -281,6 +298,15 @@ export function StepperExercise({ instructions, onDone }: Props) {
     setElapsed(0)
     setIsPlaying(true)
   }, [currentStep])
+
+  // ─── Replay narration when looping ────────────────────────────
+  useEffect(() => {
+    if (isLooping && elapsed === 0) {
+      // Small delay to ensure state has settled before replaying
+      const replayTimer = setTimeout(playNarration, 50)
+      return () => clearTimeout(replayTimer)
+    }
+  }, [isLooping, elapsed, playNarration])
 
   const formatTime = () => {
     const mins = Math.floor(step.duration_seconds / 60)
