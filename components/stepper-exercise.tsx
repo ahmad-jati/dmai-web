@@ -48,35 +48,38 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const progress = Math.min((elapsed / step.duration_seconds) * 100, 100)
   const isLastStep = currentStep === totalSteps - 1
 
-  // ─── Fade helpers ─────────────────────────────────────────────
+  // ─── Fade helpers using requestAnimationFrame for smooth transitions ───
   const fadeIn = (audio: HTMLAudioElement, duration = 1500) => {
     audio.volume = 0
     audio.play().catch(() => {})
-    const steps = 30
-    const interval = duration / steps
-    let s = 0
-    const timer = setInterval(() => {
-      s++
-      audio.volume = Math.min(s / steps, 1)
-      if (s >= steps) clearInterval(timer)
-    }, interval)
+    const startTime = performance.now()
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      audio.volume = progress
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      }
+    }
+    requestAnimationFrame(animate)
   }
 
   const fadeOut = (audio: HTMLAudioElement, duration = 1500, onComplete?: () => void) => {
-    const steps = 30
-    const interval = duration / steps
     const startVolume = audio.volume
-    let s = 0
-    const timer = setInterval(() => {
-      s++
-      audio.volume = Math.max(startVolume * (1 - s / steps), 0)
-      if (s >= steps) {
-        clearInterval(timer)
+    const startTime = performance.now()
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      audio.volume = Math.max(startVolume * (1 - progress), 0)
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      } else {
         audio.pause()
         audio.volume = 1
         onComplete?.()
       }
-    }, interval)
+    }
+    requestAnimationFrame(animate)
   }
 
   // ─── Unlock audio on first user gesture ───────────────────────
@@ -155,7 +158,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
   // ─── Narration per step (with explicit replay trigger) ────────
   const playNarration = useCallback(() => {
-    if (!narrationRef.current || !step.audio || !audioUnlockedRef.current) return
+    if (!narrationRef.current || !step.audio || !audioUnlockedRef.current) {
+      return
+    }
 
     const narration = narrationRef.current
 
@@ -166,51 +171,53 @@ export function StepperExercise({ instructions, onDone }: Props) {
     narration.currentTime = 0
     narration.src = step.audio
     narration.volume = isMuted ? 0 : 1
+
+    // Use load + play approach instead of canplaythrough for more reliable playback
     narration.load()
-
-    const onCanPlayThrough = () => {
-      narration.play().catch((e) => console.warn('Narration blocked:', e))
-
-      // Duck BGM while narration plays
-      if (bgmRef.current && !isBgmStopped && bgmRef.current.volume > 0) {
-        bgmRef.current.volume = 0.2
-      }
-    }
+    narration.play().catch((e) => {
+      console.warn('[v0] Narration play failed:', e.message)
+    })
 
     const onNarrationEnded = () => {
       // Restore BGM after narration ends
-      if (bgmRef.current && !isBgmStopped && isPlaying) {
+      if (bgmRef.current && !isBgmStopped) {
         const restore = setInterval(() => {
-          if (!bgmRef.current) return clearInterval(restore)
+          if (!bgmRef.current) {
+            clearInterval(restore)
+            return
+          }
           bgmRef.current.volume = Math.min(bgmRef.current.volume + 0.05, 1)
           if (bgmRef.current.volume >= 1) clearInterval(restore)
         }, 50)
       }
     }
 
-    narration.addEventListener('canplaythrough', onCanPlayThrough, { once: true })
+    // Duck BGM immediately while narration plays
+    if (bgmRef.current && !isBgmStopped) {
+      bgmRef.current.volume = 0.2
+    }
+
     narration.addEventListener('ended', onNarrationEnded, { once: true })
 
     // Cleanup function for this narration
     narrationListenerCleanupRef.current = () => {
-      narration.removeEventListener('canplaythrough', onCanPlayThrough)
       narration.removeEventListener('ended', onNarrationEnded)
       narration.pause()
-      if (bgmRef.current && !isBgmStopped && isPlaying) {
+      if (bgmRef.current && !isBgmStopped) {
         bgmRef.current.volume = 1
       }
     }
-  }, [step.audio, isMuted, isBgmStopped, isPlaying])
+  }, [step.audio, isMuted, isBgmStopped])
 
   useEffect(() => {
-    // Play narration immediately on step change (no 400ms delay)
+    // Play narration immediately on step change (no delay)
     playNarration()
     return () => {
       narrationListenerCleanupRef.current()
     }
   }, [currentStep, playNarration])
 
-  // ─── Sync mute to narration ───────────────────────────────────
+  // ─── Sync mute to narration ────────────��──────────────────────
   useEffect(() => {
     if (narrationRef.current) {
       narrationRef.current.volume = isMuted ? 0 : 1
