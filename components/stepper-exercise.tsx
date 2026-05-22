@@ -53,21 +53,30 @@ export function StepperExercise({ instructions, onDone }: Props) {
     const unlock = () => {
       if (audioUnlockedRef.current) return
       audioUnlockedRef.current = true
+      // Try to unlock audio by attempting playback
       if (narration.ref.current) {
+        narration.ref.current.muted = true
         narration.ref.current.volume = 0
-        narration.ref.current.play().then(() => {
-          narration.ref.current!.pause()
-          narration.ref.current!.volume = isMuted ? 0 : 1
-        }).catch(() => {})
+        narration.ref.current.play().catch(() => {})
+          .finally(() => {
+            narration.ref.current?.pause()
+            if (narration.ref.current) {
+              narration.ref.current.muted = false
+              narration.ref.current.volume = isMuted ? 0 : 1
+            }
+          })
       }
     }
-    window.addEventListener('click', unlock, { once: true })
-    window.addEventListener('touchstart', unlock, { once: true })
+    
+    // Add listener for first user interaction
+    document.addEventListener('click', unlock, { once: true })
+    document.addEventListener('touchstart', unlock, { once: true })
+    
     return () => {
-      window.removeEventListener('click', unlock)
-      window.removeEventListener('touchstart', unlock)
+      document.removeEventListener('click', unlock)
+      document.removeEventListener('touchstart', unlock)
     }
-  }, [narration])
+  }, [])
 
   // ─── Setup BGM loop ────────────────────────────────────────────
   useEffect(() => {
@@ -107,12 +116,14 @@ export function StepperExercise({ instructions, onDone }: Props) {
   // ─── Sync BGM with play/pause ─────────────────────────────────
   useEffect(() => {
     if (!isAudioReady || !bgm.ref.current) return
+    
     if (isPlaying && bgm.isBGMStopped) {
       bgm.resume()
     } else if (!isPlaying && !bgm.isBGMStopped) {
       bgm.pause()
+      narration.stopNarration() // Stop narration when paused
     }
-  }, [isPlaying, bgm, isAudioReady])
+  }, [isPlaying, bgm, isAudioReady, narration])
 
   // ─── Preload next narration steps in background ────────────────
   useEffect(() => {
@@ -136,10 +147,11 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
   // ─── Narration per step ───────────────────────────────────────
   useEffect(() => {
-    if (!isAudioReady || !step.audio || !audioUnlockedRef.current) {
+    if (!isAudioReady || !step.audio || !audioUnlockedRef.current || !isPlaying) {
       return
     }
 
+    // Only play narration if currently playing
     narration.playNarration(
       step.audio,
       isMuted,
@@ -150,7 +162,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
     return () => {
       narration.stopNarration()
     }
-  }, [currentStep, step.audio, isMuted, isAudioReady, narration, bgm])
+  }, [currentStep, step.audio, isMuted, isAudioReady, isPlaying, narration, bgm])
 
   // ─── Sync mute to narration ────────────��──────────────────────
   useEffect(() => {
@@ -320,6 +332,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
         <Button
           onClick={() => setIsPlaying((p) => !p)}
           disabled={!isAudioReady}
+          title={isPlaying ? "Pause exercise" : "Resume exercise"}
           className="w-14 h-14 p-3 [&_svg]:size-6 flex items-center justify-center bg-transparent hover:bg-background rounded-full border border-foreground disabled:opacity-50"
         >
           {isPlaying ? <PauseIcon weight="fill" /> : <PlayIcon weight="fill" />}
