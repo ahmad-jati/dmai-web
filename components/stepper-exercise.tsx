@@ -114,6 +114,26 @@ export function StepperExercise({ instructions, onDone }: Props) {
     }
   }, [isPlaying, bgm, isAudioReady])
 
+  // ─── Preload next narration steps in background ────────────────
+  useEffect(() => {
+    if (!isAudioReady) return
+
+    // Preload next 2-3 steps narration in background (Priority 3)
+    // This doesn't block, just starts loading
+    const preloadAhead = 3
+    for (let i = 1; i <= preloadAhead && currentStep + i < totalSteps; i++) {
+      const nextStep = instructions[currentStep + i]
+      if (nextStep?.audio) {
+        const audio = new Audio()
+        audio.crossOrigin = 'anonymous'
+        audio.src = nextStep.audio
+        audio.preload = 'metadata'
+        // Fire and forget - don't wait for it
+        audio.load()
+      }
+    }
+  }, [currentStep, totalSteps, instructions, isAudioReady])
+
   // ─── Narration per step ───────────────────────────────────────
   useEffect(() => {
     if (!isAudioReady || !step.audio || !audioUnlockedRef.current) {
