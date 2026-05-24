@@ -8,6 +8,8 @@ import type { SessionInstruction } from "@/lib/data-detail-session"
 import { BackgroundMusicPlayer } from "./background-music-player"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
+import { useBGMPlayer } from "@/lib/hooks/useBGMPlayer"
+import { useNarrationPlayback } from "@/lib/hooks/useNarrationPlayback"
 
 type Track = {
   id: string
@@ -29,221 +31,154 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const [isMuted, setIsMuted] = useState(false)
   const [isLooping, setIsLooping] = useState(false)
   const [elapsed, setElapsed] = useState(0)
-  const [tracksLoaded, setTracksLoaded] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  // BGM
   const [tracks, setTracks] = useState<Track[]>([])
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0)
-  const [isBgmStopped, setIsBgmStopped] = useState(false)
-  const bgmRef = useRef<HTMLAudioElement | null>(null)
+  const [isAudioReady, setIsAudioReady] = useState(false)
 
-  // Narration
-  const narrationRef = useRef<HTMLAudioElement | null>(null)
+  // Audio hooks
+  const bgm = useBGMPlayer()
+  const narration = useNarrationPlayback()
+
+  // Refs
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const audioUnlockedRef = useRef(false)
-  const narrationListenerCleanupRef = useRef<() => void>(() => {})
 
   const step = instructions[currentStep]
   const totalSteps = instructions.length
   const progress = Math.min((elapsed / step.duration_seconds) * 100, 100)
   const isLastStep = currentStep === totalSteps - 1
 
-  // ─── Fade helpers using requestAnimationFrame for smooth transitions ───
-  const fadeIn = (audio: HTMLAudioElement, duration = 1500) => {
-    audio.volume = 0
-    audio.play().catch(() => {})
-    const startTime = performance.now()
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime
-      const progress = Math.min(elapsed / duration, 1)
-      audio.volume = progress
-      if (progress < 1) {
-        requestAnimationFrame(animate)
-      }
-    }
-    requestAnimationFrame(animate)
-  }
-
-  const fadeOut = (audio: HTMLAudioElement, duration = 1500, onComplete?: () => void) => {
-    const startVolume = audio.volume
-    const startTime = performance.now()
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime
-      const progress = Math.min(elapsed / duration, 1)
-      audio.volume = Math.max(startVolume * (1 - progress), 0)
-      if (progress < 1) {
-        requestAnimationFrame(animate)
-      } else {
-        audio.pause()
-        audio.volume = 1
-        onComplete?.()
-      }
-    }
-    requestAnimationFrame(animate)
-  }
-
   // ─── Unlock audio on first user gesture ───────────────────────
   useEffect(() => {
     const unlock = () => {
       if (audioUnlockedRef.current) return
       audioUnlockedRef.current = true
-      if (narrationRef.current) {
-        narrationRef.current.volume = 0
-        narrationRef.current.play().then(() => {
-          narrationRef.current!.pause()
-          narrationRef.current!.volume = isMuted ? 0 : 1
-        }).catch(() => {})
+      // Try to unlock audio by attempting playback
+      if (narration.ref.current) {
+        narration.ref.current.muted = true
+        narration.ref.current.volume = 0
+        narration.ref.current.play().catch(() => {})
+          .finally(() => {
+            narration.ref.current?.pause()
+            if (narration.ref.current) {
+              narration.ref.current.muted = false
+              narration.ref.current.volume = isMuted ? 0 : 1
+            }
+          })
       }
     }
-    window.addEventListener('click', unlock, { once: true })
-    window.addEventListener('touchstart', unlock, { once: true })
+    
+    // Add listener for first user interaction
+    document.addEventListener('click', unlock, { once: true })
+    document.addEventListener('touchstart', unlock, { once: true })
+    
     return () => {
-      window.removeEventListener('click', unlock)
-      window.removeEventListener('touchstart', unlock)
+      document.removeEventListener('click', unlock)
+      document.removeEventListener('touchstart', unlock)
     }
   }, [])
 
-  // ─── Init audio elements ──────────────────────────────────────
+  // ─── Setup BGM loop ────────────────────────────────────────────
   useEffect(() => {
-    bgmRef.current = new Audio()
-    bgmRef.current.loop = true
-    narrationRef.current = new Audio()
-    return () => {
-      bgmRef.current?.pause()
-      bgmRef.current = null
-      narrationRef.current?.pause()
-      narrationRef.current = null
+    if (bgm.ref.current) {
+      bgm.ref.current.loop = true
     }
   }, [])
 
-  // ─── BGM fetch ────────────────────────────────────────────────
+  // ─── BGM fetch and initialization ─────────────────────────────
   useEffect(() => {
-    const fetchTracks = async () => {
+    const initAudio = async () => {
       try {
         const supabase = createClient()
         const { data, error } = await supabase
           .from('background_music')
           .select('id, title, composer, audio_url, duration_seconds')
           .order('created_at')
-        if (error) console.error('BGM fetch error:', error)
-        if (data && data.length > 0) setTracks(data as Track[])
+        if (error) {
+          console.error('BGM fetch error:', error)
+          setIsAudioReady(true)
+          return
+        }
+        if (data && data.length > 0) {
+          setTracks(data as Track[])
+          // Load first track
+          await bgm.load(data[0].audio_url)
+        }
       } catch (err) {
         console.error('BGM fetch exception:', err)
       } finally {
-        setTracksLoaded(true)
+        setIsAudioReady(true)
       }
     }
-    fetchTracks()
+    initAudio()
   }, [])
-
-  // ─── Auto-play BGM when tracks load ──────────────────────────
-  useEffect(() => {
-    if (!bgmRef.current || tracks.length === 0) return
-    bgmRef.current.src = tracks[0].audio_url
-    bgmRef.current.load()
-    bgmRef.current.addEventListener('canplay', () => {
-      fadeIn(bgmRef.current!)
-    }, { once: true })
-  }, [tracks])
 
   // ─── Sync BGM with play/pause ─────────────────────────────────
   useEffect(() => {
-    if (!bgmRef.current || isBgmStopped) return
-    if (isPlaying) {
-      fadeIn(bgmRef.current, 800)
-    } else {
-      fadeOut(bgmRef.current, 800)
+    if (!isAudioReady || !bgm.ref.current) return
+    
+    if (isPlaying && bgm.isBGMStopped) {
+      bgm.resume()
+    } else if (!isPlaying && !bgm.isBGMStopped) {
+      bgm.pause()
+      narration.stopNarration() // Stop narration when paused
     }
-  }, [isPlaying, isBgmStopped])
+  }, [isPlaying, bgm, isAudioReady, narration])
 
-  // ─── Narration per step (with explicit replay trigger) ────────
-  const playNarration = useCallback(() => {
-    if (!narrationRef.current || !step.audio || !audioUnlockedRef.current) {
+  // ─── Preload next narration steps in background ────────────────
+  useEffect(() => {
+    if (!isAudioReady) return
+
+    // Preload next 2-3 steps narration in background (Priority 3)
+    // This doesn't block, just starts loading
+    const preloadAhead = 3
+    for (let i = 1; i <= preloadAhead && currentStep + i < totalSteps; i++) {
+      const nextStep = instructions[currentStep + i]
+      if (nextStep?.audio) {
+        const audio = new Audio()
+        audio.crossOrigin = 'anonymous'
+        audio.src = nextStep.audio
+        audio.preload = 'metadata'
+        // Fire and forget - don't wait for it
+        audio.load()
+      }
+    }
+  }, [currentStep, totalSteps, instructions, isAudioReady])
+
+  // ─── Narration per step ───────────────────────────────────────
+  useEffect(() => {
+    if (!isAudioReady || !step.audio || !audioUnlockedRef.current || !isPlaying) {
       return
     }
 
-    const narration = narrationRef.current
+    // Only play narration if currently playing
+    narration.playNarration(
+      step.audio,
+      isMuted,
+      () => bgm.duck(), // onDuckBGM
+      () => bgm.restore() // onRestoreBGM
+    )
 
-    // Clean up previous listeners
-    narrationListenerCleanupRef.current()
-
-    narration.pause()
-    narration.currentTime = 0
-    narration.src = step.audio
-    narration.volume = isMuted ? 0 : 1
-
-    // Use load + play approach instead of canplaythrough for more reliable playback
-    narration.load()
-    narration.play().catch((e) => {
-      console.warn('[v0] Narration play failed:', e.message)
-    })
-
-    const onNarrationEnded = () => {
-      // Restore BGM after narration ends
-      if (bgmRef.current && !isBgmStopped) {
-        const restore = setInterval(() => {
-          if (!bgmRef.current) {
-            clearInterval(restore)
-            return
-          }
-          bgmRef.current.volume = Math.min(bgmRef.current.volume + 0.05, 1)
-          if (bgmRef.current.volume >= 1) clearInterval(restore)
-        }, 50)
-      }
-    }
-
-    // Duck BGM immediately while narration plays
-    if (bgmRef.current && !isBgmStopped) {
-      bgmRef.current.volume = 0.2
-    }
-
-    narration.addEventListener('ended', onNarrationEnded, { once: true })
-
-    // Cleanup function for this narration
-    narrationListenerCleanupRef.current = () => {
-      narration.removeEventListener('ended', onNarrationEnded)
-      narration.pause()
-      if (bgmRef.current && !isBgmStopped) {
-        bgmRef.current.volume = 1
-      }
-    }
-  }, [step.audio, isMuted, isBgmStopped])
-
-  useEffect(() => {
-    // Play narration immediately on step change (no delay)
-    playNarration()
     return () => {
-      narrationListenerCleanupRef.current()
+      narration.stopNarration()
     }
-  }, [currentStep, playNarration])
+  }, [currentStep, step.audio, isMuted, isAudioReady, isPlaying, narration, bgm])
 
   // ─── Sync mute to narration ────────────��──────────────────────
   useEffect(() => {
-    if (narrationRef.current) {
-      narrationRef.current.volume = isMuted ? 0 : 1
+    if (narration.ref.current) {
+      narration.ref.current.volume = isMuted ? 0 : 1
     }
-  }, [isMuted])
+  }, [isMuted, narration])
 
   // ─── BGM controls ─────────────────────────────────────────────
   const handleSelectTrack = (index: number) => {
-    if (!bgmRef.current || tracks.length === 0) return
     setCurrentTrackIndex(index)
-    setIsBgmStopped(false)
-    fadeOut(bgmRef.current, 600, () => {
-      bgmRef.current!.src = tracks[index].audio_url
-      bgmRef.current!.load()
-      bgmRef.current!.addEventListener('canplay', () => {
-        fadeIn(bgmRef.current!, 800)
-      }, { once: true })
-    })
+    bgm.switchTrack(tracks[index].audio_url)
   }
 
   const handleStopBgm = () => {
-    if (!bgmRef.current) return
-    fadeOut(bgmRef.current, 1000, () => {
-      bgmRef.current!.currentTime = 0
-    })
-    setIsBgmStopped(true)
+    bgm.stop()
   }
 
   // ─── Stepper logic ────────────────────────────────────────────
@@ -251,17 +186,15 @@ export function StepperExercise({ instructions, onDone }: Props) {
     if (isLooping) {
       setElapsed(0)
       setIsPlaying(true)
-      // Narration will replay via the isLooping + elapsed === 0 effect
     } else if (currentStep < totalSteps - 1) {
       setCurrentStep((s) => s + 1)
       setElapsed(0)
-      // Narration will play via currentStep change effect
     } else {
       setIsPlaying(false)
-      if (bgmRef.current) fadeOut(bgmRef.current, 2000, () => onDone())
-      else onDone()
+      bgm.stop()
+      setTimeout(() => onDone(), 600)
     }
-  }, [currentStep, totalSteps, onDone, isLooping])
+  }, [currentStep, totalSteps, onDone, isLooping, bgm])
 
   const goNextManual = () => {
     setIsLooping(false)
@@ -270,8 +203,8 @@ export function StepperExercise({ instructions, onDone }: Props) {
       setElapsed(0)
     } else {
       setIsPlaying(false)
-      if (bgmRef.current) fadeOut(bgmRef.current, 2000, () => onDone())
-      else onDone()
+      bgm.stop()
+      setTimeout(() => onDone(), 600)
     }
   }
 
@@ -306,15 +239,6 @@ export function StepperExercise({ instructions, onDone }: Props) {
     setIsPlaying(true)
   }, [currentStep])
 
-  // ─── Replay narration when looping ────────────────────────────
-  useEffect(() => {
-    if (isLooping && elapsed === 0) {
-      // Small delay to ensure state has settled before replaying
-      const replayTimer = setTimeout(playNarration, 50)
-      return () => clearTimeout(replayTimer)
-    }
-  }, [isLooping, elapsed, playNarration])
-
   const formatTime = () => {
     const mins = Math.floor(step.duration_seconds / 60)
     const secs = step.duration_seconds % 60
@@ -325,17 +249,31 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const displayMins = String(Math.floor(currentSeconds / 60)).padStart(2, "0")
   const displaySecs = String(currentSeconds % 60).padStart(2, "0")
 
+  if (!isAudioReady) {
+    return (
+      <div className="flex flex-col gap-8 items-center justify-center min-h-screen max-w-3xl">
+        <div className="animate-spin">
+          <div className="w-8 h-8 border-4 border-foreground border-t-transparent rounded-full" />
+        </div>
+        <p className="text-sm text-muted-foreground">Mempersiapkan data...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-8 items-center max-w-3xl">
       <BackgroundMusicPlayer
-        audioRef={bgmRef}
+        audioRef={bgm.ref}
         tracks={tracks}
         currentIndex={currentTrackIndex}
-        isStopped={isBgmStopped}
-        isLoaded={tracksLoaded}
+        isStopped={bgm.isBGMStopped}
+        isLoaded={isAudioReady}
         onSelectTrack={handleSelectTrack}
         onStop={handleStopBgm}
       />
+
+      <audio ref={bgm.ref} crossOrigin="anonymous" />
+      <audio ref={narration.ref} crossOrigin="anonymous" />
 
       <div className="flex gap-4 w-full items-center">
         <div className="shrink-0">
@@ -393,7 +331,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
         <Button
           onClick={() => setIsPlaying((p) => !p)}
-          className="w-14 h-14 p-3 [&_svg]:size-6 flex items-center justify-center bg-transparent hover:bg-background rounded-full border border-foreground"
+          disabled={!isAudioReady}
+          title={isPlaying ? "Pause exercise" : "Resume exercise"}
+          className="w-14 h-14 p-3 [&_svg]:size-6 flex items-center justify-center bg-transparent hover:bg-background rounded-full border border-foreground disabled:opacity-50"
         >
           {isPlaying ? <PauseIcon weight="fill" /> : <PlayIcon weight="fill" />}
         </Button>
@@ -402,9 +342,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
           <Button
             variant="ghost"
             onClick={goPrev}
-            disabled={currentStep === 0}
+            disabled={currentStep === 0 || !isAudioReady}
             size="sm"
-            className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:bg-background disabled:bg-transparent disabled:text-muted-foreground font-medium"
+            className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:bg-background disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-50 font-medium"
           >
             <ArrowLeftIcon weight="fill" />
             Sebelumnya
@@ -414,8 +354,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
             variant="ghost"
             size="sm"
             onClick={() => setIsLooping((l) => !l)}
+            disabled={!isAudioReady}
             className={cn(
-              "[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs border transition-all hover:bg-background",
+              "[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs border transition-all hover:bg-background disabled:opacity-50",
               isLooping
                 ? "bg-background text-muted-foreground font-semibold"
                 : "bg-transparent text-muted-foreground"
@@ -429,8 +370,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
             variant="ghost"
             size="sm"
             onClick={() => setIsMuted((m) => !m)}
+            disabled={!isAudioReady}
             className={cn(
-              "[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs rounded-full border transition-all hover:bg-background",
+              "[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs rounded-full border transition-all hover:bg-background disabled:opacity-50",
               isMuted
                 ? "bg-background text-muted-foreground font-semibold"
                 : "bg-transparent text-muted-foreground"
@@ -445,7 +387,8 @@ export function StepperExercise({ instructions, onDone }: Props) {
               variant="ghost"
               size="sm"
               onClick={goNextManual}
-              className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-foreground font-semibold border border-foreground rounded-full"
+              disabled={!isAudioReady}
+              className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-foreground font-semibold border border-foreground rounded-full disabled:opacity-50"
             >
               <CheckIcon weight="bold" />
               Selesai
@@ -455,7 +398,8 @@ export function StepperExercise({ instructions, onDone }: Props) {
               variant="ghost"
               size="sm"
               onClick={goNextManual}
-              className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:bg-background font-medium"
+              disabled={!isAudioReady}
+              className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:bg-background disabled:opacity-50 font-medium"
             >
               Selanjutnya
               <ArrowRightIcon weight="fill" />
