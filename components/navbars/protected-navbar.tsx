@@ -49,7 +49,7 @@ export function ProtectedNavbar() {
   return (
     <nav className="w-full flex justify-between items-center py-4 px-8 bg-white rounded-b-5xl border border-foreground border-t-0">
       <Link
-        href={'/'}
+        href={'/homepage'}
         className="text-app-name hover:font-bold font-semibold"
       >
         DMAI

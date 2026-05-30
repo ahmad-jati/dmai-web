@@ -168,24 +168,23 @@ export function StepperExercise({ instructions, onDone }: Props) {
   }, [isPlaying, isBGMStopped, bgmPause, bgmResume, stopNarration])
 
   // ── 5. Play narration for current step ─────────────────────────
-  // Deps: currentStep, isMuted, isPlaying, isReady
+  // Deps: currentStep, isPlaying, isReady — NOT isMuted.
+  // Mute only changes volume, never restarts the audio (see effect 6).
   // playNarration / stopNarration / duck / restore are [] deps → stable →
   // safe to omit from the dep array (they never change).
   useEffect(() => {
     if (!isReady || !isPlaying || !step.audio) return
-    if (!bgmStartedRef.current) {
-      // BGM not started yet — narration will begin once user gesture triggers BGM.
-      // We'll re-run this effect naturally when bgmStartedRef triggers a re-render
-      // indirectly (via BGM state change). For now, play narration anyway so it
-      // still works even without BGM (muted BGM scenario).
-    }
 
+    // Pass isMuted for the *initial* volume when narration starts.
+    // After that, effect 6 handles live volume changes without restarting.
     playNarration(step.audio, isMuted, duck, restore)
     return () => stopNarration()
-  }, [currentStep, isMuted, isPlaying, isReady]) // eslint-disable-line react-hooks/exhaustive-deps
-  // ^ Intentionally omitting stable callbacks (playNarration, stopNarration, duck, restore)
+  }, [currentStep, isPlaying, isReady]) // eslint-disable-line react-hooks/exhaustive-deps
+  // ^ isMuted intentionally excluded — toggling mute must NOT restart narration
 
   // ── 6. Sync narration volume mid-playback when mute toggled ────
+  // This is the ONLY thing that should happen on mute toggle:
+  // silently set volume to 0 or 1. The narration keeps playing underneath.
   useEffect(() => {
     if (narrationRef.current) {
       narrationRef.current.volume = isMuted ? 0 : 1
