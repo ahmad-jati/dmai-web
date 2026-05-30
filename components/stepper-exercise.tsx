@@ -266,6 +266,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
     setNarrationKey(0) // reset so loop-bump starts fresh on each new step
   }, [currentStep])
 
+  // ── Helpers ────────────────────────────────────────────────────
   const currentSeconds = Math.min(elapsed, step.duration_seconds)
   const displayMins = String(Math.floor(currentSeconds / 60)).padStart(2, '0')
   const displaySecs = String(currentSeconds % 60).padStart(2, '0')
@@ -312,8 +313,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
     )
   }
 
+  // ── Main exercise UI ───────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-8 items-center max-w-3xl">
+    <div className="flex flex-col gap-8 items-center w-full">
       <BackgroundMusicPlayer
         audioRef={bgmRef}
         tracks={tracks}
@@ -326,7 +328,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
       <div className="flex gap-4 w-full items-center">
         <div className="shrink-0">
-          <div className="rounded-4xl border border-foreground bg-background p-2 w-100 h-68">
+          <div className="rounded-4xl border border-foreground bg-background p-2 w-100 h-88">
             <Image
               key={step.image}
               src={step.image}
@@ -339,129 +341,133 @@ export function StepperExercise({ instructions, onDone }: Props) {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col gap-2">
-          <span className="text-xs text-muted-foreground font-semibold tracking-widest">
-            LANGKAH {currentStep + 1} / {totalSteps}
-          </span>
-          <p className="text-h2 font-semibold leading-tight">{step.title}</p>
-          <p className="text-sm text-muted-foreground">{step.description}</p>
-        </div>
-      </div>
+        <div className="flex-1 flex flex-col gap-10">
+          <div className="w-full px-9 flex flex-col gap-2 text-center">
+            <span className="text-xs text-muted-foreground font-semibold tracking-widest">
+              LANGKAH {currentStep + 1} / {totalSteps}
+            </span>
+            <p className="text-h2 font-semibold leading-tight">{step.title}</p>
+            <p className="text-sm text-muted-foreground">{step.description}</p>
+          </div>
 
-      <div className="w-full flex flex-col items-center gap-5">
-        {/* Progress bar */}
-        <div className="w-full flex flex-col items-center gap-2">
-          <div className="w-full flex gap-2 items-center">
-            <p className="text-xs text-muted-foreground font-mono">
-              {displayMins}:{displaySecs}
-            </p>
-            <div className="flex-1 h-1.5 rounded-full bg-foreground/10 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-foreground transition-all duration-1000 ease-linear"
-                style={{ width: `${progress}%` }}
-              />
+          <div className="w-full flex flex-col justify-center items-center gap-4 pr-4">
+            <div className="w-full flex items-center gap-4">
+
+              {/* Progress bar */}
+              <div className="w-full flex gap-2 items-center">
+                <p className="text-xs text-muted-foreground font-mono">
+                  {displayMins}:{displaySecs}
+                </p>
+                <div className="flex-1 h-1.5 rounded-full bg-foreground/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-foreground transition-all duration-1000 ease-linear"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground font-mono">{totalTime}</p>
+              </div>
+
+              {/* Step dots
+              <div className="flex gap-1.5">
+                {instructions.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => jumpToStep(i)}
+                    className={`rounded-full transition-all hover:cursor-pointer hover:bg-foreground/20 ${
+                      i === currentStep
+                        ? 'w-6 h-2 bg-foreground'
+                        : i < currentStep
+                        ? 'w-2 h-2 bg-foreground/60'
+                        : 'w-2 h-2 bg-foreground/30'
+                    }`}
+                  />
+                ))}
+              </div> */}
             </div>
-            <p className="text-xs text-muted-foreground font-mono">{totalTime}</p>
+            <div className="w-14">
+              {/* Play / Pause */}
+              <Button
+                onClick={() => setIsPlaying((p) => !p)}
+                title={isPlaying ? 'Pause exercise' : 'Resume exercise'}
+                className="w-14 h-14 p-3 [&_svg]:size-6 flex items-center justify-center bg-transparent hover:bg-background rounded-full border border-foreground"
+              >
+                {isPlaying ? <PauseIcon weight="fill" /> : <PlayIcon weight="fill" />}
+              </Button>
+            </div>
+            {/* Controls row */}
+            <div className="w-full flex gap-2 justify-center items-center">
+              <Button
+                variant="ghost"
+                onClick={goPrev}
+                disabled={currentStep === 0}
+                size="sm"
+                className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:bg-background disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-50 font-medium"
+              >
+                <ArrowLeftIcon weight="fill" />
+                Sebelumnya
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsLooping((l) => !l)}
+                className={cn(
+                  '[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs border transition-all hover:bg-background',
+                  isLooping
+                    ? 'bg-transparent text-foreground font-semibold'
+                    : 'bg-transparent text-muted-foreground',
+                )}
+              >
+                {
+                  isLooping?
+                  <RepeatOnceIcon  weight='fill' />
+                  :
+                  <RepeatIcon weight='fill' />
+                }
+                Ulangi
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMuted((m) => !m)}
+                className={cn(
+                  '[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs border transition-all hover:bg-background',
+                  isMuted
+                    ? 'bg-transparent text-foreground font-semibold'
+                    : 'bg-transparent text-muted-foreground',
+                )}
+              >
+                {isMuted ? <SpeakerSlashIcon weight="fill" /> : <SpeakerHighIcon weight="fill" />}
+                {isMuted ? 'Hening' : 'Suara'}
+              </Button>
+
+              {isLastStep ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={goNextManual}
+                  className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-foreground font-semibold border border-foreground  hover:bg-background"
+                >
+                  <CheckIcon weight="bold" />
+                  Selesai
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={goNextManual}
+                  className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:bg-background font-medium"
+                >
+                  Selanjutnya
+                  <ArrowRightIcon weight="fill" />
+                </Button>
+              )}
+            </div>
           </div>
-
-          {/* Step dots */}
-          <div className="flex gap-1.5">
-            {instructions.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => jumpToStep(i)}
-                className={`rounded-full transition-all ${
-                  i === currentStep
-                    ? 'w-6 h-2 bg-foreground'
-                    : i < currentStep
-                    ? 'w-2 h-2 bg-foreground/60'
-                    : 'w-2 h-2 bg-foreground/20'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Play / Pause */}
-        <Button
-          onClick={() => setIsPlaying((p) => !p)}
-          title={isPlaying ? 'Pause exercise' : 'Resume exercise'}
-          className="w-14 h-14 p-3 [&_svg]:size-6 flex items-center justify-center bg-transparent hover:bg-background rounded-full border border-foreground"
-        >
-          {isPlaying ? <PauseIcon weight="fill" /> : <PlayIcon weight="fill" />}
-        </Button>
-
-        {/* Controls row */}
-        <div className="flex gap-2 items-center">
-          <Button
-            variant="ghost"
-            onClick={goPrev}
-            disabled={currentStep === 0}
-            size="sm"
-            className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:bg-background disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-50 font-medium"
-          >
-            <ArrowLeftIcon weight="fill" />
-            Sebelumnya
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsLooping((l) => !l)}
-            className={cn(
-              '[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs border transition-all hover:bg-background',
-              isLooping
-                ? 'bg-transparent text-foreground font-semibold'
-                : 'bg-transparent text-muted-foreground',
-            )}
-          >
-            {
-              isLooping?
-              <RepeatOnceIcon  weight='fill' />
-              :
-              <RepeatIcon weight='fill' />
-            }
-            Ulangi
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsMuted((m) => !m)}
-            className={cn(
-              '[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs border transition-all hover:bg-background',
-              isMuted
-                ? 'bg-transparent text-foreground font-semibold'
-                : 'bg-transparent text-muted-foreground',
-            )}
-          >
-            {isMuted ? <SpeakerSlashIcon weight="fill" /> : <SpeakerHighIcon weight="fill" />}
-            {isMuted ? 'Hening' : 'Suara'}
-          </Button>
-
-          {isLastStep ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goNextManual}
-              className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-foreground font-semibold border border-foreground  hover:bg-background"
-            >
-              <CheckIcon weight="bold" />
-              Selesai
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goNextManual}
-              className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:bg-background font-medium"
-            >
-              Selanjutnya
-              <ArrowRightIcon weight="fill" />
-            </Button>
-          )}
         </div>
       </div>
+
     </div>
   )
 }
