@@ -77,7 +77,7 @@ export function LoginForm({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="rounded-full px-3"
+                className="rounded-full px-3 text-sm"
                 autoComplete="off"
               />
             </div>
@@ -98,8 +98,9 @@ export function LoginForm({
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
+                  placeholder="●●●●●●●●"
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pr-10 rounded-full"
+                  className="pr-10 rounded-full text-sm"
                   autoComplete="off"
                 />
 

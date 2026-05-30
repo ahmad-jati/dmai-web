@@ -1,31 +1,32 @@
 'use client'
 
-import { useState, useEffect } from "react"
-import { use } from "react"
-import Link from "next/link"
+import { useState, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { Section } from "@/components/layout/section-wrapper"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
 import { StepperExercise } from "@/components/stepper-exercise"
 import { fetchSessionBySlug, type SessionData } from "@/lib/data-detail-session"
 import { notFound } from "next/navigation"
-import { RepeatIcon, HouseIcon } from "@phosphor-icons/react"
-import { Route } from "next"
-import { createClient } from "@/lib/supabase/client"
 
-type Props = {
-  params: Promise<{ slug: string }>
-}
+type Props = {}
 
-export default function ExercisePage({ params }: Props) {
-  const { slug } = use(params)
+function ExercisePageContent({}: Props) {
+  const searchParams = useSearchParams()
+  const slug = searchParams.get('slug')
 
   const [session, setSession] = useState<SessionData | null | undefined>(undefined)
   const [isDone, setIsDone] = useState(false)
   const [key, setKey] = useState(0)
 
+  // Load session data based on slug
   useEffect(() => {
-    fetchSessionBySlug(slug).then((data) => setSession(data ?? null))
+    if (!slug) {
+      setSession(null)
+      return
+    }
+
+    fetchSessionBySlug(slug).then((data) => {
+      setSession(data ?? null)
+    })
   }, [slug])
 
   const handleRepeat = () => {
@@ -34,19 +35,12 @@ export default function ExercisePage({ params }: Props) {
   }
 
   const handleDone = async () => {
-    const supabase = createClient()
-    const { data: userData } = await supabase.auth.getUser()
-    const user = userData?.user
-
-    if (user && session) {
-      await supabase.from("session_completions").insert({
-        user_id: user.id,
-        session_slug: slug,
-        session_name: session.session_name,
-      })
-    }
-
     setIsDone(true)
+  }
+
+  // No slug provided
+  if (!slug) {
+    return notFound()
   }
 
   // loading
@@ -73,27 +67,26 @@ export default function ExercisePage({ params }: Props) {
           </div>
 
           <div className="rounded-4xl border border-foreground bg-background p-2 w-100 h-68">
-            <Image
+            <img
               src={session.image_cover}
-              alt={''}
-              width={2000}
-              height={2000}
+              alt={session.session_name}
               className="w-full h-full object-cover rounded-3xl"
-              loading="eager"
             />
           </div>
 
           <div className="flex items-center gap-3">
-            <Button onClick={handleRepeat} className="w-full flex items-center gap-2 bg-green">
-              <RepeatIcon className="w-4 h-4" weight="fill" />
+            <button 
+              onClick={handleRepeat}
+              className="w-full flex items-center justify-center gap-2 bg-green text-foreground px-4 py-2 rounded-lg font-medium hover:opacity-90"
+            >
               Ulangi Pelatihan Ini
-            </Button>
-            <Button variant="outline" className="w-full flex items-center gap-2 bg-background" asChild>
-              <Link href={"/homepage" as Route}>
-                <HouseIcon className="w-4 h-4" weight="fill" />
-                Kembali ke Beranda
-              </Link>
-            </Button>
+            </button>
+            <a 
+              href="/homepage"
+              className="w-full flex items-center justify-center gap-2 bg-background border border-foreground text-foreground px-4 py-2 rounded-lg font-medium hover:bg-foreground/5"
+            >
+              Kembali ke Beranda
+            </a>
           </div>
         </Section>
       </div>
@@ -102,14 +95,28 @@ export default function ExercisePage({ params }: Props) {
 
   return (
     <div className="w-full">
+      <Section className="bg-celeste flex flex-col items-center justify-center gap-6">
         <StepperExercise
           key={key}
           instructions={session.instructions}
           sessionName={session.session_name}
           onDone={handleDone}
         />
-      {/* <Section className="bg-celeste flex flex-col items-center justify-center gap-6">
-      </Section> */}
+      </Section>
     </div>
+  )
+}
+
+export default function ExercisePage(props: Props) {
+  return (
+    <Suspense fallback={
+      <div className="w-full">
+        <Section className="bg-celeste flex items-center justify-center">
+          <p className="text-sm text-muted-foreground">Memuat sesi...</p>
+        </Section>
+      </div>
+    }>
+      <ExercisePageContent {...props} />
+    </Suspense>
   )
 }
