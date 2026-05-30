@@ -120,6 +120,7 @@ export function SignUpForm({
                     required
                     value={password}
                     autoComplete="off"
+                    placeholder="●●●●●●●●"
                     onChange={(e) => setPassword(e.target.value)}
                     className="pr-10 rounded-full"
                   />

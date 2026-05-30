@@ -286,3 +286,12 @@ h2 {
 p {
   line-height: 108%;
 }
+
+input[type="password"] {
+  font-family: Arial, sans-serif;
+  font-size: 14px; 
+}
+input[type="password"]::placeholder {
+  font-family: Arial, sans-serif;
+  font-size: 14px;  
+}
