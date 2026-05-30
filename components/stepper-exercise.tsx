@@ -252,12 +252,12 @@ export function StepperExercise({ instructions, onDone }: Props) {
               aria-label={isBGMStopped ? 'Musik dimatikan' : 'Musik latar'}
               className="relative w-8 h-8 rounded-full flex items-center gap-2 justify-center group
                         bg-background text-muted-foreground
-                        hover:bg-muted-foreground hover:cursor-pointer hover:text-white transition-all duration-150 ease-out"
+                        hover:bg-muted-foreground border border-foreground hover:cursor-pointer hover:text-white transition-all duration-150 ease-out"
             >
-              <MusicNotesIcon weight={isBGMStopped ? 'regular' : 'fill'} className="w-3.5 h-3.5" />
+              <MusicNotesIcon weight={'fill'} className="w-3.5 h-3.5" />
               {/* Status dot */}
               <span className={cn(
-                'absolute top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white/40 transition-all duration-300',
+                'absolute top-0.5 -right-0.5 w-2 h-2 rounded-full border border-background/40 transition-all duration-300',
                 isBGMStopped ? 'bg-transparent border-none' : 'bg-muted-foreground group-hover:bg-background'
               )} />
             </button>
