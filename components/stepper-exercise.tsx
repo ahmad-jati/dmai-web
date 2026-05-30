@@ -36,23 +36,15 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const [elapsed, setElapsed] = useState(0)
   const [tracks, setTracks] = useState<Track[]>([])
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0)
-
-  // ── Loading / ready states ─────────────────────────────────────
-  // isAudioReady: data fetched from Supabase
-  // readyToPlay:  1 s after isAudioReady — gives the DOM time to settle
-  // audioUnlocked: user has made a gesture, browser will allow audio
-  const [isAudioReady, setIsAudioReady] = useState(false)
-  const [readyToPlay, setReadyToPlay] = useState(false)
-  const [audioUnlocked, setAudioUnlocked] = useState(false)
+  // isReady = BGM data fetched + short settle so browser finishes setup
+  const [isReady, setIsReady] = useState(false)
 
   // ── Audio hooks ────────────────────────────────────────────────
+  // Both hooks create their own Audio() elements internally.
+  // DO NOT add <audio> elements to JSX — that was causing the double-ref bug.
   const bgm = useBGMPlayer()
   const narration = useNarrationPlayback()
 
-  // ── Destructure stable callbacks so they can safely go in effect
-  //    dep arrays without the wrapper object causing infinite loops.
-  //    Every method is useCallback-wrapped inside its hook with
-  //    stable dependencies, so these references never change.
   const {
     ref: bgmRef,
     isBGMStopped,
@@ -66,30 +58,20 @@ export function StepperExercise({ instructions, onDone }: Props) {
     restore,
   } = bgm
 
-  const {
-    ref: narrationRef,
-    playNarration,
-    stopNarration,
-  } = narration
+  const { ref: narrationRef, playNarration, stopNarration } = narration
 
-  // ── Internal refs ──────────────────────────────────────────────
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  // Tracks whether we have actually started BGM playback, so we never
-  // call play() twice (which would reset volume to 0 mid-playback).
-  const hasStartedBGMRef = useRef(false)
+  // Whether BGM playback has ever been successfully started this session
+  const bgmStartedRef = useRef(false)
+  // Track previous isPlaying to avoid calling bgmPause/bgmResume on mount
+  const prevIsPlayingRef = useRef(isPlaying)
 
   const step = instructions[currentStep]
   const totalSteps = instructions.length
   const progress = Math.min((elapsed / step.duration_seconds) * 100, 100)
   const isLastStep = currentStep === totalSteps - 1
 
-  // ── Setup BGM loop flag ────────────────────────────────────────
-  useEffect(() => {
-    if (bgmRef.current) bgmRef.current.loop = true
-  }, [bgmRef])
-
-  // ── Fetch BGM tracks and load first track ──────────────────────
-  // Runs exactly once. bgmLoad is stable (useCallback with [] deps).
+  // ── 1. Fetch BGM tracks, load first track ──────────────────────
   useEffect(() => {
     const init = async () => {
       try {
@@ -99,130 +81,124 @@ export function StepperExercise({ instructions, onDone }: Props) {
           .select('id, title, composer, audio_url, duration_seconds')
           .order('created_at')
 
-        if (error) {
-          console.error('[BGM] fetch error:', error)
-          setIsAudioReady(true)
-          return
-        }
-        if (data && data.length > 0) {
+        if (!error && data && data.length > 0) {
           setTracks(data as Track[])
           await bgmLoad(data[0].audio_url)
         }
       } catch (err) {
-        console.error('[BGM] init exception:', err)
+        console.error('[BGM] init error:', err)
       } finally {
-        setIsAudioReady(true)
+        // Brief settle so the browser finishes decoding before we try play()
+        setTimeout(() => setIsReady(true), 800)
       }
     }
     init()
   }, [bgmLoad])
 
-  // ── 1 s delay after data is ready ─────────────────────────────
-  // Gives the browser time to decode the first track before we try
-  // to play. Shows the full UI immediately; only audio is held back.
+  // ── 2. Prefetch narration URLs for upcoming steps ──────────────
+  // Uses <link rel="preload"> pattern via new Audio() so they're cached.
   useEffect(() => {
-    if (!isAudioReady) return
-    const t = setTimeout(() => setReadyToPlay(true), 1000)
-    return () => clearTimeout(t)
-  }, [isAudioReady])
-
-  // ── Listen for the first user gesture ─────────────────────────
-  // Browser autoplay policy requires a user gesture before audio
-  // can play. We listen on document so ANY tap/click on the page
-  // counts, including the play/pause button, step dots, etc.
-  useEffect(() => {
-    if (audioUnlocked) return // already done
-    const unlock = () => setAudioUnlocked(true)
-    document.addEventListener('click', unlock, { once: true })
-    document.addEventListener('touchstart', unlock, { once: true })
-    return () => {
-      document.removeEventListener('click', unlock)
-      document.removeEventListener('touchstart', unlock)
+    const ahead = 3
+    for (let i = 0; i <= ahead && currentStep + i < totalSteps; i++) {
+      const url = instructions[currentStep + i]?.audio
+      if (url) {
+        const a = new Audio()
+        a.crossOrigin = 'anonymous'
+        a.src = url
+        a.preload = 'auto'
+        // We don't need to keep a reference — just trigger the cache
+      }
     }
-  }, [audioUnlocked])
+  }, [currentStep, totalSteps, instructions])
 
-  // ── Attempt BGM autoplay once both gates open ──────────────────
-  // We try as soon as readyToPlay AND audioUnlocked are both true.
-  // bgmPlay re-throws on autoplay-block, so we swallow that quietly.
+  // ── 3. BGM autoplay with gesture-unlock fallback ───────────────
+  // Strategy:
+  //   a) Try autoplay immediately once data is ready (works if user navigated
+  //      from within the same tab — the prior click counts as a gesture).
+  //   b) If autoplay is blocked, register a one-shot listener so the very
+  //      next tap/click starts it. This satisfies browser autoplay policy.
   useEffect(() => {
-    if (!readyToPlay || !audioUnlocked || hasStartedBGMRef.current) return
-    hasStartedBGMRef.current = true
-    bgmPlay().catch((err) => console.warn('[BGM] autoplay blocked:', err))
-  }, [readyToPlay, audioUnlocked, bgmPlay])
+    if (!isReady || bgmStartedRef.current) return
 
-  // ── Sync BGM with exercise play/pause ──────────────────────────
-  // Only runs after BGM has actually started (hasStartedBGMRef).
+    const tryPlay = async () => {
+      if (bgmStartedRef.current) return
+      try {
+        await bgmPlay()
+        bgmStartedRef.current = true
+      } catch {
+        // Autoplay blocked — will start on next user gesture below
+      }
+    }
+
+    tryPlay()
+
+    // Fallback: user gesture listener
+    const onGesture = async () => {
+      if (bgmStartedRef.current) return
+      try {
+        await bgmPlay()
+        bgmStartedRef.current = true
+      } catch (err) {
+        console.warn('[BGM] gesture-triggered play failed:', err)
+      }
+    }
+
+    document.addEventListener('click', onGesture, { once: true })
+    document.addEventListener('touchstart', onGesture, { once: true })
+
+    return () => {
+      document.removeEventListener('click', onGesture)
+      document.removeEventListener('touchstart', onGesture)
+    }
+  }, [isReady, bgmPlay])
+
+  // ── 4. Sync BGM with exercise play/pause state ─────────────────
+  // Only fires when isPlaying actually changes (tracked via ref).
   useEffect(() => {
-    if (!readyToPlay || !audioUnlocked || !hasStartedBGMRef.current) return
+    if (!bgmStartedRef.current) return
+    if (isPlaying === prevIsPlayingRef.current) return
+    prevIsPlayingRef.current = isPlaying
 
     if (!isPlaying) {
       bgmPause()
       stopNarration()
     } else if (!isBGMStopped) {
-      // bgmResume() is guarded internally — safe to call even if playing
       bgmResume()
     }
-  }, [isPlaying, isBGMStopped, readyToPlay, audioUnlocked, bgmPause, bgmResume, stopNarration])
+  }, [isPlaying, isBGMStopped, bgmPause, bgmResume, stopNarration])
 
-  // ── Narration per step ─────────────────────────────────────────
-  // BUG FIX (was causing the looping glitch):
-  //   The original effect listed `narration` and `bgm` (objects) in its
-  //   deps. These are new object references every render, so the effect
-  //   re-ran every render → stopNarration() then playNarration() every
-  //   render → audio restarted every ~16 ms → the 1-2 s loop you heard.
-  //
-  //   Fix: use the destructured, stable callbacks (useCallback-wrapped
-  //   with primitive/stable deps) instead of the wrapper objects.
+  // ── 5. Play narration for current step ─────────────────────────
+  // Deps: currentStep, isMuted, isPlaying, isReady
+  // playNarration / stopNarration / duck / restore are [] deps → stable →
+  // safe to omit from the dep array (they never change).
   useEffect(() => {
-    if (!readyToPlay || !audioUnlocked || !isPlaying || !step.audio) {
-      return
+    if (!isReady || !isPlaying || !step.audio) return
+    if (!bgmStartedRef.current) {
+      // BGM not started yet — narration will begin once user gesture triggers BGM.
+      // We'll re-run this effect naturally when bgmStartedRef triggers a re-render
+      // indirectly (via BGM state change). For now, play narration anyway so it
+      // still works even without BGM (muted BGM scenario).
     }
+
     playNarration(step.audio, isMuted, duck, restore)
     return () => stopNarration()
-  }, [
-    currentStep,
-    step.audio,
-    isMuted,
-    readyToPlay,
-    audioUnlocked,
-    isPlaying,
-    playNarration,
-    stopNarration,
-    duck,
-    restore,
-  ])
+  }, [currentStep, isMuted, isPlaying, isReady]) // eslint-disable-line react-hooks/exhaustive-deps
+  // ^ Intentionally omitting stable callbacks (playNarration, stopNarration, duck, restore)
 
-  // ── Sync narration volume with mute toggle ─────────────────────
+  // ── 6. Sync narration volume mid-playback when mute toggled ────
   useEffect(() => {
     if (narrationRef.current) {
       narrationRef.current.volume = isMuted ? 0 : 1
     }
   }, [isMuted, narrationRef])
 
-  // ── Prefetch next steps' narration in the background ──────────
-  useEffect(() => {
-    if (!isAudioReady) return
-    const ahead = 3
-    for (let i = 1; i <= ahead && currentStep + i < totalSteps; i++) {
-      const next = instructions[currentStep + i]
-      if (next?.audio) {
-        const a = new Audio()
-        a.crossOrigin = 'anonymous'
-        a.src = next.audio
-        a.preload = 'metadata'
-        a.load()
-      }
-    }
-  }, [currentStep, totalSteps, instructions, isAudioReady])
-
   // ── BGM track controls ─────────────────────────────────────────
   const handleSelectTrack = (index: number) => {
     setCurrentTrackIndex(index)
     bgmSwitchTrack(tracks[index].audio_url)
   }
-  const handleStopBgm = () => bgmStop()
 
-  // ── Timer / stepper logic ──────────────────────────────────────
+  // ── Timer logic ────────────────────────────────────────────────
   const handleTimerEnd = useCallback(() => {
     if (isLooping) {
       setElapsed(0)
@@ -262,14 +238,16 @@ export function StepperExercise({ instructions, onDone }: Props) {
     setElapsed(0)
   }
 
-  // Timer fires every second while playing AND audio is ready
+  // Timer: tick every second while playing and ready
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current)
-    if (isPlaying && readyToPlay && audioUnlocked) {
+    if (isPlaying && isReady) {
       intervalRef.current = setInterval(() => setElapsed((e) => e + 1), 1000)
     }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [isPlaying, readyToPlay, audioUnlocked])
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [isPlaying, isReady])
 
   useEffect(() => {
     if (elapsed >= step.duration_seconds) handleTimerEnd()
@@ -282,31 +260,18 @@ export function StepperExercise({ instructions, onDone }: Props) {
   }, [currentStep])
 
   // ── Helpers ────────────────────────────────────────────────────
-  const formatTime = () => {
-    const m = Math.floor(step.duration_seconds / 60)
-    const s = step.duration_seconds % 60
-    return `${m}:${s.toString().padStart(2, '0')}`
-  }
-
   const currentSeconds = Math.min(elapsed, step.duration_seconds)
   const displayMins = String(Math.floor(currentSeconds / 60)).padStart(2, '0')
   const displaySecs = String(currentSeconds % 60).padStart(2, '0')
+  const totalMins = Math.floor(step.duration_seconds / 60)
+  const totalSecs = step.duration_seconds % 60
+  const totalTime = `${totalMins}:${totalSecs.toString().padStart(2, '0')}`
 
-  // ── Loading state (data not yet fetched) ───────────────────────
-  if (!isAudioReady) {
-    return (
-      <div className="flex flex-col gap-4 items-center justify-center min-h-64 max-w-3xl">
-        <div className="w-8 h-8 border-4 border-foreground border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-muted-foreground">Mempersiapkan sesi...</p>
-      </div>
-    )
-  }
-
-  // ── Preparing state (1 s delay, data ready, UI shown) ─────────
-  if (!readyToPlay) {
+  // ── Loading / prepare state ────────────────────────────────────
+  if (!isReady) {
     return (
       <div className="flex flex-col gap-8 items-center max-w-3xl w-full">
-        {/* Show the first step UI immediately, audio starts in ~1 s */}
+        {/* Show the first step UI immediately while audio loads */}
         <div className="bg-background flex items-center gap-2 justify-between w-full px-4 py-2 rounded-xl border border-foreground opacity-50">
           <p className="text-sm text-muted-foreground flex-1 text-center">Memuat musik...</p>
         </div>
@@ -335,7 +300,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
         <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
           <div className="w-5 h-5 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
-          <p>Ketuk di mana saja untuk memulai</p>
+          <p>Mempersiapkan sesi...</p>
         </div>
       </div>
     )
@@ -344,19 +309,23 @@ export function StepperExercise({ instructions, onDone }: Props) {
   // ── Main exercise UI ───────────────────────────────────────────
   return (
     <div className="flex flex-col gap-8 items-center max-w-3xl">
+      {/*
+        NO <audio> elements here.
+        Both useBGMPlayer and useNarrationPlayback create their own
+        Audio() elements internally. Putting <audio ref={...}> in JSX
+        was the source of the "detached ref" bug where hooks got a ref
+        that pointed to null until the DOM element mounted.
+      */}
+
       <BackgroundMusicPlayer
         audioRef={bgmRef}
         tracks={tracks}
         currentIndex={currentTrackIndex}
         isStopped={isBGMStopped}
-        isLoaded={isAudioReady}
+        isLoaded={tracks.length > 0}
         onSelectTrack={handleSelectTrack}
-        onStop={handleStopBgm}
+        onStop={bgmStop}
       />
-
-      {/* Hidden audio elements — refs managed by hooks */}
-      <audio ref={bgmRef} crossOrigin="anonymous" />
-      <audio ref={narrationRef} crossOrigin="anonymous" />
 
       <div className="flex gap-4 w-full items-center">
         <div className="shrink-0">
@@ -382,13 +351,6 @@ export function StepperExercise({ instructions, onDone }: Props) {
         </div>
       </div>
 
-      {/* "Tap to start" hint shown until first gesture unlocks audio */}
-      {!audioUnlocked && (
-        <p className="text-xs text-muted-foreground animate-pulse">
-          Ketuk tombol di bawah untuk memulai audio
-        </p>
-      )}
-
       <div className="w-full flex flex-col items-center gap-5">
         {/* Progress bar */}
         <div className="w-full flex flex-col items-center gap-2">
@@ -402,7 +364,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <p className="text-xs text-muted-foreground font-mono">{formatTime()}</p>
+            <p className="text-xs text-muted-foreground font-mono">{totalTime}</p>
           </div>
 
           {/* Step dots */}

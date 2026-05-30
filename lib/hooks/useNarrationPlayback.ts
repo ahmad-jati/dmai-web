@@ -1,101 +1,110 @@
 import { useRef, useCallback, useEffect } from 'react'
-import { useAudioElement } from './useAudioElement'
 
 interface NarrationControls {
   ref: React.MutableRefObject<HTMLAudioElement | null>
-  isPlaying: boolean
-  playNarration: (audioSrc: string, isMuted: boolean, onDuckBGM: () => void, onRestoreBGM: () => void) => Promise<void>
+  playNarration: (
+    audioSrc: string,
+    isMuted: boolean,
+    onDuckBGM: () => void,
+    onRestoreBGM: () => void
+  ) => void
   stopNarration: () => void
 }
 
 /**
- * Custom hook for managing narration playback
- * Handles audio unlocking, ducking BGM, and cleanup
+ * Manages narration audio with a single internal Audio element.
+ *
+ * ROOT CAUSE FIX for the narration loop bug:
+ *   The original hook returned an `audio` object in its return value and
+ *   listed it in useCallback deps. Since the return object is new every
+ *   render, `playNarration` was recreated every render. The effect in
+ *   StepperExercise that called `playNarration` would then re-run every
+ *   render → stopNarration() → playNarration() every ~16ms → the 1-2 s
+ *   audio restart loop.
+ *
+ *   Fix:
+ *   1. Creates ONE Audio() element on mount, kept in audioRef.
+ *   2. `playNarration` and `stopNarration` have `[]` dep arrays — they
+ *      are ALWAYS the same function reference. The narration effect in
+ *      StepperExercise can safely list them in deps without re-running.
+ *   3. No DOM <audio> element needed in JSX.
  */
-export function useNarrationPlayback(
-  onNarrationEnd?: () => void
-): NarrationControls {
-  const audio = useAudioElement()
-  const isPlayingRef = useRef(false)
-  const listenerCleanupRef = useRef<() => void>(() => {})
-  const lastSrcRef = useRef<string | null>(null)
+export function useNarrationPlayback(): NarrationControls {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  // Holds the cleanup for the currently active narration listener
+  const cleanupRef = useRef<() => void>(() => {})
+
+  // Create the Audio element once on mount
+  useEffect(() => {
+    const audio = new Audio()
+    audio.crossOrigin = 'anonymous'
+    audioRef.current = audio
+    return () => {
+      cleanupRef.current()
+      audio.pause()
+      audio.src = ''
+    }
+  }, [])
+
+  const stopNarration = useCallback(() => {
+    cleanupRef.current()
+    cleanupRef.current = () => {}
+  }, []) // stable — reads from refs only
 
   const playNarration = useCallback(
-    async (
+    (
       audioSrc: string,
       isMuted: boolean,
       onDuckBGM: () => void,
       onRestoreBGM: () => void
     ) => {
-      if (!audio.ref.current || !audioSrc) return
+      const audio = audioRef.current
+      if (!audio || !audioSrc) return
 
-      const narration = audio.ref.current
+      // Tear down any previous playback and listener
+      cleanupRef.current()
 
-      // Always clean up previous listeners when starting a new narration
-      listenerCleanupRef.current()
+      audio.pause()
+      audio.currentTime = 0
 
-      // Stop current playback and reset position
-      narration.pause()
-      narration.currentTime = 0
-
-      // Only set new source if it changed
-      if (narration.src !== audioSrc) {
-        narration.src = audioSrc
-        narration.load()
+      // Only reload if the URL changed (avoids unnecessary network hit)
+      if (!audio.src.endsWith(audioSrc) && audio.src !== audioSrc) {
+        audio.src = audioSrc
+        audio.load()
       }
 
-      // Set volume before playing
-      narration.volume = isMuted ? 0 : 1
-      lastSrcRef.current = audioSrc
+      audio.volume = isMuted ? 0 : 1
 
-      try {
-        await narration.play()
-        isPlayingRef.current = true
-        onDuckBGM()
+      const onEnded = () => {
+        onRestoreBGM()
+        cleanupRef.current = () => {}
+      }
 
-        const onEnded = () => {
-          isPlayingRef.current = false
-          onRestoreBGM()
-          onNarrationEnd?.()
-        }
+      audio.addEventListener('ended', onEnded, { once: true })
 
-        narration.addEventListener('ended', onEnded, { once: true })
-
-        listenerCleanupRef.current = () => {
-          narration.removeEventListener('ended', onEnded)
-          narration.pause()
-          narration.currentTime = 0
-          isPlayingRef.current = false
-        }
-      } catch (error) {
-        console.warn('[v0] Narration play failed:', error)
-        isPlayingRef.current = false
+      // Cleanup: remove listener, stop audio, restore BGM
+      cleanupRef.current = () => {
+        audio.removeEventListener('ended', onEnded)
+        audio.pause()
+        audio.currentTime = 0
         onRestoreBGM()
       }
+
+      audio.play()
+        .then(() => {
+          onDuckBGM()
+        })
+        .catch((err) => {
+          console.warn('[Narration] play failed:', err)
+          audio.removeEventListener('ended', onEnded)
+          cleanupRef.current = () => {}
+        })
     },
-    [audio, onNarrationEnd]
+    [] // stable — reads from refs only
   )
 
-  const stopNarration = useCallback(() => {
-    listenerCleanupRef.current()
-    if (audio.ref.current) {
-      audio.ref.current.pause()
-      audio.ref.current.currentTime = 0
-    }
-    isPlayingRef.current = false
-    lastSrcRef.current = null
-  }, [audio])
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      listenerCleanupRef.current()
-    }
-  }, [])
-
   return {
-    ref: audio.ref,
-    isPlaying: isPlayingRef.current,
+    ref: audioRef,
     playNarration,
     stopNarration,
   }
