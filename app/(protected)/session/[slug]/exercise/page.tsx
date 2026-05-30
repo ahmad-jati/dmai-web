@@ -102,14 +102,14 @@ export default function ExercisePage({ params }: Props) {
 
   return (
     <div className="w-full">
-      <Section className="bg-celeste flex flex-col items-center justify-center gap-6">
         <StepperExercise
           key={key}
           instructions={session.instructions}
           sessionName={session.session_name}
           onDone={handleDone}
         />
-      </Section>
+      {/* <Section className="bg-celeste flex flex-col items-center justify-center gap-6">
+      </Section> */}
     </div>
   )
 }

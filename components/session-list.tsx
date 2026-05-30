@@ -21,9 +21,9 @@ export function SessionList({ excludeSlug }: { excludeSlug?: string }) {
 
   return (
     <div id="session-list" className="flex flex-col gap-4 items-start">
-      <h2>All Session</h2>
+      <h2>Other Session</h2>
 
-      <div className="grid grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-3 gap-3.5">
         {filtered.map((session) => (
           <Link
             key={session.slug}
@@ -45,7 +45,7 @@ export function SessionList({ excludeSlug }: { excludeSlug?: string }) {
           </Link>
         ))}
 
-        <div className="relative flex flex-row-reverse items-center justify-end bg-background rounded-lg border border-foreground overflow-hidden h-40">
+        {/* <div className="relative flex flex-row-reverse items-center justify-end bg-background rounded-lg border border-foreground overflow-hidden h-40">
           <p className="font-bold text-lg z-1 relative -ml-2">
             You&apos;re <span className="block">not</span> alone.
           </p>
@@ -58,7 +58,7 @@ export function SessionList({ excludeSlug }: { excludeSlug?: string }) {
               className="w-49 h-full object-contain"
             />
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   )
