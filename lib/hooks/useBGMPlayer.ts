@@ -114,22 +114,30 @@ export function useBGMPlayer(): BGMControls {
 
   const switchTrack = useCallback(async (src: string) => {
     if (!audioRef.current) return
-    const wasPlaying = !audioRef.current.paused
-    if (wasPlaying) {
+
+    // FIX: treat "user explicitly stopped" (Tanpa Musik) as intent to play again
+    // when they pick a new track. Previously only checked !paused, which was
+    // false after stop(), so the new track loaded but never played.
+    const shouldPlay = !audioRef.current.paused || isBGMStoppedRef.current
+
+    if (!audioRef.current.paused) {
+      // Currently playing — fade out first before swapping src
       smoothFade(0, 500)
       await new Promise<void>((r) => setTimeout(r, 500))
     }
+
     audioRef.current.src = src
     audioRef.current.currentTime = 0
     audioRef.current.load()
     setCurrentTrack(src)
-    if (wasPlaying) {
+
+    if (shouldPlay) {
       try {
-        // FIX: explicitly reset to 0 before play — the fade-out above is
-        // rAF-based and may not have landed exactly at 0 after 500ms,
-        // leaving a stale non-zero volume that causes a full-volume flash.
+        // Explicitly reset to 0 before play so there's no full-volume flash
         audioRef.current.volume = 0
         await audioRef.current.play()
+        isBGMStoppedRef.current = false
+        setIsBGMStopped(false)
         smoothFade(BGM_VOLUME, 500)
       } catch (err) {
         console.warn('[BGM] track switch play failed:', err)
