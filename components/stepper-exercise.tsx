@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import {
   RepeatIcon, SpeakerSlashIcon, SpeakerHighIcon,
   PauseIcon, PlayIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon,
+  RepeatOnceIcon,
 } from "@phosphor-icons/react"
 import type { SessionInstruction } from "@/lib/data-detail-session"
 import { BackgroundMusicPlayer } from "./background-music-player"
@@ -38,6 +39,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0)
   // isReady = BGM data fetched + short settle so browser finishes setup
   const [isReady, setIsReady] = useState(false)
+  // Incremented every time narration should restart — covers both step changes
+  // and loop restarts (where currentStep stays the same so effect won't re-run).
+  const [narrationKey, setNarrationKey] = useState(0)
 
   // ── Audio hooks ────────────────────────────────────────────────
   // Both hooks create their own Audio() elements internally.
@@ -58,7 +62,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
     restore,
   } = bgm
 
-  const { ref: narrationRef, playNarration, stopNarration } = narration
+  const { ref: narrationRef, playNarration, stopNarration, fadeMute } = narration
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   // Whether BGM playback has ever been successfully started this session
@@ -168,28 +172,28 @@ export function StepperExercise({ instructions, onDone }: Props) {
   }, [isPlaying, isBGMStopped, bgmPause, bgmResume, stopNarration])
 
   // ── 5. Play narration for current step ─────────────────────────
-  // Deps: currentStep, isPlaying, isReady — NOT isMuted.
-  // Mute only changes volume, never restarts the audio (see effect 6).
-  // playNarration / stopNarration / duck / restore are [] deps → stable →
-  // safe to omit from the dep array (they never change).
+  // Deps: currentStep, narrationKey, isPlaying, isReady — NOT isMuted.
+  // narrationKey bumps on loop-end so narration restarts even when
+  // currentStep stays the same. isMuted excluded — see effect 6.
   useEffect(() => {
     if (!isReady || !isPlaying || !step.audio) return
 
-    // Pass isMuted for the *initial* volume when narration starts.
-    // After that, effect 6 handles live volume changes without restarting.
     playNarration(step.audio, isMuted, duck, restore)
     return () => stopNarration()
-  }, [currentStep, isPlaying, isReady]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentStep, narrationKey, isPlaying, isReady]) // eslint-disable-line react-hooks/exhaustive-deps
   // ^ isMuted intentionally excluded — toggling mute must NOT restart narration
 
-  // ── 6. Sync narration volume mid-playback when mute toggled ────
-  // This is the ONLY thing that should happen on mute toggle:
-  // silently set volume to 0 or 1. The narration keeps playing underneath.
+  // ── 6. Fade narration volume when mute toggled ────────────────
+  // fadeMute() smoothly fades to 0 or 1 over 300ms — never restarts audio.
+  // Skipped on mount (isMuted starts false, no need to fade on first render).
+  const isMountedRef = useRef(false)
   useEffect(() => {
-    if (narrationRef.current) {
-      narrationRef.current.volume = isMuted ? 0 : 1
+    if (!isMountedRef.current) {
+      isMountedRef.current = true
+      return
     }
-  }, [isMuted, narrationRef])
+    fadeMute(isMuted)
+  }, [isMuted]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── BGM track controls ─────────────────────────────────────────
   const handleSelectTrack = (index: number) => {
@@ -201,6 +205,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const handleTimerEnd = useCallback(() => {
     if (isLooping) {
       setElapsed(0)
+      // currentStep doesn't change on loop, so narration effect won't re-run
+      // naturally. Bumping narrationKey forces it to restart.
+      setNarrationKey((k) => k + 1)
     } else if (currentStep < totalSteps - 1) {
       setCurrentStep((s) => s + 1)
       setElapsed(0)
@@ -256,9 +263,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
   useEffect(() => {
     setElapsed(0)
     setIsPlaying(true)
+    setNarrationKey(0) // reset so loop-bump starts fresh on each new step
   }, [currentStep])
 
-  // ── Helpers ────────────────────────────────────────────────────
   const currentSeconds = Math.min(elapsed, step.duration_seconds)
   const displayMins = String(Math.floor(currentSeconds / 60)).padStart(2, '0')
   const displaySecs = String(currentSeconds % 60).padStart(2, '0')
@@ -305,17 +312,8 @@ export function StepperExercise({ instructions, onDone }: Props) {
     )
   }
 
-  // ── Main exercise UI ───────────────────────────────────────────
   return (
     <div className="flex flex-col gap-8 items-center max-w-3xl">
-      {/*
-        NO <audio> elements here.
-        Both useBGMPlayer and useNarrationPlayback create their own
-        Audio() elements internally. Putting <audio ref={...}> in JSX
-        was the source of the "detached ref" bug where hooks got a ref
-        that pointed to null until the DOM element mounted.
-      */}
-
       <BackgroundMusicPlayer
         audioRef={bgmRef}
         tracks={tracks}
@@ -413,11 +411,16 @@ export function StepperExercise({ instructions, onDone }: Props) {
             className={cn(
               '[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs border transition-all hover:bg-background',
               isLooping
-                ? 'bg-background text-muted-foreground font-semibold'
+                ? 'bg-transparent text-foreground font-semibold'
                 : 'bg-transparent text-muted-foreground',
             )}
           >
-            <RepeatIcon weight={isLooping ? 'fill' : 'regular'} />
+            {
+              isLooping?
+              <RepeatOnceIcon  weight='fill' />
+              :
+              <RepeatIcon weight='fill' />
+            }
             Ulangi
           </Button>
 
@@ -426,9 +429,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
             size="sm"
             onClick={() => setIsMuted((m) => !m)}
             className={cn(
-              '[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs rounded-full border transition-all hover:bg-background',
+              '[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs border transition-all hover:bg-background',
               isMuted
-                ? 'bg-background text-muted-foreground font-semibold'
+                ? 'bg-transparent text-foreground font-semibold'
                 : 'bg-transparent text-muted-foreground',
             )}
           >
@@ -441,7 +444,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
               variant="ghost"
               size="sm"
               onClick={goNextManual}
-              className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-foreground font-semibold border border-foreground rounded-full"
+              className="[&_svg]:size-4 flex items-center gap-1 px-3 py-2 text-xs text-foreground font-semibold border border-foreground  hover:bg-background"
             >
               <CheckIcon weight="bold" />
               Selesai

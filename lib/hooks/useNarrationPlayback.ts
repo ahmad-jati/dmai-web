@@ -9,32 +9,59 @@ interface NarrationControls {
     onRestoreBGM: () => void
   ) => void
   stopNarration: () => void
+  // Fades narration volume to 0 or 1 over MUTE_FADE_DURATION.
+  // Does NOT stop/restart playback — just adjusts volume.
+  fadeMute: (mute: boolean) => void
+}
+
+const FADE_DURATION = 500      // fade-in / fade-out on play/stop
+const MUTE_FADE_DURATION = 300 // faster fade for mute/unmute toggle
+
+/**
+ * Fades audio.volume from its current value to `target` over `duration` ms.
+ * Returns a cancel fn to abort mid-fade (e.g. if mute is toggled again quickly).
+ */
+function fadeVolume(
+  audio: HTMLAudioElement,
+  target: number,
+  duration: number,
+  onComplete?: () => void
+): () => void {
+  const start = audio.volume
+  const startTime = performance.now()
+  let rafId: number
+
+  const tick = (now: number) => {
+    const progress = Math.min((now - startTime) / duration, 1)
+    audio.volume = Math.max(0, Math.min(1, start + (target - start) * progress))
+    if (progress < 1) {
+      rafId = requestAnimationFrame(tick)
+    } else {
+      onComplete?.()
+    }
+  }
+
+  rafId = requestAnimationFrame(tick)
+  return () => cancelAnimationFrame(rafId)
 }
 
 /**
- * Manages narration audio with a single internal Audio element.
- *
- * ROOT CAUSE FIX for the narration loop bug:
- *   The original hook returned an `audio` object in its return value and
- *   listed it in useCallback deps. Since the return object is new every
- *   render, `playNarration` was recreated every render. The effect in
- *   StepperExercise that called `playNarration` would then re-run every
- *   render → stopNarration() → playNarration() every ~16ms → the 1-2 s
- *   audio restart loop.
- *
- *   Fix:
- *   1. Creates ONE Audio() element on mount, kept in audioRef.
- *   2. `playNarration` and `stopNarration` have `[]` dep arrays — they
- *      are ALWAYS the same function reference. The narration effect in
- *      StepperExercise can safely list them in deps without re-running.
- *   3. No DOM <audio> element needed in JSX.
+ * Manages narration audio with:
+ *   - Fade-in on play, fade-out on stop
+ *   - fadeMute() for smooth mute/unmute without restarting playback
+ *   - Always stable callback refs ([] deps) — no render-loop risk
  */
 export function useNarrationPlayback(): NarrationControls {
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  // Holds the cleanup for the currently active narration listener
   const cleanupRef = useRef<() => void>(() => {})
+  // Active fade cancel for play/stop fades
+  const cancelFadeRef = useRef<() => void>(() => {})
+  // Active fade cancel specifically for mute/unmute (separate so they don't
+  // collide with play/stop fades)
+  const cancelMuteFadeRef = useRef<() => void>(() => {})
+  // Track current muted state in a ref so fadeMute stays stable
+  const isMutedRef = useRef(false)
 
-  // Create the Audio element once on mount
   useEffect(() => {
     const audio = new Audio()
     audio.crossOrigin = 'anonymous'
@@ -47,9 +74,26 @@ export function useNarrationPlayback(): NarrationControls {
   }, [])
 
   const stopNarration = useCallback(() => {
-    cleanupRef.current()
-    cleanupRef.current = () => {}
-  }, []) // stable — reads from refs only
+    const audio = audioRef.current
+    if (!audio) {
+      cleanupRef.current()
+      cleanupRef.current = () => {}
+      return
+    }
+
+    // Cancel both play-fade and mute-fade
+    cancelFadeRef.current()
+    cancelMuteFadeRef.current()
+
+    // Fade out then stop
+    const cancel = fadeVolume(audio, 0, FADE_DURATION, () => {
+      audio.pause()
+      audio.currentTime = 0
+      cleanupRef.current()
+      cleanupRef.current = () => {}
+    })
+    cancelFadeRef.current = cancel
+  }, [])
 
   const playNarration = useCallback(
     (
@@ -61,51 +105,84 @@ export function useNarrationPlayback(): NarrationControls {
       const audio = audioRef.current
       if (!audio || !audioSrc) return
 
-      // Tear down any previous playback and listener
+      // Cancel all in-progress fades and previous playback
+      cancelFadeRef.current()
+      cancelMuteFadeRef.current()
+      cancelFadeRef.current = () => {}
+      cancelMuteFadeRef.current = () => {}
       cleanupRef.current()
 
       audio.pause()
       audio.currentTime = 0
 
-      // Only reload if the URL changed (avoids unnecessary network hit)
+      // Sync the muted ref with current state
+      isMutedRef.current = isMuted
+
       if (!audio.src.endsWith(audioSrc) && audio.src !== audioSrc) {
         audio.src = audioSrc
         audio.load()
       }
 
-      audio.volume = isMuted ? 0 : 1
+      // Always start silent — fade in after play() resolves
+      audio.volume = 0
 
       const onEnded = () => {
+        cancelFadeRef.current()
+        cancelMuteFadeRef.current()
         onRestoreBGM()
         cleanupRef.current = () => {}
       }
 
       audio.addEventListener('ended', onEnded, { once: true })
 
-      // Cleanup: remove listener, stop audio, restore BGM
+      // Cleanup always restores BGM — step change, stop, or error
       cleanupRef.current = () => {
         audio.removeEventListener('ended', onEnded)
-        audio.pause()
-        audio.currentTime = 0
         onRestoreBGM()
       }
 
       audio.play()
         .then(() => {
           onDuckBGM()
+          // Only fade in if not muted — if muted, stay at 0
+          if (!isMuted) {
+            const cancel = fadeVolume(audio, 1, FADE_DURATION)
+            cancelFadeRef.current = cancel
+          }
         })
         .catch((err) => {
           console.warn('[Narration] play failed:', err)
           audio.removeEventListener('ended', onEnded)
+          onRestoreBGM()
           cleanupRef.current = () => {}
         })
     },
-    [] // stable — reads from refs only
+    [] // stable
   )
+
+  /**
+   * Smoothly fade narration volume for mute/unmute toggle.
+   * Cancels any previous mute-fade so rapid toggling doesn't stack.
+   * Never stops/restarts the audio — just moves the volume knob.
+   */
+  const fadeMute = useCallback((mute: boolean) => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    isMutedRef.current = mute
+
+    // Cancel any prior mute fade
+    cancelMuteFadeRef.current()
+
+    const target = mute ? 0 : 1
+    const cancel = fadeVolume(audio, target, MUTE_FADE_DURATION)
+    cancelMuteFadeRef.current = cancel
+  }, []) // stable
 
   return {
     ref: audioRef,
     playNarration,
     stopNarration,
+    fadeMute,
   }
 }
