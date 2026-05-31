@@ -30,7 +30,13 @@ export function LoginForm({
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      // if (error) { /* handle error */ return }
+      //
+      // // Check role and redirect accordingly
+      
+
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -43,9 +49,20 @@ export function LoginForm({
 
         setError(error.message);
         return;
-      }
 
-      router.push("/homepage");
+      } 
+      
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .single()
+      
+      if (roleData?.role === "admin") {
+        router.push("/admin")
+      } else {
+        router.push("/homepage")
+      }
     } catch (error: unknown) {
       setError(
         error instanceof Error
