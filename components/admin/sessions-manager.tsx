@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from "react"
+import { useEffect, useState, useRef, useCallback, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import {
@@ -29,8 +29,9 @@ import {
   FloppyDiskIcon,
   ImageIcon,
   SpeakerHighIcon,
-  DatabaseIcon,
 } from "@phosphor-icons/react"
+import { Badge } from "../ui/badge"
+import Image from "next/image"
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -145,14 +146,17 @@ function StepEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="max-w-xl max-h-[90vh] overflow-y-auto"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Edit Step {form.step_number}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-2">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="step-title">Judul</Label>
+            <Label htmlFor="step-title">Nama Step</Label>
             <Input
               id="step-title"
               value={form.title}
@@ -161,7 +165,7 @@ function StepEditorDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="step-desc">Deskripsi / Instruksi</Label>
+            <Label htmlFor="step-desc">Instruksi</Label>
             <Textarea
               id="step-desc"
               value={form.description}
@@ -178,7 +182,7 @@ function StepEditorDialog({
               type="number"
               value={form.duration_seconds}
               onChange={(e) => setForm((f) => f ? ({ ...f, duration_seconds: Number(e.target.value) }) : f)}
-              className="w-40"
+              className="w-full"
             />
           </div>
 
@@ -187,10 +191,13 @@ function StepEditorDialog({
             <Label>Gambar</Label>
             <div className="flex items-center gap-4">
               {form.image_url && (
-                <img
+                <Image
                   src={form.image_url}
                   alt="preview"
-                  className="w-20 h-20 object-cover border border-border"
+                  width={60}
+                  height={60}
+                  loading="eager"
+                  className="w-20 h-20 object-cover border border-border rounded-md"
                 />
               )}
               <div className="flex flex-col gap-1.5">
@@ -201,7 +208,7 @@ function StepEditorDialog({
                   variant="outline"
                   size="sm"
                   onClick={() => imageRef.current?.click()}
-                  className="w-fit rounded-md gap-2"
+                  className="w-fit rounded-md gap-2 [&_svg]:size-4 hover:bg-celeste "
                 >
                   <ImageIcon className="w-4 h-4" />
                   Ganti Gambar
@@ -224,7 +231,7 @@ function StepEditorDialog({
               variant="outline"
               size="sm"
               onClick={() => audioRef.current?.click()}
-              className="w-fit rounded-md gap-2"
+              className="w-fit rounded-md gap-2 [&_svg]:size-3.5 hover:bg-celeste "
             >
               <SpeakerHighIcon className="w-4 h-4" />
               Ganti Audio
@@ -234,10 +241,10 @@ function StepEditorDialog({
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="rounded-md">
+          <Button variant="outline" onClick={onClose} className="rounded-md text-sm hover:bg-destructive/20">
             Batal
           </Button>
-          <Button onClick={handleSave} disabled={saving} className="rounded-md gap-2">
+          <Button onClick={handleSave} disabled={saving} className="rounded-md gap-2 text-sm [&_svg]:size-4 bg-celeste">
             {saving ? <Spinner className="shrink-0" /> : <FloppyDiskIcon className="w-4 h-4" />}
             {saving ? "Menyimpan..." : "Simpan Perubahan"}
           </Button>
@@ -286,19 +293,19 @@ function SessionStepsView({
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col items-start gap-4">
         <Button
-          variant="outline"
+          variant="link"
           size="sm"
           onClick={() => onBack({ ...session, steps })}
-          className="rounded-md gap-2"
+          className="[&_svg]:size-3.5 rounded-md gap-2 p-0 text-sm"
         >
           <ArrowLeftIcon className="w-4 h-4" />
-          Semua Sesi
+          Kembali
         </Button>
         <div>
           <h2 className="text-xl font-semibold">{session.session_name}</h2>
-          <p className="text-sm text-muted-foreground">{steps.length} steps · <span className="font-mono">{session.slug}</span></p>
+          {/* <p className="text-sm text-muted-foreground">{steps.length} steps · <span className="font-medium">{session.slug}</span></p> */}
         </div>
       </div>
 
@@ -308,42 +315,45 @@ function SessionStepsView({
           <TableHeader>
             <TableRow className="bg-muted/40">
               <TableHead className="w-12 text-center">Step</TableHead>
-              <TableHead className="w-16">Gambar</TableHead>
+              <TableHead className="w-20">Gambar</TableHead>
               <TableHead>Judul</TableHead>
               <TableHead>Deskripsi</TableHead>
               <TableHead className="w-20 text-center">Durasi</TableHead>
-              <TableHead className="w-16 text-center">Audio</TableHead>
-              <TableHead className="text-right">Aksi</TableHead>
+              <TableHead className="text-center">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {steps.map((step) => (
               <TableRow key={step.id}>
-                <TableCell className="text-center font-semibold text-sm">
+                <TableCell className="text-center font-semibold text-sm text-muted-foreground">
                   {step.step_number}
                 </TableCell>
                 <TableCell>
-                  {step.image_url
-                    ? <img src={step.image_url} alt="" className="w-12 h-12 object-cover border border-border" />
-                    : <div className="w-12 h-12 bg-muted border border-border flex items-center justify-center text-xs text-muted-foreground">—</div>
-                  }
+                  {step.image_url ? (
+                    <Image
+                      src={step.image_url}
+                      alt={step.title ?? `Step ${step.step_number}`}
+                      width={48}
+                      height={48}
+                      loading="eager"
+                      className="w-12 h-12 object-cover border border-border rounded-md"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-muted border border-border rounded-md flex items-center justify-center text-xs text-muted-foreground">
+                      —
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className="font-medium text-sm">{step.title}</TableCell>
                 <TableCell className="text-sm text-muted-foreground max-w-60">
-                  <span className="line-clamp-2">{step.description}</span>
+                  <span className="line-clamp-1 truncate">{step.description}</span>
                 </TableCell>
                 <TableCell className="text-center text-sm">{step.duration_seconds}s</TableCell>
                 <TableCell className="text-center">
-                  {step.audio_url
-                    ? <SpeakerHighIcon className="w-4 h-4 text-muted-foreground mx-auto" />
-                    : <span className="text-muted-foreground text-xs">—</span>
-                  }
-                </TableCell>
-                <TableCell className="text-right">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="rounded-md gap-1.5"
+                    className="rounded-sm gap-1.5 hover:bg-celeste [&_svg]:size-3.5"
                     onClick={() => { setEditingStep(step); setEditorOpen(true) }}
                   >
                     <PencilSimpleIcon className="w-3.5 h-3.5" />
@@ -380,30 +390,21 @@ function SessionCard({
   return (
     <button
       onClick={onClick}
-      className="flex flex-col gap-3 p-5 bg-background border border-border hover:border-foreground hover:shadow-sm transition-all text-left group"
+      className="flex flex-col gap-1.5 p-5 bg-white border border-border hover:border-muted-foreground hover:bg-muted-foreground/10 hover:shadow-sm transition-all text-left group rounded-md"
     >
       {/* Top row */}
-      <div className="flex items-start justify-between gap-3 w-full">
+      <div className="flex items-start justify-between gap-2 w-full">
         <div className="flex items-center gap-2.5">
-          <span className="text-xs font-mono text-muted-foreground w-5">{index + 1}.</span>
+          <span className="text-xs font-medium text-muted-foreground w-5">{index + 1}.</span>
           <p className="font-semibold text-sm">{session.session_name}</p>
         </div>
-        <span className="shrink-0 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-sm">
+        <Badge variant={'secondary'}>
           {session.steps.length} steps
-        </span>
+        </Badge>
       </div>
 
       {/* Description */}
       <p className="text-sm text-muted-foreground line-clamp-2 pl-7">{session.detail_short}</p>
-
-      {/* Slug + CTA */}
-      <div className="flex items-center justify-between pl-7">
-        <span className="text-xs font-mono text-muted-foreground">{session.slug}</span>
-        <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors flex items-center gap-1">
-          Edit steps
-          <PencilSimpleIcon className="w-3 h-3" />
-        </span>
-      </div>
     </button>
   )
 }
@@ -415,33 +416,55 @@ export function SessionsManager() {
   const [loading, setLoading] = useState(true)
   const [activeSession, setActiveSession] = useState<SessionRecord | null>(null)
 
+  const columns = useMemo(() => {
+  const mid = Math.ceil(sessions.length / 2)
+
+  return [
+    sessions.slice(0, mid),
+    sessions.slice(mid),
+  ]
+}, [sessions])
+
   useEffect(() => {
     const load = async () => {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from("sessions")
-        .select(`
-          id, slug, session_name, detail_short,
-          session_steps (
-            id, step_number, title, description,
-            duration_seconds, image_url, audio_url
-          )
-        `)
-        .order("created_at")
+      setLoading(true)
 
-      const mapped: SessionRecord[] = ((data ?? []) as SessionRaw[]).map((s) => ({
-        id: s.id,
-        slug: s.slug,
-        session_name: s.session_name,
-        detail_short: s.detail_short,
-        steps: (s.session_steps ?? []).sort(
-          (a, b) => a.step_number - b.step_number
-        ),
-      }))
+      try {
+        const supabase = createClient()
 
-      setSessions(mapped)
-      setLoading(false)
+        const { data, error } = await supabase
+          .from("sessions")
+          .select(`
+            id, slug, session_name, detail_short, created_at,
+            session_steps (
+              id, step_number, title, description,
+              duration_seconds, image_url, audio_url
+            )
+          `)
+          .order("created_at", { ascending: true })
+
+        if (error) {
+          console.error("Failed to load sessions:", error)
+          setSessions([])
+          return
+        }
+
+        const mapped: SessionRecord[] = ((data ?? []) as SessionRaw[]).map((s) => ({
+          id: s.id,
+          slug: s.slug,
+          session_name: s.session_name,
+          detail_short: s.detail_short,
+          steps: [...(s.session_steps ?? [])].sort(
+            (a, b) => a.step_number - b.step_number
+          ),
+        }))
+
+        setSessions(mapped)
+      } finally {
+        setLoading(false)
+      }
     }
+
     load()
   }, [])
 
@@ -471,22 +494,31 @@ export function SessionsManager() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <DatabaseIcon className="w-5 h-5 text-muted-foreground" />
         <div>
           <h2 className="text-xl font-semibold">Kelola Sesi Terapi</h2>
           <p className="text-sm text-muted-foreground">Pilih sesi untuk mengedit step-nya</p>
         </div>
       </div>
 
-      {/* Session cards grid */}
       <div className="grid grid-cols-2 gap-3">
-        {sessions.map((s, i) => (
-          <SessionCard
-            key={s.id}
-            session={s}
-            index={i}
-            onClick={() => setActiveSession(s)}
-          />
+        {columns.map((column, colIndex) => (
+          <div key={colIndex} className="flex flex-col gap-3">
+            {column.map((s, rowIndex) => {
+              const displayIndex =
+                colIndex === 0
+                  ? rowIndex
+                  : columns[0].length + rowIndex
+
+              return (
+                <SessionCard
+                  key={s.id}
+                  session={s}
+                  index={displayIndex}
+                  onClick={() => setActiveSession(s)}
+                />
+              )
+            })}
+          </div>
         ))}
       </div>
     </div>

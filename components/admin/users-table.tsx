@@ -77,8 +77,8 @@ function UserTableSection({
       {/* Section header */}
       <div className="flex items-center gap-2">
         {icon}
-        <h3 className="font-semibold text-sm">{title}</h3>
-        <span className="text-xs text-muted-foreground ml-1">({users.length})</span>
+        <h3 className="font-medium text-sm">{title}</h3>
+        <span className="text-sm text-muted-foreground ml-1">({users.length})</span>
       </div>
 
       {/* Table */}
@@ -86,11 +86,11 @@ function UserTableSection({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40">
-              <TableHead className="w-12 text-center">#</TableHead>
-              <TableHead>Nama</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Terdaftar</TableHead>
-              <TableHead className="text-right">Aksi</TableHead>
+              <TableHead className="w-10 text-center">#</TableHead>
+              <TableHead className="w-60">Nama</TableHead>
+              <TableHead className="w-60">Email</TableHead>
+              <TableHead className="w-30">Terdaftar</TableHead>
+              <TableHead className="text-center w-10">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -104,20 +104,20 @@ function UserTableSection({
               paginated.map((u, i) => (
                 <TableRow key={u.id}>
                   <TableCell className="text-center text-muted-foreground text-sm w-12">
-                    {(page - 1) * PAGE_SIZE + i + 1}
+                    {(page - 1) * PAGE_SIZE + i + 1}.
                   </TableCell>
                   <TableCell className="font-medium text-sm">
                     {u.full_name ?? <span className="text-muted-foreground italic">—</span>}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{fmtDate(u.created_at)}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-center">
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={sending === u.id}
                       onClick={() => onResetPassword(u.email, u.id)}
-                      className="rounded-md gap-1.5"
+                      className="rounded-md gap-1.5 hover:bg-celeste [&_svg]:size-3.5"
                     >
                       {sending === u.id
                         ? <SpinnerIcon className="w-3.5 h-3.5 animate-spin" />
@@ -139,7 +139,7 @@ function UserTableSection({
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => onPageChange(Math.max(1, page - 1))}
-                className={page === 1 ? "pointer-events-none opacity-40 rounded-md" : "cursor-pointer rounded-md"}
+                className={page === 1 ? "pointer-events-none opacity-40 rounded-md" : "cursor-pointer rounded-md hover:bg-muted-foreground/20"}
               />
             </PaginationItem>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
@@ -147,7 +147,7 @@ function UserTableSection({
                 <Button
                   variant={p === page ? "default" : "ghost"}
                   size="sm"
-                  className="w-8 h-8 p-0 rounded-md"
+                  className="w-8 h-8 p-0 rounded-md font-medium text-sm hover:bg-muted-foreground/20"
                   onClick={() => onPageChange(p)}
                 >
                   {p}
@@ -157,7 +157,7 @@ function UserTableSection({
             <PaginationItem>
               <PaginationNext
                 onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-                className={page === totalPages ? "pointer-events-none opacity-40 rounded-md" : "cursor-pointer rounded-md"}
+                className={page === totalPages ? "pointer-events-none opacity-40 rounded-md" : "cursor-pointer rounded-md hover:bg-muted-foreground/20"}
               />
             </PaginationItem>
           </PaginationContent>
@@ -246,9 +246,9 @@ export function UsersTable() {
   return (
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-semibold">Pengguna Terdaftar</h2>
+        <h2 className="text-xl font-semibold">User Terdaftar</h2>
         <p className="text-sm text-muted-foreground">
-          {allUsers.length} pengguna total — {admins.length} admin, {users.length} pengguna biasa
+          {allUsers.length} User total — {admins.length} admin, {users.length} user biasa
         </p>
       </div>
 
@@ -266,7 +266,7 @@ export function UsersTable() {
 
       {/* Regular users table */}
       <UserTableSection
-        title="Pengguna"
+        title="User Biasa"
         icon={<UsersIcon className="w-4 h-4 text-muted-foreground" />}
         users={users}
         page={userPage}

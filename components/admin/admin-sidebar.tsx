@@ -12,6 +12,7 @@ import {
   ArrowSquareOutIcon,
 } from "@phosphor-icons/react"
 import { Route } from "next"
+import { Button } from "../ui/button"
 
 type AdminSidebarProps = {
   activeTab?: string
@@ -39,19 +40,21 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   }
 
   return (
-    <aside className="w-60 shrink-0 border-r border-border flex flex-col bg-background">
+    <aside className="w-60 border-r border-border flex flex-col bg-background ">
       {/* Brand */}
-      <div className="px-6 py-5 border-b border-border">
-        <p className="font-semibold text-lg tracking-tight">DMAI</p>
+      <div className="px-6 py-5">
+        <p className="font-semibold text-h1 tracking-tight">DMAI</p>
         <p className="text-xs text-muted-foreground mt-0.5">Admin Panel</p>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-0.5 px-3 py-4">
+      <nav className="flex-1 flex flex-col gap-2.5 px-3 py-4">
+
+        <div className="border-t border-border"></div>
         <SidebarLink
           href="/admin"
           icon={<UsersIcon className="w-4 h-4" />}
-          label="Pengguna"
+          label="User Info"
           active={pathname === "/admin" || pathname?.startsWith("/admin/users")}
         />
         <SidebarLink
@@ -61,12 +64,12 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
           active={pathname?.startsWith("/admin/sessions") ?? false}
         />
 
-        <div className="mt-3 pt-3 border-t border-border">
+        <div className="pt-2 border-t border-border">
           <Link
             href="/homepage"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="flex items-center gap-3 px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors rounded-md"
           >
             <HouseIcon className="w-4 h-4" />
             Lihat Homepage
@@ -76,15 +79,16 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="px-3 pb-5 border-t border-border pt-4">
-        <p className="text-xs text-muted-foreground truncate px-3 mb-2">{adminEmail}</p>
-        <button
+      <div className="px-3 pb-5 border-t border-border pt-4 flex flex-col items-center gap-3">
+        <p className="text-sm text-foreground truncate w-full text-center font-medium">Hi, {adminEmail}</p>
+        <Button
+          variant={'ghost'}
           onClick={logout}
-          className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium bg-red/20 text-foreground hover:bg-red/30 transition-colors rounded-md"
+          className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md border-2 border-destructive/20 text-destructive hover:bg-destructive/10"
         >
           <SignOutIcon className="w-4 h-4" />
           Logout
-        </button>
+        </Button>
       </div>
     </aside>
   )
@@ -104,10 +108,10 @@ function SidebarLink({
   return (
     <Link
       href={`${href}` as Route}
-      className={`flex items-center gap-3 px-3 py-2 text-sm font-medium transition-colors
+      className={`flex items-center gap-3 px-3 py-2 text-sm transition-colors font-semibold
         ${active
-          ? "bg-foreground text-background rounded-md"
-          : "text-foreground hover:bg-muted rounded-md"
+          ? "bg-white text-foreground rounded-md"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-md"
         }`}
     >
       {icon}
