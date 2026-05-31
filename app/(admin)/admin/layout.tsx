@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { AdminSidebar } from "@/components/admin/admin-sidebar"
+import { Toaster } from "@/components/ui/sonner"
+import { FullPageSpinner } from "@/components/ui/spinner"
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [checking, setChecking] = useState(true)
@@ -37,18 +40,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [router])
 
   if (checking) {
-    return (
-      <div className="min-h-dvh flex items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Memeriksa akses...</p>
-      </div>
-    )
+    return <FullPageSpinner text="Memeriksa akses..." />
   }
 
   if (!authorized) return null
 
   return (
-    <div className="min-h-dvh bg-background">
-      {children}
+    <div className="flex min-h-dvh bg-background">
+      <AdminSidebar />
+      <main className="flex-1 overflow-y-auto">
+        {children}
+      </main>
+      <Toaster />
     </div>
   )
 }
