@@ -12,6 +12,7 @@ import { notFound } from "next/navigation"
 import { RepeatIcon, HouseIcon } from "@phosphor-icons/react"
 import { Route } from "next"
 import { createClient } from "@/lib/supabase/client"
+import { Spinner } from "@/components/ui/spinner"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -72,6 +73,8 @@ export default function ExercisePage({ params }: Props) {
             <h2 className="text-h2 font-semibold">{session.session_name}</h2>
           </div>
 
+          <Spinner/>
+
           <div className="rounded-4xl border border-foreground bg-background p-2 w-100 h-68">
             <Image
               src={session.image_cover}
@@ -84,11 +87,19 @@ export default function ExercisePage({ params }: Props) {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button onClick={handleRepeat} className="w-full flex items-center gap-2 bg-green">
+            <Button 
+              onClick={handleRepeat} 
+              className="w-full flex items-center gap-2 bg-background"
+            >
               <RepeatIcon className="w-4 h-4" weight="fill" />
-              Ulangi Pelatihan Ini
+              Ulangi Sesi Ini
             </Button>
-            <Button variant="outline" className="w-full flex items-center gap-2 bg-background" asChild>
+
+            <Button 
+              variant="outline" 
+              className="w-full flex items-center gap-2 bg-background" 
+              asChild
+            >
               <Link href={"/homepage" as Route}>
                 <HouseIcon className="w-4 h-4" weight="fill" />
                 Kembali ke Beranda
