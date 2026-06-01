@@ -103,7 +103,7 @@ export default function Page({ params }: Props) {
 
         <div className="flex-1 rounded-5xl border border-foreground bg-background p-2 h-88">
           <Image
-            src={session.instructions[0]?.image ?? '/serene1.png'}
+            src={session.instructions[0]?.image}
             alt={session.session_name}
             width={2000}
             height={2000}
