@@ -106,7 +106,7 @@ export function HistoryList() {
       <div className="flex-1 flex flex-col gap-3.5 items-start">
         <h1 className="text-h1">Session History</h1>
 
-        <div className="h-108 pr-2 pb-2 overflow-y-auto w-full">
+        <div className="h-120 pr-4 pb-2 overflow-y-auto w-full">
           {loading ? (
             <HistorySkeletonContent />
           ) : grouped.length === 0 ? (
