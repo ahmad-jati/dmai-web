@@ -16,6 +16,52 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
+function SessionDetailSkeleton() {
+  return (
+    <div className="flex flex-col gap-8 w-full">
+      <Section className="flex gap-8 bg-celeste">
+        <div className="flex flex-col justify-between max-w-xl w-full gap-6 animate-pulse">
+          {/* breadcrumb */}
+          <div className="h-3 bg-foreground/10 rounded w-48" />
+          <div className="flex flex-col gap-4">
+            {/* title */}
+            <div className="h-8 bg-foreground/10 rounded w-3/4" />
+            {/* paragraphs */}
+            <div className="flex flex-col gap-2">
+              <div className="h-3 bg-foreground/8 rounded w-full" />
+              <div className="h-3 bg-foreground/8 rounded w-5/6" />
+              <div className="h-3 bg-foreground/8 rounded w-4/6" />
+            </div>
+            {/* meta */}
+            <div className="flex flex-col gap-1.5">
+              <div className="h-3 bg-foreground/8 rounded w-32" />
+              <div className="h-3 bg-foreground/8 rounded w-28" />
+              <div className="h-3 bg-foreground/8 rounded w-48" />
+            </div>
+          </div>
+          {/* button */}
+          <div className="h-10 bg-foreground/10 rounded-full w-32" />
+        </div>
+
+        {/* image */}
+        <div className="flex-1 rounded-5xl border border-foreground/20 bg-foreground/8 h-88 animate-pulse" />
+      </Section>
+
+      {/* bottom section placeholder */}
+      <Section className="bg-pink">
+        <div className="flex flex-col gap-4">
+          <div className="h-6 bg-foreground/10 rounded w-32 animate-pulse" />
+          <div className="grid grid-cols-3 gap-3.5">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-40 bg-background rounded-lg border border-foreground/20 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </Section>
+    </div>
+  )
+}
+
 export default function Page({ params }: Props) {
   const { slug } = use(params);
 
@@ -43,15 +89,7 @@ export default function Page({ params }: Props) {
   }, [slug])
 
   // still loading
-  if (session === undefined) {
-    return (
-      <div className="flex flex-col gap-8 w-full">
-        <Section className="bg-celeste h-[76dvh] flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">Memuat sesi...</p>
-        </Section>
-      </div>
-    )
-  }
+  if (session === undefined) return <SessionDetailSkeleton />
 
   // not found
   if (session === null) notFound()
@@ -103,12 +141,12 @@ export default function Page({ params }: Props) {
 
         <div className="flex-1 rounded-5xl border border-foreground bg-background p-2 h-88">
           <Image
-            src={session.instructions[0]?.image}
+            src={session.instructions[0]?.image ?? '/serene1.png'}
             alt={session.session_name}
             width={2000}
             height={2000}
+            priority
             className="w-full h-full object-cover rounded-4xl"
-            loading="eager"
           />
         </div>
       </Section>

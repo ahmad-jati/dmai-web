@@ -49,6 +49,60 @@ function fmtDate(iso: string) {
 
 const PAGE_SIZE = 10
 
+// ─── Skeleton ───────────────────────────────────────────────────────────────
+
+function TableSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Section header skeleton */}
+      <div className="flex items-center gap-2 animate-pulse">
+        <div className="w-4 h-4 bg-muted rounded" />
+        <div className="h-3.5 bg-muted rounded w-20" />
+        <div className="h-3.5 bg-muted/60 rounded w-8" />
+      </div>
+
+      {/* Table skeleton */}
+      <div className="border border-border">
+        {/* Header */}
+        <div className="flex items-center gap-4 px-4 py-3 bg-muted/40 border-b border-border animate-pulse">
+          <div className="w-8 h-3 bg-muted rounded" />
+          <div className="flex-1 h-3 bg-muted rounded w-20" />
+          <div className="flex-1 h-3 bg-muted rounded w-28" />
+          <div className="w-24 h-3 bg-muted rounded" />
+          <div className="w-28 h-3 bg-muted rounded" />
+        </div>
+        {Array.from({ length: rows }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 px-4 py-3.5 border-b border-border last:border-0 animate-pulse"
+            style={{ animationDelay: `${i * 50}ms` }}
+          >
+            <div className="w-8 h-3 bg-muted/60 rounded" />
+            <div className="flex-1 h-3 bg-muted rounded" style={{ width: `${55 + Math.random() * 30}%` }} />
+            <div className="flex-1 h-3 bg-muted/70 rounded" style={{ width: `${60 + Math.random() * 25}%` }} />
+            <div className="w-20 h-3 bg-muted/60 rounded" />
+            <div className="w-28 h-7 bg-muted/40 rounded-md" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function AdminPageSkeleton() {
+  return (
+    <div className="flex flex-col gap-10">
+      {/* Page title */}
+      <div className="flex flex-col gap-2 animate-pulse">
+        <div className="h-6 bg-muted rounded w-48" />
+        <div className="h-3.5 bg-muted/60 rounded w-64" />
+      </div>
+      <TableSkeleton rows={2} />
+      <TableSkeleton rows={6} />
+    </div>
+  )
+}
+
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
 function UserTableSection({
@@ -175,19 +229,16 @@ export function UsersTable() {
   const [sending, setSending] = useState<string | null>(null)
   const [adminPage, setAdminPage] = useState(1)
   const [userPage, setUserPage] = useState(1)
-  
 
   useEffect(() => {
     const load = async () => {
       const supabase = createClient()
 
-      // Fetch profiles
       const { data: profiles } = await supabase
         .from("user_profiles")
         .select("id, email, full_name, created_at")
         .order("created_at", { ascending: false })
 
-      // Fetch roles
       const { data: roles } = await supabase
         .from("user_roles")
         .select("user_id, role")
@@ -233,15 +284,7 @@ export function UsersTable() {
   const adminTotalPages = Math.ceil(admins.length / PAGE_SIZE) || 1
   const userTotalPages = Math.ceil(users.length / PAGE_SIZE) || 1
 
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-12 bg-muted animate-pulse" />
-        ))}
-      </div>
-    )
-  }
+  if (loading) return <AdminPageSkeleton />
 
   return (
     <div className="flex flex-col gap-10">
@@ -252,7 +295,6 @@ export function UsersTable() {
         </p>
       </div>
 
-      {/* Admin table */}
       <UserTableSection
         title="Admin"
         icon={<ShieldIcon className="w-4 h-4 text-muted-foreground" />}
@@ -264,7 +306,6 @@ export function UsersTable() {
         onResetPassword={sendResetLink}
       />
 
-      {/* Regular users table */}
       <UserTableSection
         title="User Biasa"
         icon={<UsersIcon className="w-4 h-4 text-muted-foreground" />}

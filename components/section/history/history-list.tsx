@@ -18,10 +18,6 @@ type GroupedHistory = {
   items: CompletionRecord[]
 }
 
-function toSlug(name: string) {
-  return name.toLowerCase().replace(/\s+/g, "-")
-}
-
 function formatDateLabel(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("id-ID", {
     weekday: "long",
@@ -41,17 +37,29 @@ function formatTime(dateStr: string): string {
 
 function groupByDate(records: CompletionRecord[]): GroupedHistory[] {
   const map = new Map<string, CompletionRecord[]>()
-
   for (const record of records) {
     const label = formatDateLabel(record.completed_at)
     if (!map.has(label)) map.set(label, [])
     map.get(label)!.push(record)
   }
+  return Array.from(map.entries()).map(([dateLabel, items]) => ({ dateLabel, items }))
+}
 
-  return Array.from(map.entries()).map(([dateLabel, items]) => ({
-    dateLabel,
-    items,
-  }))
+function HistorySkeletonContent() {
+  return (
+    <div className="flex flex-col gap-8 animate-pulse">
+      {Array.from({ length: 2 }).map((_, gi) => (
+        <div key={gi} className="flex flex-col gap-4">
+          <div className="h-3.5 bg-foreground/10 rounded w-48" />
+          <div className="grid grid-cols-3 gap-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-32 bg-background rounded-2xl border border-foreground/15" />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export function HistoryList() {
@@ -84,14 +92,14 @@ export function HistoryList() {
 
   return (
     <div className="flex items-center gap-6">
-      <div className="w-76 h-132">
+      <div className="w-76 h-120">
         <Image
           src={'/tropicaline/Being-Still.png'}
           alt="Being Okay (Tropicaline Illustrations)"
           width={2000}
           height={2000}
+          priority
           className="w-full h-full object-contain"
-          loading="eager"
         />
       </div>
 
@@ -100,7 +108,7 @@ export function HistoryList() {
 
         <div className="h-108 pr-2 pb-2 overflow-y-auto w-full">
           {loading ? (
-            <p className="text-sm text-muted-foreground">Memuat riwayat...</p>
+            <HistorySkeletonContent />
           ) : grouped.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Kamu belum menyelesaikan sesi apapun.
@@ -123,7 +131,6 @@ export function HistoryList() {
                           <p className="text-sm font-medium">
                             Selesai pukul {formatTime(item.completed_at)}
                           </p>
-
                           <Button
                             className="bg-white w-fit px-6 py-2 font-medium rounded-full"
                             size="sm"

@@ -18,6 +18,22 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
+function ExerciseLoadingSkeleton() {
+  return (
+    <div className="w-full">
+      <div className="p-6 bg-celeste border border-foreground w-full rounded-5xl">
+        <div className="flex flex-col items-center w-full rounded-4xl relative h-[76dvh] overflow-hidden bg-foreground/8 animate-pulse">
+          <div className="absolute inset-0 bg-foreground/5 rounded-4xl" />
+          <div className="relative z-10 flex flex-col items-center justify-center h-full gap-3">
+            <Spinner />
+            <p className="text-sm text-muted-foreground">Memuat sesi...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function ExercisePage({ params }: Props) {
   const { slug } = use(params)
 
@@ -51,15 +67,7 @@ export default function ExercisePage({ params }: Props) {
   }
 
   // loading
-  if (session === undefined) {
-    return (
-      <div className="w-full">
-        <Section className="bg-celeste flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">Memuat sesi...</p>
-        </Section>
-      </div>
-    )
-  }
+  if (session === undefined) return <ExerciseLoadingSkeleton />
 
   // not found
   if (session === null) notFound()
@@ -73,31 +81,29 @@ export default function ExercisePage({ params }: Props) {
             <h2 className="text-h2 font-semibold">{session.session_name}</h2>
           </div>
 
-          <Spinner/>
-
           <div className="rounded-4xl border border-foreground bg-background p-2 w-100 h-68">
             <Image
               src={session.image_cover}
               alt={''}
               width={2000}
               height={2000}
+              priority
               className="w-full h-full object-cover rounded-3xl"
-              loading="eager"
             />
           </div>
 
           <div className="flex items-center gap-3">
-            <Button 
-              onClick={handleRepeat} 
+            <Button
+              onClick={handleRepeat}
               className="w-full flex items-center gap-2 bg-background"
             >
               <RepeatIcon className="w-4 h-4" weight="fill" />
               Ulangi Sesi Ini
             </Button>
 
-            <Button 
-              variant="outline" 
-              className="w-full flex items-center gap-2 bg-background" 
+            <Button
+              variant="outline"
+              className="w-full flex items-center gap-2 bg-background"
               asChild
             >
               <Link href={"/homepage" as Route}>
@@ -113,14 +119,12 @@ export default function ExercisePage({ params }: Props) {
 
   return (
     <div className="w-full">
-        <StepperExercise
-          key={key}
-          instructions={session.instructions}
-          sessionName={session.session_name}
-          onDone={handleDone}
-        />
-      {/* <Section className="bg-celeste flex flex-col items-center justify-center gap-6">
-      </Section> */}
+      <StepperExercise
+        key={key}
+        instructions={session.instructions}
+        sessionName={session.session_name}
+        onDone={handleDone}
+      />
     </div>
   )
 }

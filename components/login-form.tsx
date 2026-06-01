@@ -1,5 +1,5 @@
 "use client";
-;
+
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
+import { EyeIcon, EyeSlashIcon, SpinnerIcon } from "@phosphor-icons/react";
 
 export function LoginForm({
   className,
@@ -30,12 +29,6 @@ export function LoginForm({
     setError(null);
 
     try {
-      // const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      // if (error) { /* handle error */ return }
-      //
-      // // Check role and redirect accordingly
-      
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -44,32 +37,32 @@ export function LoginForm({
       if (error) {
         if (error.status === 400) {
           setError("Email atau password yang kamu masukkan salah.");
-          return;
+        } else {
+          setError(error.message);
         }
-
-        setError(error.message);
+        // Only stop loading on error
+        setIsLoading(false);
         return;
+      }
 
-      } 
-      
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", data.user.id)
-        .single()
-      
+        .single();
+
+      // Keep loading state — navigation will unmount the component anyway
       if (roleData?.role === "admin") {
-        router.push("/admin")
+        router.push("/admin");
       } else {
-        router.push("/homepage")
+        router.push("/homepage");
       }
-    } catch (error: unknown) {
+    } catch (err: unknown) {
       setError(
-        error instanceof Error
-          ? error.message
+        err instanceof Error
+          ? err.message
           : "Terjadi kesalahan. Silakan coba lagi."
       );
-    } finally {
       setIsLoading(false);
     }
   };
@@ -96,6 +89,7 @@ export function LoginForm({
                 onChange={(e) => setEmail(e.target.value)}
                 className="rounded-full px-3 text-sm"
                 autoComplete="off"
+                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
@@ -119,24 +113,26 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                   className="pr-10 rounded-full text-sm"
                   autoComplete="off"
+                  disabled={isLoading}
                 />
-
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeSlashIcon size={18} /> : <EyeIcon size={18} />}
                 </button>
               </div>
             </div>
             {error && <p className="text-sm text-red">{error}</p>}
-            <Button 
-              type="submit" 
-              className="w-full bg-green" 
+            <Button
+              type="submit"
+              className="w-full bg-green flex items-center gap-2"
               disabled={isLoading}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin" />}
+              {isLoading ? "Menghubungkan ke akunmu..." : "Masuk"}
             </Button>
           </div>
 

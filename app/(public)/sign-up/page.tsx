@@ -13,16 +13,15 @@ export default function Page() {
               alt=""
               width={2000}
               height={2000}
+              priority
               className="w-136 h-118 object-cover"
-              loading="eager"
             />
           </div>
         </Section>
-        
+
         <Section className="max-w-120 bg-white flex items-center">
           <SignUpForm />
         </Section>
-
       </div>
     </div>
   );
