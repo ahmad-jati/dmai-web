@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowCircleDownIcon } from "@phosphor-icons/react";
 
-export function HeroHomepage(){
+export function HeroHomepage() {
   return (
     <div className="flex flex-col items-center gap-6">
       <Image
@@ -12,8 +12,8 @@ export function HeroHomepage(){
         alt="Parachute (Tropicaline Illustrations)"
         width={2000}
         height={2000}
+        priority
         className="w-80 h-86 object-cover"
-        loading="eager"
       />
       <div className="flex-1 flex flex-col gap-3.5 items-center text-center text-foreground">
         <h1 className="text-h1 max-w-90">A Space to Slow Down</h1>
@@ -29,8 +29,8 @@ export function HeroHomepage(){
           document.getElementById("session-list")?.scrollIntoView({ behavior: "smooth" });
         }}
       >
-        JELAJAHI SESI 
-        <ArrowCircleDownIcon className="w-6 h-6"/>
+        JELAJAHI SESI
+        <ArrowCircleDownIcon className="w-6 h-6" />
       </Button>
     </div>
   )

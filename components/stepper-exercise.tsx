@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import {
   RepeatIcon, SpeakerSlashIcon, SpeakerHighIcon,
   PauseIcon, PlayIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon,
-  RepeatOnceIcon, MusicNotesIcon, XIcon, StopIcon,
+  RepeatOnceIcon, MusicNotesIcon,
 } from "@phosphor-icons/react"
 import type { SessionInstruction } from "@/lib/data-detail-session"
 import { createClient } from "@/lib/supabase/client"
@@ -203,20 +203,27 @@ export function StepperExercise({ instructions, onDone }: Props) {
   // ── Loading ───────────────────────────────────────────────────
   if (!isReady) {
     return (
-      <div className="w-full p-6 bg-celeste border border-foreground rounded-5xl">
+      <div className="w-full p-4 bg-celeste border border-foreground rounded-5xl">
         <div className="flex flex-col gap-8 items-center w-full rounded-4xl relative p-8 h-[76dvh] overflow-hidden">
           <div className="absolute inset-0 z-0">
             <Image
+              key={step.image}
               src={step.image}
               alt={step.title}
               fill
-              className="object-cover object-center rounded-5xl border border-foreground"
-              loading="eager"
+              unoptimized
+              priority
+              className="object-cover object-center rounded-4xl"
             />
-            <div className="absolute inset-0 bg-foreground/30 rounded-5xl" />
+
+            <div className="absolute inset-0 rounded-4xl bg-black/45" />
+
+            <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
+
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/80 via-black/50 to-transparent rounded-b-4xl" />
           </div>
           <div className="relative z-10 flex flex-col items-center justify-center flex-1 gap-3">
-            <Spinner/>
+            <Spinner />
             <p className="text-sm text-white/70 tracking-wide">Mempersiapkan sesi…</p>
           </div>
         </div>
@@ -226,27 +233,31 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
   // ── Main UI ───────────────────────────────────────────────────
   return (
-    <div className="p-6 bg-celeste border border-foreground w-full rounded-5xl">
+    <div className="p-4 bg-celeste border border-foreground w-full rounded-5xl">
 
       <div className="flex flex-col items-center w-full rounded-4xl relative h-[76dvh] overflow-hidden">
-        {/* ── Background image ── */}
         <div className="absolute inset-0 z-0">
           <Image
             key={step.image}
             src={step.image}
             alt={step.title}
             fill
+            unoptimized
+            priority
             className="object-cover object-center rounded-4xl"
-            loading="eager"
           />
-          <div className="absolute inset-x-0 top-0 h-full bg-linear-to-b from-black/36 to-transparent rounded-t-4xl" />
-          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/75 via-black/45 to-transparent rounded-b-4xl" />
+
+          <div className="absolute inset-0 rounded-4xl bg-black/45" />
+
+          <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
+
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/80 via-black/50 to-transparent rounded-b-4xl" />
         </div>
 
         {/* ── Content layer ── */}
         <div className="relative z-10 flex flex-col items-center justify-between h-full w-full py-8 px-6">
 
-          {/* Top bar: music icon left · dots center · spacer right */}
+          {/* Top bar */}
           <div className="flex flex-row-reverse items-center w-full">
 
             {/* Music button */}
@@ -259,14 +270,12 @@ export function StepperExercise({ instructions, onDone }: Props) {
                           hover:bg-muted-foreground border border-foreground hover:cursor-pointer hover:text-white transition-all duration-150 ease-out"
               >
                 <MusicNotesIcon weight={'fill'} className="w-3.5 h-3.5" />
-                {/* Status dot */}
                 <span className={cn(
                   'absolute top-0.5 -right-0.5 w-2 h-2 rounded-full border border-background/40 transition-all duration-300',
                   isBGMStopped ? 'bg-transparent border-none' : 'bg-muted-foreground group-hover:bg-background'
                 )} />
               </button>
 
-              {/* Tray — opens downward from the button */}
               {showMusicTray && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowMusicTray(false)} />
@@ -287,7 +296,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
                           'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl text-left transition-all duration-150 ease-out',
                           index === currentTrackIndex && !isBGMStopped
                             ? 'bg-muted-foreground/15 text-foreground'
-                            : 'text-foreground hover:bg-muted-foreground/15 '
+                            : 'text-foreground hover:bg-muted-foreground/15'
                         )}
                       >
                         <span className={cn(
@@ -347,9 +356,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
               ))}
             </div>
 
-            {/* Spacer — mirrors left side to keep dots centered */}
             <div className="flex-1" />
-
           </div>
 
           {/* Middle: ring + step info */}
@@ -385,7 +392,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
               >
                 {isPlaying
                   ? <PauseIcon weight="fill" className="w-7 h-7" />
-                  : <PlayIcon  weight="fill" className="w-7 h-7" />
+                  : <PlayIcon weight="fill" className="w-7 h-7" />
                 }
               </button>
             </div>
@@ -406,9 +413,8 @@ export function StepperExercise({ instructions, onDone }: Props) {
             </div>
           </div>
 
-          {/* Bottom: controls + BGM */}
+          {/* Bottom: controls */}
           <div className="flex flex-col items-center gap-2 px-3">
-
             <div className="flex items-center justify-center gap-2 bg-background rounded-full px-2 py-1.5 w-full">
 
               <Button
@@ -464,7 +470,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
                   variant={'ghost'}
                   size={'sm'}
                   className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground disabled:bg-transparent disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10"
-                  >
+                >
                   Selesai
                   <CheckIcon weight="bold" />
                 </Button>
@@ -480,10 +486,8 @@ export function StepperExercise({ instructions, onDone }: Props) {
                 </Button>
               )}
             </div>
-
           </div>
         </div>
-
       </div>
     </div>
   )

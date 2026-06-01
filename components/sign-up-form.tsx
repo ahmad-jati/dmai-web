@@ -70,18 +70,18 @@ export function SignUpForm({
       <div className="flex flex-col gap-4">
         <h2>Glad you&apos;re here.</h2>
         <p className="font-medium">
-          Mulailah perlahan dan jalani semua sesuai kenyamananmu sendiri.
+         Buat ruang kecil untuk dirimu hari ini, lalu jalani setiap sesi latihan sesuai dengan kenyamananmu sendiri.
         </p>
       </div>
       <div className="w-full">
         <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="fullname">Fullname</Label>
+                <Label htmlFor="fullname">Nama</Label>
                 <Input
                   id="fullname"
                   type="text"
-                  placeholder="Your name"
+                  placeholder="Nama Kamu"
                   className="rounded-full px-3"
                   required
                   value={fullname}
@@ -138,40 +138,9 @@ export function SignUpForm({
                   </button>
                 </div>
               </div>
-              {/* <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
-                </div>
-
-                <div className="relative">
-                  <Input
-                    id="repeat-password"
-                    type={showRepeatPassword ? "text" : "password"}
-                    required
-                    value={repeatPassword}
-                    autoComplete="off"
-                    onChange={(e) => setRepeatPassword(e.target.value)}
-                    className="pr-10 rounded-full"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowRepeatPassword(!showRepeatPassword)
-                    }
-                    className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
-                  >
-                    {showRepeatPassword ? (
-                      <EyeIcon className="h-4 w-4" />
-                    ) : (
-                      <EyeSlashIcon className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div> */}
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full bg-tangerine" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
+                {isLoading ? "Menyiapkan akun..." : "Daftar"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
