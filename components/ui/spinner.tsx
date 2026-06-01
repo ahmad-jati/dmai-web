@@ -1,4 +1,4 @@
-import { Spinner as PhosphorSpinner } from "@phosphor-icons/react"
+import { SpinnerIcon} from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 
 // ─── Base Spinner ─────────────────────────────────────────────────────────────
@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils"
 
 function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
   return (
-    <PhosphorSpinner
+    <SpinnerIcon
       role="status"
       aria-label="Loading"
-      className={cn("size-4 animate-spin", className)}
+      className={cn("text-background size-5 animate-spin", className)}
       {...props}
     />
   )
@@ -39,7 +39,7 @@ function SpinnerSized({ size = "md", className }: SpinnerSizedProps) {
 
 function PageSpinner({ text = "Memuat..." }: { text?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 min-h-[200px]">
+    <div className="flex flex-col items-center justify-center gap-3 min-h-60">
       <SpinnerSized size="lg" />
       <p className="text-sm text-muted-foreground">{text}</p>
     </div>

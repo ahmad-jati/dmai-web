@@ -46,7 +46,7 @@ export default function Page({ params }: Props) {
   if (session === undefined) {
     return (
       <div className="flex flex-col gap-8 w-full">
-        <Section className="bg-celeste">
+        <Section className="bg-celeste h-[76dvh] flex items-center justify-center">
           <p className="text-sm text-muted-foreground">Memuat sesi...</p>
         </Section>
       </div>
