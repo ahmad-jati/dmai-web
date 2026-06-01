@@ -89,6 +89,7 @@ export default function ExercisePage({ params }: Props) {
               height={2000}
               priority
               className="w-full h-full object-cover rounded-3xl"
+              unoptimized
             />
           </div>
 

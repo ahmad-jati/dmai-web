@@ -323,6 +323,7 @@ function SessionMetaEditorDialog({
                   width={80}
                   height={80}
                   className="w-20 h-20 object-cover border border-border rounded-md shrink-0"
+                  unoptimized
                 />
               )}
               <div className="flex flex-col gap-1.5">
@@ -505,6 +506,7 @@ function StepEditorDialog({
                   width={60}
                   height={60}
                   className="w-20 h-20 object-cover border border-border rounded-md shrink-0"
+                  unoptimized
                 />
               )}
               <div className="flex flex-col gap-1.5">
@@ -644,6 +646,7 @@ function SessionStepsView({
                       width={48}
                       height={48}
                       className="w-12 h-12 object-cover border border-border rounded-md"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-12 h-12 bg-muted border border-border rounded-md flex items-center justify-center text-xs text-muted-foreground">
@@ -707,6 +710,7 @@ function SessionCard({
             width={400}
             height={80}
             className="w-full h-full object-cover"
+            unoptimized
           />
         </div>
       )}

@@ -66,6 +66,7 @@ export function TrainingOverviewOnboarding() {
                         width={400}
                         height={400}
                         className="w-full h-8 object-contain"
+                        unoptimized
                       />
                     </div>
                   </div>

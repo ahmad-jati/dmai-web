@@ -141,12 +141,13 @@ export default function Page({ params }: Props) {
 
         <div className="flex-1 rounded-5xl border border-foreground bg-background p-2 h-88">
           <Image
-            src={session.instructions[0]?.image ?? '/serene1.png'}
+            src={session.image_cover}
             alt={session.session_name}
             width={2000}
             height={2000}
             priority
             className="w-full h-full object-cover rounded-4xl"
+            unoptimized
           />
         </div>
       </Section>

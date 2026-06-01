@@ -203,17 +203,24 @@ export function StepperExercise({ instructions, onDone }: Props) {
   // ── Loading ───────────────────────────────────────────────────
   if (!isReady) {
     return (
-      <div className="w-full p-6 bg-celeste border border-foreground rounded-5xl">
+      <div className="w-full p-4 bg-celeste border border-foreground rounded-5xl">
         <div className="flex flex-col gap-8 items-center w-full rounded-4xl relative p-8 h-[76dvh] overflow-hidden">
           <div className="absolute inset-0 z-0">
             <Image
+              key={step.image}
               src={step.image}
               alt={step.title}
               fill
+              unoptimized
               priority
-              className="object-cover object-center rounded-5xl border border-foreground"
+              className="object-cover object-center rounded-4xl"
             />
-            <div className="absolute inset-0 bg-foreground/30 rounded-5xl" />
+
+            <div className="absolute inset-0 rounded-4xl bg-black/45" />
+
+            <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
+
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/80 via-black/50 to-transparent rounded-b-4xl" />
           </div>
           <div className="relative z-10 flex flex-col items-center justify-center flex-1 gap-3">
             <Spinner />
@@ -226,21 +233,25 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
   // ── Main UI ───────────────────────────────────────────────────
   return (
-    <div className="p-6 bg-celeste border border-foreground w-full rounded-5xl">
+    <div className="p-4 bg-celeste border border-foreground w-full rounded-5xl">
 
       <div className="flex flex-col items-center w-full rounded-4xl relative h-[76dvh] overflow-hidden">
-        {/* ── Background image ── */}
         <div className="absolute inset-0 z-0">
           <Image
             key={step.image}
             src={step.image}
             alt={step.title}
             fill
+            unoptimized
             priority
             className="object-cover object-center rounded-4xl"
           />
-          <div className="absolute inset-x-0 top-0 h-full bg-linear-to-b from-black/36 to-transparent rounded-t-4xl" />
-          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/75 via-black/45 to-transparent rounded-b-4xl" />
+
+          <div className="absolute inset-0 rounded-4xl bg-black/45" />
+
+          <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
+
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/80 via-black/50 to-transparent rounded-b-4xl" />
         </div>
 
         {/* ── Content layer ── */}
