@@ -106,7 +106,7 @@ export function HistoryList() {
       <div className="flex-1 flex flex-col gap-3.5 items-start">
         <h1 className="text-h1">Session History</h1>
 
-        <div className="h-120 pr-4 pb-2 overflow-y-auto w-full">
+        <div className="h-118 pr-4 pb-2 overflow-y-auto w-full">
           {loading ? (
             <HistorySkeletonContent />
           ) : grouped.length === 0 ? (
@@ -124,7 +124,7 @@ export function HistoryList() {
                     {group.items.map((item) => (
                       <div
                         key={item.id}
-                        className="w-full flex items-start gap-4 p-3 rounded-2xl bg-background text-foreground border border-foreground"
+                        className="w-full flex items-start gap-2 p-3 rounded-2xl bg-background text-foreground border border-foreground"
                       >
                         <div className="flex-1 flex flex-col gap-2">
                           <p className="text-lg font-semibold">{item.session_name}</p>
@@ -132,7 +132,7 @@ export function HistoryList() {
                             Selesai pukul {formatTime(item.completed_at)}
                           </p>
                           <Button
-                            className="bg-white w-fit px-6 py-2 font-medium rounded-full"
+                            className="bg-white w-fit px-4 py-2 mt-2 font-medium rounded-full"
                             size="sm"
                             asChild
                           >
