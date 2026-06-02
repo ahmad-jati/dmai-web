@@ -64,8 +64,8 @@ export function ProtectedNavbar() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="rounded-sm p-2">
-              <ListIcon className="w-7 h-7" />
+            <Button variant={'ghost'} className="rounded-sm px-2 py-1 [&_svg]:size-5 hover:bg-background transition-all hover:border hover:border-foreground">
+              <ListIcon />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44 bg-background">
@@ -84,7 +84,7 @@ export function ProtectedNavbar() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={logout}
-              className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md border-2 border-destructive/20 text-destructive hover:bg-destructive/30 hover:cursor-pointer bg-destructive/20"
+              className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md border-2 border-destructive/20 text-destructive hover:bg-destructive/70 hover:cursor-pointer bg-destructive/20 hover:text-background"
             >
               <SignOutIcon className="w-4 h-4" />
               Logout
