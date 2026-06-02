@@ -40,7 +40,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   }
 
   return (
-    <aside className="w-60 border-r border-border flex flex-col bg-background ">
+    <aside className="w-60 h-full border-r border-border flex flex-col bg-background ">
       {/* Brand */}
       <div className="px-6 py-5">
         <p className="font-semibold text-h1 tracking-tight">DMAI</p>

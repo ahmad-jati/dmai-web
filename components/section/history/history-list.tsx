@@ -91,7 +91,7 @@ export function HistoryList() {
   }, [])
 
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center w-full gap-6">
       <div className="w-76 h-120">
         <Image
           src={'/tropicaline/Being-Still.png'}
@@ -103,7 +103,7 @@ export function HistoryList() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col gap-3.5 items-start">
+      <div className="flex-1 flex flex-col gap-3.5 w-full items-start">
         <h1 className="text-h1">Session History</h1>
 
         <div className="h-118 pr-4 pb-2 overflow-y-auto w-full">
@@ -114,38 +114,44 @@ export function HistoryList() {
               Kamu belum menyelesaikan sesi apapun.
             </p>
           ) : (
-            <div className="flex flex-col gap-8">
-              {grouped.map((group) => (
-                <div key={group.dateLabel} className="flex flex-col gap-4">
-                  <p className="text-md font-medium text-muted-foreground">
-                    {group.dateLabel}
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {group.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="w-full flex items-start gap-2 p-3 rounded-2xl bg-background text-foreground border border-foreground"
-                      >
-                        <div className="flex-1 flex flex-col gap-2">
-                          <p className="text-lg font-semibold">{item.session_name}</p>
-                          <p className="text-sm font-medium">
-                            Selesai pukul {formatTime(item.completed_at)}
-                          </p>
-                          <Button
-                            className="bg-white w-fit px-4 py-2 mt-2 font-medium rounded-full"
-                            size="sm"
-                            asChild
-                          >
-                            <Link href={`/session/${item.session_slug}`}>
-                              Lihat sesi
-                            </Link>
-                          </Button>
+            <div className="flex flex-col items-center w-full gap-8">
+              <div className="flex flex-col gap-8 w-full">
+                {grouped.map((group) => (
+                  <div key={group.dateLabel} className="flex flex-col gap-4">
+                    <p className="text-md font-medium text-muted-foreground">
+                      {group.dateLabel}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {group.items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="w-full flex items-start gap-2 p-3 rounded-2xl bg-background text-foreground border border-foreground"
+                        >
+                          <div className="flex-1 flex flex-col gap-2">
+                            <p className="text-lg font-semibold">{item.session_name}</p>
+                            <p className="text-sm font-medium">
+                              Selesai pukul {formatTime(item.completed_at)}
+                            </p>
+                            <Button
+                              className="bg-white w-fit px-4 py-2 mt-2 font-medium rounded-full"
+                              size="sm"
+                              asChild
+                            >
+                              <Link href={`/session/${item.session_slug}`}>
+                                Lihat sesi
+                              </Link>
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <Button
+              >
+                Tampilkan history 10 hari sebelumnya
+              </Button>
             </div>
           )}
         </div>

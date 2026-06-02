@@ -216,7 +216,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
               className="object-cover object-center rounded-4xl"
             />
 
-            <div className="absolute inset-0 rounded-4xl bg-black/45" />
+            <div className="absolute inset-0 rounded-4xl bg-black/25" />
 
             <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
 
@@ -247,7 +247,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
             className="object-cover object-center rounded-4xl"
           />
 
-          <div className="absolute inset-0 rounded-4xl bg-black/45" />
+          <div className="absolute inset-0 rounded-4xl bg-black/25" />
 
           <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
 
