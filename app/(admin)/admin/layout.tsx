@@ -47,15 +47,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex bg-white">
-      {/* Fixed full-height sidebar */}
       <div className="fixed inset-y-0 left-0 z-40 h-screen">
         <AdminSidebar />
       </div>
-      {/* Main content offset by sidebar width (w-60 = 240px) */}
       <main className="flex-1 ml-60 min-h-dvh overflow-y-auto">
         {children}
       </main>
-      <Toaster />
+      <Toaster
+        position="top-right"
+      />
     </div>
   )
 }

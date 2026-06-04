@@ -34,7 +34,7 @@ export async function fetchAllSessions(): Promise<SessionData[]> {
         step_number, title, description, duration_seconds, image_url, audio_url
       )
     `)
-    .order('created_at')
+    .order('sort_order', { ascending: true })
 
   if (error || !sessions) return []
 

@@ -88,7 +88,7 @@ export default function ExercisePage({ params }: Props) {
               width={2000}
               height={2000}
               priority
-              className="w-full h-full object-cover rounded-3xl"
+              className="w-full h-full object-cover rounded-3xl bg-muted-foreground/10"
               unoptimized
             />
           </div>

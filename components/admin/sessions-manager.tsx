@@ -29,7 +29,6 @@ import {
   FloppyDiskIcon,
   ImageIcon,
   SpeakerHighIcon,
-  TrashIcon,
 } from "@phosphor-icons/react"
 import { Badge } from "../ui/badge"
 import Image from "next/image"
@@ -228,7 +227,7 @@ function StepEditorDialog({
                   alt="preview"
                   width={60}
                   height={60}
-                  className="w-20 h-20 object-cover border border-border rounded-md shrink-0"
+                  className="w-20 h-20 object-cover border border-border rounded-md shrink-0 bg-muted-foreground/10"
                   unoptimized
                 />
               )}
@@ -295,8 +294,32 @@ type SessionMeta = {
   session_name: string
   slug: string
   detail_short: string
-  detail_full: string[]
+  detail_full: [string, string]   // always exactly 2 paragraphs
   image_cover_url: string
+}
+
+function sessionToMeta(session: SessionRecord): SessionMeta {
+  const p0 = session.detail_full[0] ?? ''
+  const p1 = session.detail_full[1] ?? ''
+  return {
+    session_name: session.session_name,
+    slug: session.slug,
+    detail_short: session.detail_short,
+    detail_full: [p0, p1],
+    image_cover_url: session.image_cover_url ?? '',
+  }
+}
+
+function metaChanged(original: SessionRecord, form: SessionMeta, coverFile: File | null): boolean {
+  if (coverFile) return true
+  if (form.session_name !== original.session_name) return true
+  if (form.slug !== original.slug) return true
+  if (form.detail_short !== original.detail_short) return true
+  const p0 = original.detail_full[0] ?? ''
+  const p1 = original.detail_full[1] ?? ''
+  if (form.detail_full[0] !== p0) return true
+  if (form.detail_full[1] !== p1) return true
+  return false
 }
 
 function SessionDetailView({
@@ -312,17 +335,13 @@ function SessionDetailView({
   const [editingStep, setEditingStep] = useState<SessionStep | null>(null)
   const [stepEditorOpen, setStepEditorOpen] = useState(false)
 
-  // Meta form state
-  const [form, setForm] = useState<SessionMeta>({
-    session_name: session.session_name,
-    slug: session.slug,
-    detail_short: session.detail_short,
-    detail_full: session.detail_full.length > 0 ? [...session.detail_full] : [''],
-    image_cover_url: session.image_cover_url ?? '',
-  })
+  const [form, setForm] = useState<SessionMeta>(() => sessionToMeta(session))
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const coverRef = useRef<HTMLInputElement>(null)
+
+  // Track whether meta form has unsaved changes
+  const isDirty = metaChanged(session, form, coverFile)
 
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -330,21 +349,6 @@ function SessionDetailView({
       setCoverFile(file)
       setForm((f) => ({ ...f, image_cover_url: URL.createObjectURL(file) }))
     }
-  }
-
-  const handleDetailFullChange = (index: number, value: string) => {
-    setForm((f) => {
-      const arr = [...f.detail_full]
-      arr[index] = value
-      return { ...f, detail_full: arr }
-    })
-  }
-
-  const removeParagraph = (index: number) => {
-    setForm((f) => ({
-      ...f,
-      detail_full: f.detail_full.filter((_, i) => i !== index),
-    }))
   }
 
   const handleSaveMeta = async () => {
@@ -421,7 +425,6 @@ function SessionDetailView({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Back button */}
       <Button
         variant="link"
         size="sm"
@@ -447,7 +450,7 @@ function SessionDetailView({
                   alt="cover"
                   width={320}
                   height={320}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover bg-muted-foreground/10"
                   unoptimized
                 />
               ) : (
@@ -486,37 +489,34 @@ function SessionDetailView({
             />
           </div>
 
-          {/* Detail full */}
+          {/* Detail full — always 2 fixed paragraphs, no add/delete */}
           <div className="flex flex-col gap-2">
             <Label>Deskripsi Lengkap</Label>
-            {form.detail_full.map((para, i) => (
-              <div key={i} className="flex gap-2 items-start">
+            {([0, 1] as const).map((i) => (
+              <div key={i} className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">Paragraf {i + 1}</span>
                 <Textarea
-                  value={para}
-                  onChange={(e) => handleDetailFullChange(i, e.target.value)}
+                  value={form.detail_full[i]}
+                  onChange={(e) =>
+                    setForm((f) => {
+                      const arr: [string, string] = [...f.detail_full] as [string, string]
+                      arr[i] = e.target.value
+                      return { ...f, detail_full: arr }
+                    })
+                  }
                   rows={3}
                   placeholder={`Paragraf ${i + 1}`}
-                  className="resize-none text-sm flex-1"
+                  className="resize-none text-sm"
                 />
-                {form.detail_full.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeParagraph(i)}
-                    className="h-8 w-8 p-0 shrink-0 mt-0.5 [&_svg]:size-3.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <TrashIcon />
-                  </Button>
-                )}
               </div>
             ))}
           </div>
 
-          {/* Save button */}
+          {/* Save button — disabled when no changes */}
           <Button
             onClick={handleSaveMeta}
-            disabled={saving}
-            className="rounded-md gap-2 [&_svg]:size-4 bg-celeste w-full"
+            disabled={saving || !isDirty}
+            className="rounded-md gap-2 [&_svg]:size-4 bg-celeste w-full disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {saving ? <Spinner className="shrink-0 text-foreground" /> : <FloppyDiskIcon className="w-4 h-4" />}
             {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
@@ -554,7 +554,7 @@ function SessionDetailView({
                           alt={step.title ?? `Step ${step.step_number}`}
                           width={48}
                           height={48}
-                          className="w-12 h-12 object-cover border border-border rounded-md"
+                          className="w-12 h-12 object-cover border border-border rounded-md bg-muted-foreground/10"
                           unoptimized
                         />
                       ) : (
@@ -612,7 +612,6 @@ function SessionCard({
       className="flex flex-col gap-2.5 p-3.5 bg-white border border-border hover:border-muted-foreground/40 hover:shadow-sm transition-all text-left rounded-md group w-full"
     >
       <div className="flex items-start gap-3 w-full">
-        {/* Square thumbnail */}
         <div className="w-12 h-12 rounded-md overflow-hidden border border-border bg-muted shrink-0">
           {session.image_cover_url ? (
             <Image
@@ -620,7 +619,7 @@ function SessionCard({
               alt={session.session_name}
               width={48}
               height={48}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover bg-muted-foreground/10"
               unoptimized
             />
           ) : (
@@ -630,7 +629,6 @@ function SessionCard({
           )}
         </div>
 
-        {/* Name + badge */}
         <div className="flex flex-col gap-0.5 flex-1 min-w-0">
           <p className="font-semibold text-sm leading-snug line-clamp-2 group-hover:underline underline-offset-2">
             {session.session_name}
@@ -641,7 +639,6 @@ function SessionCard({
         </div>
       </div>
 
-      {/* Short description */}
       <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
         {session.detail_short}
       </p>
@@ -652,7 +649,6 @@ function SessionCard({
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export function SessionsManager() {
-  // Keep a stable ordered list — never re-sort after initial load
   const [sessions, setSessions] = useState<SessionRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [activeSession, setActiveSession] = useState<SessionRecord | null>(null)
@@ -666,13 +662,13 @@ export function SessionsManager() {
           .from('sessions')
           .select(`
             id, slug, session_name, detail_short, detail_full,
-            image_cover_url, created_at,
+            image_cover_url, sort_order,
             session_steps (
               id, step_number, title, description,
               duration_seconds, image_url, audio_url
             )
           `)
-          .order('created_at', { ascending: true })
+          .order('sort_order', { ascending: true })
 
         if (error) {
           console.error('Failed to load sessions:', error)
@@ -698,7 +694,6 @@ export function SessionsManager() {
     load()
   }, [])
 
-  // Update a session in place without changing its position in the array
   const handleSessionUpdated = useCallback((updated: SessionRecord) => {
     setSessions((prev) =>
       prev.map((s) => (s.id === updated.id ? updated : s))

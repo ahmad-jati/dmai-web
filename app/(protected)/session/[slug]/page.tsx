@@ -6,7 +6,7 @@ import { use, useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import { Section } from "@/components/layout/section-wrapper";
 import { Button } from "@/components/ui/button";
-import { SessionList } from "@/components/session-list";
+import { OtherSessionList } from "@/components/other-session-list";
 import { fetchSessionBySlug, type SessionData } from "@/lib/data-detail-session";
 import { createClient } from "@/lib/supabase/client";
 import { PersonSimpleTaiChiIcon, TimerIcon, PlayIcon, HeartIcon } from "@phosphor-icons/react";
@@ -99,7 +99,12 @@ export default function Page({ params }: Props) {
       <Section className="flex gap-8 bg-celeste">
         <div className="flex flex-col justify-between max-w-xl">
           <div className="flex items-center gap-1 font-semibold text-sm">
-            <Link href={'/session' as Route}>ALL SESSION</Link>
+            <Link 
+              href={'/session' as Route}
+              className="hover:underline underline-offset-2"
+            >
+              ALL SESSION
+            </Link>
             <p>/</p>
             <p>{session.session_name.toUpperCase()}</p>
           </div>
@@ -146,14 +151,14 @@ export default function Page({ params }: Props) {
             width={2000}
             height={2000}
             priority
-            className="w-full h-full object-cover rounded-4xl"
+            className="w-full h-full object-cover rounded-4xl bg-muted-foreground/10"
             unoptimized
           />
         </div>
       </Section>
 
       <Section className="bg-pink">
-        <SessionList excludeSlug={slug} />
+        <OtherSessionList excludeSlug={slug} />
       </Section>
     </div>
   );
