@@ -53,8 +53,6 @@ export function StepperExercise({ instructions, onDone }: Props) {
     resume: bgmResume,
     stop: bgmStop,
     switchTrack: bgmSwitchTrack,
-    duck,
-    restore,
   } = bgm
 
   const { playNarration, stopNarration, fadeMute } = narration
@@ -141,7 +139,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
   // ── 5. Narration ──────────────────────────────────────────────
   useEffect(() => {
     if (!isReady || !isPlaying || !step.audio) return
-    playNarration(step.audio, isMuted, duck, restore)
+    playNarration(step.audio, isMuted)
     return () => stopNarration()
   }, [currentStep, narrationKey, isPlaying, isReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
