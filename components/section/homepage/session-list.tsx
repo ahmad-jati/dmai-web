@@ -40,7 +40,10 @@ export function SessionList({ excludeSlug }: { excludeSlug?: string }) {
 
   return (
     <div id="session-list" className="flex flex-col gap-4 items-start">
-      <h2>All Session</h2>
+      <div className="flex flex-col gap-3 max-w-180">
+        <h2>All Session</h2>
+        <p className="font-medium">Mulai perlahan, pilih satu sesi yang terasa paling dekat denganmu.</p>
+      </div>
 
       <div className="grid grid-cols-4 gap-3.5 w-full">
         {loading
@@ -51,42 +54,53 @@ export function SessionList({ excludeSlug }: { excludeSlug?: string }) {
               <Link
                 key={session.slug}
                 href={`/session/${session.slug}` as Route}
-                className="flex flex-col justify-between items-end gap-4 bg-background p-3 rounded-lg border border-foreground w-full h-40"
+                className="group flex flex-col items-end justify-between gap-2 bg-background p-3 rounded-lg border border-foreground w-full h-62.5"
               >
-                <div className="flex flex-col gap-1">
-                  <p className="font-bold text-md">{session.session_name}</p>
+                <div className="w-full h-35">
+                  <Image
+                    src={session.image_cover}
+                    alt={`session ${session.session_name}`}
+                    width={2000}
+                    height={2000}
+                    priority
+                    unoptimized
+                    className="w-full h-full object-cover rounded-md bg-muted-foreground/10"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 self-end">
+                  <p className="font-bold text-md group-hover:underline underline-offset-2">{session.session_name}</p>
                   <p className="font-medium text-sm">{session.detail_short}</p>
                   <p className="font-medium text-xs text-muted-foreground">
-                    {session.total_instruction} Pelatihan ● {session.duration}
+                    {session.total_instruction} Instruksi ● {session.duration}
                   </p>
-                </div>
-                <div>
-                  <Button className="p-2 bg-white" asChild>
+                  {/* <Button className="w-8 h-8 [&_svg]:size-3.5 bg-white self-end" asChild>
                     <span>
                       <PlayIcon className="w-5 h-5" weight="fill"/>
                     </span>
-                  </Button>
+                  </Button> */}
                 </div>
               </Link>
             ))
         }
 
-        {!loading && (
-          <div className="relative flex flex-row-reverse items-center justify-end bg-background rounded-lg border border-foreground overflow-hidden h-40">
-            <p className="font-bold text-lg z-1 relative -ml-2">
-              You&apos;re <span className="block">not</span> alone.
-            </p>
-            <div className="relative -mb-3 -ml-4">
+        {/* {!loading && (
+          <div className="relative flex flex-col items-center justify-end bg-background rounded-lg border border-foreground overflow-hidden h-full">
+            <div className="flex-1 flex items-center ">
+              <p className="font-bold text-xl">
+                You&apos;re not alone.
+              </p>
+            </div>
+            <div className="relative -mb-3">
               <Image
                 src="/tropicaline/Diversity.png"
                 alt="Diversity icon"
                 width={400}
                 height={400}
-                className="w-49 h-full object-contain"
+                className="w-full h-full object-contain"
               />
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   )
