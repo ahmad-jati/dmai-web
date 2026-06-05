@@ -1,7 +1,8 @@
 import { useRef, useCallback, useState, useEffect } from 'react'
 
-const BGM_VOLUME = 0.6
-const BGM_DUCK_VOLUME = 0.1
+// No BGM_VOLUME constant — we never set volume programmatically.
+// The audio element plays at whatever the user's system/browser volume is (1.0 by default).
+// Fades only happen for smooth start/stop/switch transitions, always targeting 0 or 1.
 
 interface BGMControls {
   ref: React.MutableRefObject<HTMLAudioElement | null>
@@ -14,8 +15,6 @@ interface BGMControls {
   resume: () => void
   stop: () => void
   switchTrack: (src: string) => Promise<void>
-  duck: () => void
-  restore: () => void
 }
 
 export function useBGMPlayer(): BGMControls {
@@ -27,11 +26,11 @@ export function useBGMPlayer(): BGMControls {
   const [currentTrack, setCurrentTrack] = useState<string | null>(null)
   const [isBGMStopped, setIsBGMStopped] = useState(true)
 
-  // Create the Audio element once on mount
   useEffect(() => {
     const audio = new Audio()
     audio.crossOrigin = 'anonymous'
     audio.loop = true
+    audio.volume = 1
     audioRef.current = audio
     return () => {
       audio.pause()
@@ -39,10 +38,13 @@ export function useBGMPlayer(): BGMControls {
     }
   }, [])
 
-  // Smooth fade via requestAnimationFrame. Cancels any in-progress fade first.
-  const smoothFade = useCallback((targetVolume: number, duration = 800) => {
+  // Cancels any in-progress fade, then animates volume from current → target.
+  const smoothFade = useCallback((targetVolume: number, duration = 600) => {
     if (!audioRef.current) return
-    if (fadeTimerRef.current) cancelAnimationFrame(fadeTimerRef.current)
+    if (fadeTimerRef.current) {
+      cancelAnimationFrame(fadeTimerRef.current)
+      fadeTimerRef.current = null
+    }
 
     const startVolume = audioRef.current.volume
     const startTime = performance.now()
@@ -50,8 +52,7 @@ export function useBGMPlayer(): BGMControls {
     const animate = (now: number) => {
       if (!audioRef.current) return
       const progress = Math.min((now - startTime) / duration, 1)
-      const raw = startVolume + (targetVolume - startVolume) * progress
-      audioRef.current.volume = Math.max(0, Math.min(1, raw))
+      audioRef.current.volume = Math.max(0, Math.min(1, startVolume + (targetVolume - startVolume) * progress))
       if (progress < 1) {
         fadeTimerRef.current = requestAnimationFrame(animate)
       } else {
@@ -69,22 +70,26 @@ export function useBGMPlayer(): BGMControls {
     setIsLoaded(true)
   }, [])
 
-  // Start from silence and fade in. Re-throws on autoplay block.
+  // Fade in from 0 → 1 on first play (avoids abrupt start).
   const play = useCallback(async () => {
     if (!audioRef.current) return
     audioRef.current.volume = 0
     await audioRef.current.play()
     isBGMStoppedRef.current = false
     setIsBGMStopped(false)
-    smoothFade(BGM_VOLUME, 1200)
+    smoothFade(1, 1200)
   }, [smoothFade])
 
+  // Fade out → pause (does NOT reset currentTime).
   const pause = useCallback(() => {
     if (!audioRef.current) return
     smoothFade(0, 500)
-    setTimeout(() => audioRef.current?.pause(), 500)
+    setTimeout(() => {
+      audioRef.current?.pause()
+    }, 520)
   }, [smoothFade])
 
+  // Fade back in from wherever volume is → resume playback.
   const resume = useCallback(async () => {
     if (!audioRef.current) return
     if (!audioRef.current.paused) return
@@ -93,12 +98,13 @@ export function useBGMPlayer(): BGMControls {
       await audioRef.current.play()
       isBGMStoppedRef.current = false
       setIsBGMStopped(false)
-      smoothFade(BGM_VOLUME, 500)
+      smoothFade(1, 600)
     } catch (err) {
       console.warn('[BGM] resume failed:', err)
     }
   }, [smoothFade])
 
+  // Fade out → pause + reset position.
   const stop = useCallback(() => {
     if (!audioRef.current) return
     smoothFade(0, 500)
@@ -109,46 +115,49 @@ export function useBGMPlayer(): BGMControls {
       }
       isBGMStoppedRef.current = true
       setIsBGMStopped(true)
-    }, 500)
+    }, 520)
   }, [smoothFade])
 
+  // Switch track immediately with a quick crossfade:
+  // 1. Fade current out (if playing)
+  // 2. Swap src + start playing at volume 0
+  // 3. Fade in
+  // This always autoplays — whether BGM was playing or was user-stopped.
   const switchTrack = useCallback(async (src: string) => {
     if (!audioRef.current) return
 
-    // FIX: treat "user explicitly stopped" (Tanpa Musik) as intent to play again
-    // when they pick a new track. Previously only checked !paused, which was
-    // false after stop(), so the new track loaded but never played.
-    const shouldPlay = !audioRef.current.paused || isBGMStoppedRef.current
-
-    if (!audioRef.current.paused) {
-      // Currently playing — fade out first before swapping src
-      smoothFade(0, 500)
-      await new Promise<void>((r) => setTimeout(r, 500))
+    // Cancel any pending fade first
+    if (fadeTimerRef.current) {
+      cancelAnimationFrame(fadeTimerRef.current)
+      fadeTimerRef.current = null
     }
 
+    // Fade out if currently audible
+    const wasPlaying = !audioRef.current.paused
+    if (wasPlaying) {
+      smoothFade(0, 400)
+      await new Promise<void>((r) => setTimeout(r, 420))
+      audioRef.current?.pause()
+    }
+
+    if (!audioRef.current) return
+
+    // Swap the source
     audioRef.current.src = src
     audioRef.current.currentTime = 0
+    audioRef.current.volume = 0
     audioRef.current.load()
     setCurrentTrack(src)
 
-    if (shouldPlay) {
-      try {
-        // Explicitly reset to 0 before play so there's no full-volume flash
-        audioRef.current.volume = 0
-        await audioRef.current.play()
-        isBGMStoppedRef.current = false
-        setIsBGMStopped(false)
-        smoothFade(BGM_VOLUME, 500)
-      } catch (err) {
-        console.warn('[BGM] track switch play failed:', err)
-      }
+    // Always autoplay the new track
+    try {
+      await audioRef.current.play()
+      isBGMStoppedRef.current = false
+      setIsBGMStopped(false)
+      smoothFade(1, 600)
+    } catch (err) {
+      console.warn('[BGM] switchTrack play failed:', err)
     }
-  }, [smoothFade])
-
-  const duck = useCallback(() => smoothFade(BGM_DUCK_VOLUME, 200), [smoothFade])
-
-  const restore = useCallback(() => {
-    if (!isBGMStoppedRef.current) smoothFade(BGM_VOLUME, 300)
   }, [smoothFade])
 
   useEffect(() => {
@@ -168,7 +177,5 @@ export function useBGMPlayer(): BGMControls {
     resume,
     stop,
     switchTrack,
-    duck,
-    restore,
   }
 }
