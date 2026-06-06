@@ -44,7 +44,7 @@ function SessionDetailSkeleton() {
         <div className="flex flex-col gap-4">
           <div className="h-6 bg-foreground/10 rounded w-32 animate-pulse" />
           <div className="grid grid-cols-3 gap-3.5">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-40 bg-background rounded-lg border border-foreground/20 animate-pulse" />
             ))}
           </div>
@@ -59,7 +59,6 @@ export default function Page({ params }: Props) {
 
   const [session, setSession] = useState<SessionData | null | undefined>(undefined)
   const [completionCount, setCompletionCount] = useState<number>(0)
-  const [imageLoaded, setImageLoaded] = useState(false)
 
   useEffect(() => {
     fetchSessionBySlug(slug).then((data) => setSession(data ?? null))
@@ -81,93 +80,79 @@ export default function Page({ params }: Props) {
     fetchCount()
   }, [slug])
 
-  // Show skeleton while: session is loading OR session data arrived but cover image hasn't loaded
-  if (session === undefined || (session !== null && !imageLoaded)) {
-    // Trigger image preload as soon as we have the URL, but keep showing skeleton
-    if (session && session.image_cover && !imageLoaded) {
-      // The real page below will render off-screen to load the image;
-      // we render the skeleton on top until imageLoaded flips.
-    } else {
-      return <SessionDetailSkeleton />
-    }
-  }
-
+  // Only block on data fetch — image loads naturally inside its container bg placeholder
+  if (session === undefined) return <SessionDetailSkeleton />
   if (session === null) notFound()
 
   return (
-    <>
-      {/* Skeleton overlay — visible until image is done */}
-      {!imageLoaded && <div className="fixed inset-0 z-50 bg-white"><SessionDetailSkeleton /></div>}
+    <div className="flex flex-col gap-8 w-full">
+      <Section className="flex gap-8 bg-celeste">
+        <div className="flex flex-col justify-between max-w-xl">
+          <div className="flex items-center gap-1 font-semibold text-sm">
+            <Link
+              href={'/session' as Route}
+              className="hover:underline underline-offset-2"
+            >
+              ALL SESSION
+            </Link>
+            <p>/</p>
+            <p>{session.session_name.toUpperCase()}</p>
+          </div>
 
-      <div className="flex flex-col gap-8 w-full">
-        <Section className="flex gap-8 bg-celeste">
-          <div className="flex flex-col justify-between max-w-xl">
-            <div className="flex items-center gap-1 font-semibold text-sm">
-              <Link
-                href={'/session' as Route}
-                className="hover:underline underline-offset-2"
-              >
-                ALL SESSION
-              </Link>
-              <p>/</p>
-              <p>{session.session_name.toUpperCase()}</p>
-            </div>
+          <div className="flex flex-col gap-4">
+            <h1>{session.session_name.toUpperCase()}</h1>
 
-            <div className="flex flex-col gap-4">
-              <h1>{session.session_name.toUpperCase()}</h1>
+            {session.detail_full.map((para, i) => (
+              <p key={i} className="font-medium text-base">{para}</p>
+            ))}
 
-              {session.detail_full.map((para, i) => (
-                <p key={i} className="font-medium text-base">{para}</p>
-              ))}
-
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-1">
-                  <PersonSimpleTaiChiIcon className="w-5 h-5" weight="fill" />
-                  <p className="font-medium text-sm">{session.total_instruction} Instruksi</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <TimerIcon className="w-5 h-5" weight="fill" />
-                  <p className="font-medium text-sm">{session.duration}</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <HeartIcon className="w-5 h-5" weight="fill" />
-                  <p className="font-medium text-sm">
-                    {completionCount === 0
-                      ? "Kamu belum pernah mengikuti sesi ini"
-                      : `Kamu telah mengikuti sesi ini ${completionCount} kali`}
-                  </p>
-                </div>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-1">
+                <PersonSimpleTaiChiIcon className="w-5 h-5" weight="fill" />
+                <p className="font-medium text-sm">{session.total_instruction} Instruksi</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <TimerIcon className="w-5 h-5" weight="fill" />
+                <p className="font-medium text-sm">{session.duration}</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <HeartIcon className="w-5 h-5" weight="fill" />
+                <p className="font-medium text-sm">
+                  {completionCount === 0
+                    ? "Kamu belum pernah mengikuti sesi ini"
+                    : `Kamu telah mengikuti sesi ini ${completionCount} kali`}
+                </p>
               </div>
             </div>
-
-            <Button className="w-fit [&_svg]:size-3">
-              <Link href={`/session/${slug}/exercise` as Route} className="flex items-center gap-2">
-                MULAI SESI
-                <PlayIcon className="w-5 h-5" weight="fill" />
-              </Link>
-            </Button>
           </div>
 
-          <div className="flex-1 rounded-5xl border border-foreground bg-background p-2 h-88">
-            <div className="w-full h-full overflow-hidden rounded-4xl bg-muted-foreground/10">
-              <Image
-                src={session.image_cover}
-                alt={session.session_name}
-                width={2000}
-                height={2000}
-                priority
-                onLoad={() => setImageLoaded(true)}
-                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                unoptimized
-              />
-            </div>
-          </div>
-        </Section>
+          <Button className="w-fit [&_svg]:size-3">
+            <Link href={`/session/${slug}/exercise` as Route} className="flex items-center gap-2">
+              MULAI SESI
+              <PlayIcon className="w-5 h-5" weight="fill" />
+            </Link>
+          </Button>
+        </div>
 
-        <Section className="bg-pink">
-          <OtherSessionList excludeSlug={slug} />
-        </Section>
-      </div>
-    </>
+        <div className="flex-1 rounded-5xl border border-foreground bg-background p-2 h-88">
+          {/* bg-muted-foreground/10 acts as the image placeholder while it loads — no blink */}
+          <div className="w-full h-full overflow-hidden rounded-4xl bg-muted-foreground/10">
+            <Image
+              src={session.image_cover}
+              alt={session.session_name}
+              width={2000}
+              height={2000}
+              priority
+              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+              unoptimized
+            />
+          </div>
+        </div>
+      </Section>
+
+      <Section className="bg-pink">
+        <OtherSessionList excludeSlug={slug} />
+      </Section>
+    </div>
   );
 }
