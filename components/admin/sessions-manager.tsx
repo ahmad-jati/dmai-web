@@ -113,6 +113,8 @@ function StepEditorDialog({
   const [saving, setSaving] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [audioFile, setAudioFile] = useState<File | null>(null)
+  // Separate preview URLs from real saved URLs to avoid blob leaking to DB
+  const [imagePreview, setImagePreview] = useState<string>("")
   const imageRef = useRef<HTMLInputElement>(null)
   const audioRef = useRef<HTMLInputElement>(null)
 
@@ -121,6 +123,7 @@ function StepEditorDialog({
       setForm({ ...step })
       setImageFile(null)
       setAudioFile(null)
+      setImagePreview(step.image_url)
     }
   }, [step])
 
@@ -128,15 +131,15 @@ function StepEditorDialog({
     const file = e.target.files?.[0]
     if (file && form) {
       setImageFile(file)
-      setForm((f) => f ? ({ ...f, image_url: URL.createObjectURL(file) }) : f)
+      // Only use blob for local preview — never written to DB
+      setImagePreview(URL.createObjectURL(file))
     }
   }
 
   const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file && form) {
+    if (file) {
       setAudioFile(file)
-      setForm((f) => f ? ({ ...f, audio_url: file.name }) : f)
     }
   }
 
@@ -144,6 +147,7 @@ function StepEditorDialog({
     if (!form) return
     setSaving(true)
     const supabase = createClient()
+    // Start with original DB URLs — never with blob://
     let finalImageUrl = form.image_url
     let finalAudioUrl = form.audio_url
 
@@ -153,7 +157,9 @@ function StepEditorDialog({
       const { error: upErr } = await supabase.storage
         .from('session-assets')
         .upload(path, imageFile, { upsert: true })
-      if (!upErr) {
+      if (upErr) {
+        toast.error('Gagal upload gambar', { description: upErr.message })
+      } else {
         const { data: urlData } = supabase.storage.from('session-assets').getPublicUrl(path)
         finalImageUrl = urlData.publicUrl
       }
@@ -165,7 +171,9 @@ function StepEditorDialog({
       const { error: upErr } = await supabase.storage
         .from('session-assets')
         .upload(path, audioFile, { upsert: true })
-      if (!upErr) {
+      if (upErr) {
+        toast.error('Gagal upload audio', { description: upErr.message })
+      } else {
         const { data: urlData } = supabase.storage.from('session-assets').getPublicUrl(path)
         finalAudioUrl = urlData.publicUrl
       }
@@ -221,9 +229,9 @@ function StepEditorDialog({
           <div className="flex flex-col gap-2">
             <Label>Gambar</Label>
             <div className="flex items-center gap-4">
-              {form.image_url && (
+              {imagePreview && (
                 <Image
-                  src={form.image_url}
+                  src={imagePreview}
                   alt="preview"
                   width={60}
                   height={60}
@@ -294,7 +302,7 @@ type SessionMeta = {
   session_name: string
   slug: string
   detail_short: string
-  detail_full: [string, string]   // always exactly 2 paragraphs
+  detail_full: [string, string]
   image_cover_url: string
 }
 
@@ -337,24 +345,29 @@ function SessionDetailView({
 
   const [form, setForm] = useState<SessionMeta>(() => sessionToMeta(session))
   const [coverFile, setCoverFile] = useState<File | null>(null)
+  // Separate preview from real DB url
+  const [coverPreview, setCoverPreview] = useState<string>(session.image_cover_url ?? '')
   const [saving, setSaving] = useState(false)
   const coverRef = useRef<HTMLInputElement>(null)
 
-  // Track whether meta form has unsaved changes
   const isDirty = metaChanged(session, form, coverFile)
+
+  console.log(form)
 
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       setCoverFile(file)
-      setForm((f) => ({ ...f, image_cover_url: URL.createObjectURL(file) }))
+      // Only use blob URL for local preview
+      setCoverPreview(URL.createObjectURL(file))
     }
   }
 
   const handleSaveMeta = async () => {
     setSaving(true)
     const supabase = createClient()
-    let finalCoverUrl = form.image_cover_url
+    // Start with the original DB url — never blob://
+    let finalCoverUrl = session.image_cover_url
 
     if (coverFile) {
       const ext = coverFile.name.split('.').pop()
@@ -362,10 +375,13 @@ function SessionDetailView({
       const { error: upErr } = await supabase.storage
         .from('session-assets')
         .upload(path, coverFile, { upsert: true })
-      if (!upErr) {
-        const { data: urlData } = supabase.storage.from('session-assets').getPublicUrl(path)
-        finalCoverUrl = urlData.publicUrl
+      if (upErr) {
+        toast.error('Gagal upload cover', { description: upErr.message })
+        setSaving(false)
+        return
       }
+      const { data: urlData } = supabase.storage.from('session-assets').getPublicUrl(path)
+      finalCoverUrl = urlData.publicUrl
     }
 
     const cleanedDetailFull = form.detail_full.filter((p) => p.trim() !== '')
@@ -381,6 +397,8 @@ function SessionDetailView({
       })
       .eq('id', session.id)
 
+      
+
     if (error) {
       toast.error('Gagal menyimpan', { description: error.message })
     } else {
@@ -395,6 +413,8 @@ function SessionDetailView({
       }
       onSessionUpdated(updatedSession)
       setCoverFile(null)
+      // Update preview to final Supabase url (removes blob reference)
+      setCoverPreview(finalCoverUrl)
       toast.success('Tersimpan', { description: 'Sesi berhasil diperbarui.' })
     }
     setSaving(false)
@@ -440,13 +460,12 @@ function SessionDetailView({
         <div className="flex flex-col gap-5 w-80 shrink-0">
           <h2 className="text-lg font-semibold">{session.session_name}</h2>
 
-          {/* Cover image */}
           <div className="flex flex-col gap-2">
             <Label>Gambar Cover</Label>
             <div className="w-full aspect-square rounded-md overflow-hidden border border-border bg-muted">
-              {form.image_cover_url ? (
+              {coverPreview ? (
                 <Image
-                  src={form.image_cover_url}
+                  src={coverPreview}
                   alt="cover"
                   width={320}
                   height={320}
@@ -466,7 +485,7 @@ function SessionDetailView({
               className="w-fit rounded-md gap-2 [&_svg]:size-4 hover:bg-celeste"
             >
               <ImageIcon className="w-4 h-4" />
-              {form.image_cover_url ? 'Ganti Cover' : 'Upload Cover'}
+              {coverPreview ? 'Ganti Cover' : 'Upload Cover'}
             </Button>
             <input
               ref={coverRef}
@@ -480,16 +499,14 @@ function SessionDetailView({
             )}
           </div>
 
-          {/* Detail short */}
           <div className="flex flex-col gap-1.5">
             <Label>Deskripsi Singkat</Label>
-            <Input
+            <Textarea
               value={form.detail_short}
               onChange={(e) => setForm((f) => ({ ...f, detail_short: e.target.value }))}
             />
           </div>
 
-          {/* Detail full — always 2 fixed paragraphs, no add/delete */}
           <div className="flex flex-col gap-2">
             <Label>Deskripsi Lengkap</Label>
             {([0, 1] as const).map((i) => (
@@ -512,11 +529,10 @@ function SessionDetailView({
             ))}
           </div>
 
-          {/* Save button — disabled when no changes */}
           <Button
             onClick={handleSaveMeta}
             disabled={saving || !isDirty}
-            className="rounded-md gap-2 [&_svg]:size-4 bg-celeste w-full disabled:opacity-40 disabled:cursor-not-allowed"
+            className="rounded-md gap-2 [&_svg]:size-4 bg-celeste w-full disabled:bg-muted-foreground/20 disabled:cursor-not-allowed"
           >
             {saving ? <Spinner className="shrink-0 text-foreground" /> : <FloppyDiskIcon className="w-4 h-4" />}
             {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
@@ -612,7 +628,7 @@ function SessionCard({
       className="flex flex-col gap-2.5 p-3.5 bg-white border border-border hover:border-muted-foreground/40 hover:shadow-sm transition-all text-left rounded-md group w-full"
     >
       <div className="flex items-start gap-3 w-full">
-        <div className="w-12 h-12 rounded-md overflow-hidden border border-border bg-muted shrink-0">
+        <div className="w-14 h-14 rounded-md overflow-hidden border border-border bg-muted shrink-0">
           {session.image_cover_url ? (
             <Image
               src={session.image_cover_url}
@@ -629,8 +645,8 @@ function SessionCard({
           )}
         </div>
 
-        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-          <p className="font-semibold text-sm leading-snug line-clamp-2 group-hover:underline underline-offset-2">
+        <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+          <p className="font-semibold text-base leading-snug line-clamp-2 group-hover:underline underline-offset-2">
             {session.session_name}
           </p>
           <Badge variant="secondary" className="w-fit text-xs">

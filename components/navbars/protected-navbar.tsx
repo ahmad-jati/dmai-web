@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ListIcon, HouseIcon, SignOutIcon, ClockCounterClockwiseIcon} from "@phosphor-icons/react";
+import { ListIcon, HouseIcon, SignOutIcon, ClockCounterClockwiseIcon } from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -25,22 +25,35 @@ function getGreeting(): string {
 export function ProtectedNavbar() {
   const [userName, setUserName] = useState<string | null>(null);
   const [greeting, setGreeting] = useState(getGreeting());
+  const [greetingVisible, setGreetingVisible] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const getUser = async () => {
       const supabase = createClient();
+
+      // Fast path: login page stores name in sessionStorage on redirect
+      const cached = sessionStorage.getItem("user_full_name");
+      if (cached) {
+        setUserName(cached);
+        requestAnimationFrame(() => setGreetingVisible(true));
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
-      setUserName(user?.user_metadata?.full_name ?? null);
+      const name = user?.user_metadata?.full_name ?? null;
+      setUserName(name);
+      if (name) sessionStorage.setItem("user_full_name", name);
+      requestAnimationFrame(() => setGreetingVisible(true));
     };
     getUser();
 
-    // Update greeting every minute in case user keeps tab open across time boundaries
     const interval = setInterval(() => setGreeting(getGreeting()), 60_000);
     return () => clearInterval(interval);
   }, []);
 
   const logout = async () => {
+    sessionStorage.removeItem("user_full_name");
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
@@ -56,11 +69,13 @@ export function ProtectedNavbar() {
       </Link>
 
       <div className="flex gap-3 items-center">
-        {userName && (
-          <p className="text-md font-medium text-foreground">
-            {greeting}, <span className="">{userName}</span>!
-          </p>
-        )}
+        {/* Always reserve space; fade in once name is ready */}
+        <p
+          className="text-md font-medium text-foreground transition-opacity duration-500"
+          style={{ opacity: greetingVisible && userName ? 1 : 0 }}
+        >
+          {greeting}, <span>{userName}</span>!
+        </p>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
