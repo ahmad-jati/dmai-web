@@ -55,6 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </main>
       <Toaster
         position="top-right"
+        
       />
     </div>
   )
