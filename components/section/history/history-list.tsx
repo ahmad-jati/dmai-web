@@ -71,7 +71,7 @@ function HistorySkeleton() {
           {Array.from({ length: 3 }).map((_, gi) => (
             <div key={gi} className="flex flex-col gap-3 animate-pulse">
               <div className="h-4 bg-foreground/10 rounded w-24" />
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-3 gap-6">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="h-14 bg-background rounded-xl border border-foreground/10" />
                 ))}
@@ -122,7 +122,7 @@ function DayGroup({ group }: { group: GroupedDay }) {
         <p className="text-sm font-semibold text-foreground">{group.label}</p>
         <span className="text-xs text-muted-foreground">({group.items.length} sesi)</span>
       </div>
-      <div className="grid grid-cols-2 gap-2 pl-1">
+      <div className="grid grid-cols-3 gap-2 pl-1">
         {group.items.map((item) => (
           <HistoryItemCard key={item.id} item={item} />
         ))}
