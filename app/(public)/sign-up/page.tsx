@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { Section } from "@/components/layout/section-wrapper";
 import { SignUpForm } from "@/components/sign-up-form";
 import Image from "next/image";
+
+export const metadata: Metadata = {
+  title: "Sign Up — DMAI",
+  description:
+    "Buat akun baru dan mulai perjalanan mindfulness kamu bersama kami.",
+};
 
 export default function Page() {
   return (
@@ -9,7 +16,7 @@ export default function Page() {
         <Section className="bg-white p-4">
           <div className="h-full w-full rounded-3xl bg-tangerine flex items-center justify-center p-2">
             <Image
-              src={'/tropicaline/Together.png'}
+              src={"/tropicaline/Together.png"}
               alt=""
               width={2000}
               height={2000}
@@ -18,7 +25,6 @@ export default function Page() {
             />
           </div>
         </Section>
-
         <Section className="max-w-120 bg-white flex items-center">
           <SignUpForm />
         </Section>

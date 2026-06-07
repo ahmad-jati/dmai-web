@@ -13,6 +13,7 @@ export function HeroHomepage() {
         width={2000}
         height={2000}
         priority
+        unoptimized
         className="w-80 h-86 object-cover"
       />
       <div className="flex-1 flex flex-col gap-3.5 items-center text-center text-foreground">
