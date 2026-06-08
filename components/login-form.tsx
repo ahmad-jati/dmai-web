@@ -51,7 +51,6 @@ export function LoginForm({
         .eq("user_id", data.user.id)
         .single();
 
-      // Keep loading state — navigation will unmount the component anyway
       if (roleData?.role === "admin") {
         router.push("/admin");
       } else {
@@ -68,10 +67,10 @@ export function LoginForm({
   };
 
   return (
-    <div className='flex flex-col items-center gap-8'>
-      <div className="flex flex-col gap-4">
-        <h2>Good to see you again.</h2>
-        <p className="font-medium">
+    <div className='flex flex-col items-center sm:gap-8 gap-6'>
+      <div className="flex flex-col sm:gap-4 gap-2 lg:px-0 sm:px-14 xs:px-16">
+        <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold lg:text-left text-center">Good to see you again.</h2>
+        <p className="sm:text-p/5 text-sm/4 font-medium lg:text-left text-center">
           Terima kasih sudah kembali dan memberi ruang untuk dirimu sendiri hari ini. Mari lanjutkan sesi dengan tenang.
         </p>
       </div>
@@ -94,12 +93,12 @@ export function LoginForm({
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Kata Sandi</Label>
                 <Link
                   href={'/forgot-password'}
-                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                  className="ml-auto inline-block sm:text-sm text-xs underline-offset-4 hover:underline"
                 >
-                  Forgot your password?
+                  Lupa password?
                 </Link>
               </div>
 
@@ -136,7 +135,7 @@ export function LoginForm({
             </Button>
           </div>
 
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-4 text-center sm:text-sm text-xs">
             Belum punya akun?{" "}
             <Link
               href={'/sign-up'}

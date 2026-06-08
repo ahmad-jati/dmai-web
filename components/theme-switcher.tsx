@@ -24,41 +24,41 @@ const ThemeSwitcher = () => {
     return null;
   }
 
-  const ICON_SIZE = 16;
+  const ICON_SIZE = 12;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size={"sm"}>
           {theme === "light" ? (
-            <div className="flex gap-2 items-center text-muted-foreground">
-              <p>Theme: </p>
+            <div className="flex gap-2 items-center">
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">Theme: </p>
               <SunIcon
                 key="light"
-                size={ICON_SIZE}
-                className={"text-muted-foreground"}
+                // size={ICON_SIZE}
+                className={"text-muted-foreground size-50"}
                 />
-              <p>Light</p>
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">Light</p>
             </div>
           ) : theme === "dark" ? (
             <div className="flex gap-2 items-center text-muted-foreground">
-              <p>Theme: </p>
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">Theme: </p>
               <MoonIcon
                 key="dark"
                 size={ICON_SIZE}
                 className={"text-muted-foreground"}
               />
-              <p>Dark</p>
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">Dark</p>
             </div>
           ) : (
             <div className="flex gap-2 items-center text-muted-foreground">
-              <p>Theme: </p>
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">Theme: </p>
               <LaptopIcon
                 key="system"
                 size={ICON_SIZE}
                 className={"text-muted-foreground"}
                 />
-              <p>System</p>
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">System</p>
             </div>
           )}
         </Button>

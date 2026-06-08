@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Section } from "./layout/section-wrapper";
 import Image from "next/image";
+import { PasswordIcon } from "@phosphor-icons/react";
 
 export function UpdatePasswordForm({
   ...props
@@ -74,30 +75,31 @@ export function UpdatePasswordForm({
 
   return (
     <div className="w-full">
-      <Section className="flex items-center justify-center gap-8 bg-white">
-        <div className="flex-1 flex flex-col gap-3.5 items-start text-foreground max-w-120">
-          <h2>Set your new password</h2>
-          <p className="text-lg">
+      <Section className="flex lg:flex-row flex-col-reverse md:items-center justify-center items-end md:gap-8 gap-0 bg-lemon min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:px-20">
+        <div className="flex flex-col gap-3.5 items-start text-foreground md:px-0 px-2 md:mt-0 xs:-mt-10 -mt-4">
+          <PasswordIcon className="text-foreground md:w-10 md:h-10 w-16 h-16" />
+          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">Set your new password</h2>
+          <p className="sm:text-p/5 text-sm/4 font-medium">
             Masukkan password baru yang ingin kamu gunakan untuk kembali mengakses akunmu.
           </p>
 
           {!sessionReady && !error && (
-            <p className="text-sm text-muted-foreground">Memverifikasi sesi...</p>
+            <p className="font-medium text-muted-foreground sm:text-p/5 text-sm/4">Memverifikasi sesi...</p>
           )}
 
           {error && (
-            <p className="text-sm text-red-500">{error}</p>
+            <p className="sm:text-p/5 text-sm/4 font-medium text-red-500">{error}</p>
           )}
 
           {sessionReady && (
             <form onSubmit={handleUpdatePassword} className="w-full">
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="password">New password</Label>
+                  <Label htmlFor="password">Password Baru</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="New password"
+                    placeholder="Password Baru"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -105,21 +107,23 @@ export function UpdatePasswordForm({
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Saving..." : "Save new password"}
+                  {isLoading ? "Simpan..." : "Simpan password baru"}
                 </Button>
               </div>
             </form>
           )}
         </div>
 
-        <Image
-          src={'/tropicaline/Send.png'}
-          alt=""
-          width={2000}
-          height={2000}
-          className="w-107 h-96 object-contain"
-          loading="eager"
-        />
+        <div className="lg:w-76 lg:h-106 w-50 h-50">
+          <Image
+            src={'/tropicaline/Send.png'}
+            alt=""
+            width={2000}
+            height={2000}
+            priority
+            className="w-full h-full object-contain"
+          />
+        </div>
       </Section>
     </div>
   );

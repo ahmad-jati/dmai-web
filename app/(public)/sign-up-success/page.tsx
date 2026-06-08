@@ -7,22 +7,24 @@ import { MailboxIcon } from "@phosphor-icons/react";
 export default function Page() {
   return (
     <div className="w-full">
-      <Section className="flex items-center gap-8 bg-white">
-        <Image
-          src={'/tropicaline/Scooter.png'}
-          alt=""
-          width={2000}
-          height={2000}
-          priority
-          className="w-67 h-96 object-contain"
-        />
+      <Section className="flex lg:flex-row flex-col lg:items-center justify-center items-end lg:gap-8 gap-0 bg-lemon min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:px-20">
+        <div className="lg:w-67 lg:h-96 w-50 h-60">
+          <Image
+            src={'/tropicaline/Scooter.png'}
+            alt=""
+            width={2000}
+            height={2000}
+            priority
+            className="w-full h-full object-contain"
+          />
+        </div>
 
-        <div className="flex-1 flex flex-col gap-3.5 items-start text-foreground">
-          <MailboxIcon className="text-foreground w-10 h-10" />
-          <h2>Thank you for signing up!</h2>
-          <p className="text-lg">
+        <div className="flex flex-col gap-3.5 items-start text-foreground md:px-0 px-2 md:mt-0 xs:-mt-10 -mt-4">
+          <MailboxIcon className="text-foreground md:w-10 md:h-10 w-16 h-16" />
+          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">Thank you for signing up!</h2>
+          <p className="sm:text-p/5 text-sm/4">
             Silakan <span className="font-bold">cek email </span> untuk mengonfirmasi akun sebelum masuk ke platform.{" "}
-            <span className="block"></span> Kamu bisa menutup tab ini.
+            <span className="lg:block"></span> Kamu bisa menutup tab ini.
           </p>
         </div>
       </Section>

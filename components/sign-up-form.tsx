@@ -68,8 +68,8 @@ export function SignUpForm({
   return (
     <div className='flex flex-col items-center gap-8'>
       <div className="flex flex-col gap-4">
-        <h2>Glad you&apos;re here.</h2>
-        <p className="font-medium">
+        <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold md:text-left text-center">Let&apos;s prepare your account.</h2>
+        <p className="sm:text-p/5 text-sm/4 font-medium md:text-left text-center">
          Buat ruang kecil untuk dirimu hari ini, lalu jalani setiap sesi latihan sesuai dengan kenyamananmu sendiri.
         </p>
       </div>
@@ -81,8 +81,8 @@ export function SignUpForm({
                 <Input
                   id="fullname"
                   type="text"
-                  placeholder="Nama Kamu"
-                  className="rounded-full px-3"
+                  placeholder="DMAI"
+                  className="rounded-full px-3 text-sm font-medium"
                   required
                   value={fullname}
                   onChange={(e) => {
@@ -105,12 +105,12 @@ export function SignUpForm({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="off"
-                  className="rounded-full px-3"
+                  className="rounded-full px-3 text-sm font-medium"
                   />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Kata Sandi</Label>
                 </div>
 
                 <div className="relative">
@@ -122,7 +122,7 @@ export function SignUpForm({
                     autoComplete="off"
                     placeholder="●●●●●●●●"
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pr-10 rounded-full"
+                    className="pr-10 rounded-full text-sm font-medium"
                   />
 
                   <button

@@ -5,6 +5,7 @@ import { Button } from "../../ui/button";
 import { ArrowRightIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Route } from "next";
 
 export function HeroOnboarding() {
   const [splashDone, setSplashDone] = useState(false)
@@ -35,13 +36,13 @@ export function HeroOnboarding() {
         >
           <div className="flex flex-col items-center gap-2 text-center">
             <p
-              className="text-h1 font-semibold tracking-tight"
+              className="sm:text-h1/8 text-h2/7 font-semibold"
               style={{ animation: 'splash-fadein 0.6s ease-out 0.3s both' }}
             >
               DMAI
             </p>
             <p
-              className="text-base text-muted-foreground font-medium"
+              className="sm:text-p/5 text-sm/4text-muted-foreground"
               style={{ animation: 'splash-fadein 0.6s ease-out 0.7s both' }}
             >
               Digital Mindful Autogenic Intervention
@@ -76,33 +77,34 @@ export function HeroOnboarding() {
         </div>
       )}
 
-      {/* ── Actual content ── */}
       <div
-        className="flex flex-col items-center gap-4"
+        className="flex  flex-col items-center gap-6 md:px-0 px-2 md:pb-0 pb-3"
         style={{
           transition: 'opacity 500ms ease-out, transform 500ms ease-out',
           opacity: contentVisible ? 1 : 0,
           transform: contentVisible ? 'translateY(0)' : 'translateY(12px)',
         }}
       >
-        <Image
-          src={'/tropicaline/Being-Happy2.png'}
-          alt="Being Happy 2 (Tropicaline Illustrations)"
-          width={2000}
-          height={2000}
-          priority
-          className="w-102 h-83 object-cover"
-        />
+        <div className="md:w-102 sm:h-78 w-full xs:h-76 h-54 ">
+          <Image
+            src={'/tropicaline/happy.png'}
+            alt="Being Happy 2 (Tropicaline Illustrations)"
+            width={2000}
+            height={2000}
+            priority
+            className="w-full h-full object-contain"
+          />
+        </div>
 
-        <div className="flex-1 flex flex-col gap-4 items-center text-center text-foreground">
-          <h1 className="text-h1 max-w-90">Digital Mindful Autogenic Intervention.</h1>
-          <p className="text-base leading-tight max-w-140 font-medium">
+        <div className="flex-1 flex flex-col gap-2 items-center text-center text-foreground">
+          <h1 className="sm:text-h1/8 text-h2/7 font-semibold max-w-90">Digital Mindful Autogenic Intervention.</h1>
+          <p className="sm:text-p/5 text-sm/4 max-w-140 font-medium">
             Platform mindful yang dirancang untuk membantu kamu menjalani sesi latihan refleksi diri dengan suasana yang lebih tenang dan tidak terasa melelahkan.
           </p>
         </div>
 
         <Button asChild variant={'default'}>
-          <Link href={'/login'} className="flex gap-2 items-center">
+          <Link href={'/login' as Route} className="flex gap-2 items-center">
             COBA SEKARANG
             <ArrowRightIcon className="w-5 h-5" />
           </Link>

@@ -11,19 +11,29 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <div className="w-full">
-      <div className="flex gap-8">
-        <Section className="max-w-120 bg-white flex items-center">
-          <LoginForm />
-        </Section>
-        <Section className="bg-white p-4">
-          <div className="h-full w-full rounded-3xl bg-green flex items-center justify-center p-2">
+      <div className="flex lg:flex-row flex-col-reverse gap-8">
+        <Section className="min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:max-w-120 w-full bg-white flex lg:flex-row flex-col gap-8 justify-center items-center">
+          <div className="w-full xs:h-64 h-full bg-celeste rounded-3xl lg:hidden flex items-center justify-center p-2">
             <Image
-              src={"/tropicaline/Play.png"}
+              src={"/tropicaline/happy2.png"}
               alt=""
               width={2000}
               height={2000}
               priority
-              className="w-122 h-full object-cover"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <LoginForm />
+        </Section>
+        <Section className="bg-white p-4! w-full lg:block hidden">
+          <div className="min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:h-full w-full h-66 rounded-4xl bg-green flex items-center justify-center p-2">
+            <Image
+              src={"/tropicaline/happy2.png"}
+              alt=""
+              width={2000}
+              height={2000}
+              priority
+              className="w-122 h-full lg:object-cover object-contain"
             />
           </div>
         </Section>
