@@ -291,6 +291,16 @@
   }
 }
 
+html, body {
+  height: 100%;
+}
+
+#__next {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
 /* h1 {
   line-height: 105%;
   font-size: var(--text-h1);
