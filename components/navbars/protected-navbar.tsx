@@ -8,6 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
 import { ListIcon, HouseIcon, SignOutIcon, ClockCounterClockwiseIcon } from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
@@ -60,7 +62,7 @@ export function ProtectedNavbar() {
   };
 
   return (
-    <nav className="w-full flex justify-between items-center py-4 px-8 bg-white rounded-b-5xl border border-foreground border-t-0">
+    <nav className="w-full flex justify-between items-center py-4 bg-white sm:rounded-b-5xl px-8 rounded-b-3xl border border-foreground border-t-0">
       <Link
         href={'/homepage'}
         className="text-app-name hover:font-bold font-semibold"
@@ -69,9 +71,8 @@ export function ProtectedNavbar() {
       </Link>
 
       <div className="flex gap-3 items-center">
-        {/* Always reserve space; fade in once name is ready */}
         <p
-          className="text-md font-medium text-foreground transition-opacity duration-500"
+          className="text-md font-medium text-foreground transition-opacity duration-500 sm:block hidden"
           style={{ opacity: greetingVisible && userName ? 1 : 0 }}
         >
           {greeting}, <span>{userName}</span>!
@@ -84,26 +85,40 @@ export function ProtectedNavbar() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44 bg-background">
-            <DropdownMenuItem asChild>
-              <Link href="/homepage" className="flex gap-2 items-center cursor-pointer">
-                <HouseIcon className="w-4 h-4" />
-                Homepage
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href="/history" className="flex gap-2 items-center cursor-pointer">
-                <ClockCounterClockwiseIcon className="w-4 h-4" />
-                Riwayat Sesi
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={logout}
-              className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md border-2 border-destructive/20 text-destructive hover:bg-destructive/70 hover:cursor-pointer bg-destructive/20 hover:text-background"
-            >
-              <SignOutIcon className="w-4 h-4" />
-              Logout
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="sm:hidden block">
+                <p
+                  className="sm:text-p/5 text-sm/4 font-medium text-muted-foreground transition-opacity duration-500 "
+                  style={{ opacity: greetingVisible && userName ? 1 : 0 }}
+                >
+                  {greeting}, <span>{userName}</span>!
+                </p>
+              </DropdownMenuLabel>
+              <DropdownMenuItem asChild
+                className="[&_svg]:size-4"
+              >
+                <Link href="/homepage" className="flex gap-2 items-center cursor-pointer">
+                  <HouseIcon />
+                  Homepage
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="[&_svg]:size-4"
+              >
+                <Link href="/history" className="flex gap-2 items-center cursor-pointer">
+                  <ClockCounterClockwiseIcon />
+                  Riwayat Sesi
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={logout}
+                className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md text-destructive hover:bg-destructive/70 hover:cursor-pointer hover:text-background"
+              >
+                <SignOutIcon />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

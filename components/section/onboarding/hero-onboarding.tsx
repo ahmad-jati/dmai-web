@@ -78,7 +78,7 @@ export function HeroOnboarding() {
       )}
 
       <div
-        className="flex  flex-col items-center gap-6 md:px-0 px-2 md:pb-0 pb-3"
+        className="flex  flex-col items-center sm:gap-8 gap-6 md:px-0 px-2 md:pb-0 pb-3"
         style={{
           transition: 'opacity 500ms ease-out, transform 500ms ease-out',
           opacity: contentVisible ? 1 : 0,
@@ -96,8 +96,8 @@ export function HeroOnboarding() {
           />
         </div>
 
-        <div className="flex-1 flex flex-col gap-2 items-center text-center text-foreground">
-          <h1 className="sm:text-h1/8 text-h2/7 font-semibold max-w-90">Digital Mindful Autogenic Intervention.</h1>
+        <div className="flex-1 flex flex-col sm:gap-4 gap-2 items-center text-center text-foreground">
+          <h1 className="sm:text-h1/8 text-[1.8rem]/8 font-semibold max-w-90">Digital Mindful Autogenic Intervention.</h1>
           <p className="sm:text-p/5 text-sm/4 max-w-140 font-medium">
             Platform mindful yang dirancang untuk membantu kamu menjalani sesi latihan refleksi diri dengan suasana yang lebih tenang dan tidak terasa melelahkan.
           </p>
