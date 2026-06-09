@@ -244,6 +244,7 @@
   --text-h1: 2rem;               /* 32px */
   --text-h1-mobile: 1.625rem;    /* 26px */
   --text-h2: 1.5rem;             /* 24px */
+  --text-p:1rem;                /* 16px */
 
   --text-lg: 1.125rem;           /* 18px */
   --text-base: 1rem;             /* 16px */
@@ -259,6 +260,15 @@
   --card-title-sm: 0.75rem;      /* 12px */
 
   --border-stroke: var(--foreground);
+
+  /* breakpoint custom */
+  --breakpoint-xs: 420px;
+  --breakpoint-2xs: 590px;
+  --breakpoint-2md: 898px
+  /* --breakpoint-xty2: 380px;
+  --breakpoint-ty: 426px;
+  --breakpoint-2ty: 496px;
+  --breakpoint-xsm: 520px; */
 } 
 
 @layer base {
@@ -269,11 +279,10 @@
   body {
     @apply bg-background text-foreground font-sans;
     background-image:
-      linear-gradient(rgba(28, 28, 25, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(28, 28, 25, 0.05) 1px, transparent 1px);
-    background-size: 20px 20px;
+      linear-gradient(hsla(60, 2%, 16%, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(60, 4%, 15%, 0.12) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
- 
   .dark body {
     background-image:
       linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
@@ -282,21 +291,31 @@
   }
 }
 
-h1 {
+html, body {
+  height: 100%;
+}
+
+#__next {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* h1 {
   line-height: 105%;
   font-size: var(--text-h1);
   font-weight: 600;
-}
+} */
 
-h2 {
+/* h2 {
   line-height: 105%;
   font-size: var(--text-h2);
   font-weight: 600;
-}
-
+} */
+/* 
 p {
   line-height: 108%;
-}
+} */
 
 input[type="password"] {
   font-family: Arial, sans-serif;
@@ -306,3 +325,4 @@ input[type="password"]::placeholder {
   font-family: Arial, sans-serif;
   font-size: 14px;  
 }
+

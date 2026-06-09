@@ -10,6 +10,8 @@ import {
   SignOutIcon,
   HouseIcon,
   ArrowSquareOutIcon,
+  ChatCenteredTextIcon,
+  MusicNotesIcon,
 } from "@phosphor-icons/react"
 import { Route } from "next"
 import { Button } from "../ui/button"
@@ -40,7 +42,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   }
 
   return (
-    <aside className="w-60 h-full border-r border-border flex flex-col bg-background ">
+    <aside className="w-60 h-full border-r border-border flex flex-col bg-background">
       {/* Brand */}
       <div className="px-6 py-5">
         <p className="font-semibold text-h1 tracking-tight">DMAI</p>
@@ -49,19 +51,31 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-2.5 px-3 py-4">
+        <div className="border-t border-border" />
 
-        <div className="border-t border-border"></div>
         <SidebarLink
           href="/admin"
           icon={<UsersIcon className="w-4 h-4" />}
           label="User Info"
-          active={pathname === "/admin" || pathname?.startsWith("/admin/users")}
+          active={pathname === "/admin" || (pathname?.startsWith("/admin/users") ?? false)}
         />
         <SidebarLink
           href="/admin/sessions"
           icon={<DatabaseIcon className="w-4 h-4" />}
           label="Sesi Terapi"
           active={pathname?.startsWith("/admin/sessions") ?? false}
+        />
+        <SidebarLink
+          href="/admin/music"
+          icon={<MusicNotesIcon className="w-4 h-4" />}
+          label="Musik Latar"
+          active={pathname?.startsWith("/admin/music") ?? false}
+        />
+        <SidebarLink
+          href="/admin/feedback"
+          icon={<ChatCenteredTextIcon className="w-4 h-4" />}
+          label="Feedback"
+          active={pathname?.startsWith("/admin/feedback") ?? false}
         />
 
         <div className="pt-2 border-t border-border">
@@ -80,9 +94,11 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
 
       {/* Footer */}
       <div className="px-3 pb-5 border-t border-border pt-4 flex flex-col items-center gap-3">
-        <p className="text-sm text-foreground truncate w-full text-center font-medium">Hi, {adminEmail}</p>
+        <p className="text-sm text-foreground truncate w-full text-center font-medium">
+          Hi, {adminEmail}
+        </p>
         <Button
-          variant={'ghost'}
+          variant="ghost"
           onClick={logout}
           className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md border-2 border-destructive/20 text-destructive hover:bg-destructive/10"
         >
@@ -107,11 +123,11 @@ function SidebarLink({
 }) {
   return (
     <Link
-      href={`${href}` as Route}
-      className={`flex items-center gap-3 px-3 py-2 text-sm transition-colors font-semibold
+      href={href as Route}
+      className={`flex items-center gap-3 px-3 py-2 text-sm transition-colors font-semibold rounded-md
         ${active
-          ? "bg-white text-foreground rounded-md"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-md"
+          ? "bg-white text-foreground"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
         }`}
     >
       {icon}

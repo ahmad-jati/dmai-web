@@ -6,19 +6,22 @@ import { ArrowCircleDownIcon } from "@phosphor-icons/react";
 
 export function HeroHomepage() {
   return (
-    <div className="flex flex-col items-center gap-6">
-      <Image
-        src={'/tropicaline/Parachute.png'}
-        alt="Parachute (Tropicaline Illustrations)"
-        width={2000}
-        height={2000}
-        priority
-        unoptimized
-        className="w-80 h-86 object-cover"
-      />
+    <div className="flex  flex-col items-center sm:gap-8 gap-6 md:px-0 px-2 md:pb-0 pb-3">
+      <div className="md:w-102 sm:h-82 w-full xs:h-76 h-54 ">
+        <Image
+          src={'/tropicaline/Parachute.png'}
+          alt="Parachute (Tropicaline Illustrations)"
+          width={2000}
+          height={2000}
+          priority
+          unoptimized
+          className="w-full h-full object-contain"
+        />
+      </div>
+
       <div className="flex-1 flex flex-col gap-3.5 items-center text-center text-foreground">
-        <h1 className="text-h1 max-w-90">A Space to Slow Down</h1>
-        <p className="text-lg max-w-136 font-medium">
+        <h1 className="sm:text-h1/8 text-[1.8rem]/8 font-semibold max-w-90">A Space to Slow Down</h1>
+        <p className="sm:text-p/5 text-sm/4 max-w-136 font-medium">
           Berikan dirimu waktu untuk berhenti sejenak, menenangkan pikiran, dan menjalani sesi dengan suasana yang lebih nyaman.
         </p>
       </div>

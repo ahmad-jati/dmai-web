@@ -1,62 +1,24 @@
-'use client'
-
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import type { Metadata } from "next"
+import { AdminAuthGuard } from "@/components/admin/admin-auth-guard"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { Toaster } from "@/components/ui/sonner"
-import { FullPageSpinner } from "@/components/ui/spinner"
+
+export const metadata: Metadata = {
+  title: "User Info — DMAI Admin",
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [checking, setChecking] = useState(true)
-  const [authorized, setAuthorized] = useState(false)
-  const router = useRouter()
-
-  useEffect(() => {
-    const check = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.replace("/login")
-        return
-      }
-
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single()
-
-      if (roleData?.role === "admin") {
-        setAuthorized(true)
-      } else {
-        router.replace("/homepage")
-      }
-
-      setChecking(false)
-    }
-    check()
-  }, [router])
-
-  if (checking) {
-    return <FullPageSpinner text="Memeriksa akses..." />
-  }
-
-  if (!authorized) return null
-
   return (
-    <div className="flex bg-white">
-      <div className="fixed inset-y-0 left-0 z-40 h-screen">
-        <AdminSidebar />
+    <AdminAuthGuard>
+      <div className="flex bg-white">
+        <div className="fixed inset-y-0 left-0 z-40 h-screen">
+          <AdminSidebar />
+        </div>
+        <main className="flex-1 ml-60 min-h-dvh overflow-y-auto">
+          {children}
+        </main>
+        <Toaster position="top-right" />
       </div>
-      <main className="flex-1 ml-60 min-h-dvh overflow-y-auto">
-        {children}
-      </main>
-      <Toaster
-        position="top-right"
-        
-      />
-    </div>
+    </AdminAuthGuard>
   )
 }

@@ -4,12 +4,12 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
+  ? `https://dmai-web.vercel.app`
   : "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Digital Mindful Autogenic Intervention",
+  title: "DMAI — Digital Mindful Autogenic Intervention",
   description: "A calm mindfulness platform for guided reflective training sessions.",
 };
 
