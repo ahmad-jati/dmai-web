@@ -116,8 +116,8 @@ function StepEditorDialog({
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>("")
-  const imageRef = useRef<HTMLInputElement>(null)
-  const audioRef = useRef<HTMLInputElement>(null)
+  const imageRef = useRef<HTMLInputElement>(null!)
+  const audioRef = useRef<HTMLInputElement>(null!)
 
   useEffect(() => {
     if (step) {
@@ -238,8 +238,8 @@ function AddStepDialog({
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
-  const imageRef = useRef<HTMLInputElement>(null)
-  const audioRef = useRef<HTMLInputElement>(null)
+  const imageRef = useRef<HTMLInputElement>(null!)
+  const audioRef = useRef<HTMLInputElement>(null!)
 
   // Reset on open
   useEffect(() => {
@@ -447,7 +447,7 @@ function DeleteStepDialog({
           <DialogTitle>Hapus Step {step.step_number}?</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
-          Step <span className="font-medium text-foreground">"{step.title}"</span> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.
+          Step <span className="font-medium text-foreground">{step.title}</span> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.
         </p>
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose} className="rounded-md text-sm">Batal</Button>
@@ -630,7 +630,7 @@ function SessionDetailView({
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState<string>(session.image_cover_url ?? '')
   const [saving, setSaving] = useState(false)
-  const coverRef = useRef<HTMLInputElement>(null)
+  const coverRef = useRef<HTMLInputElement>(null!)
 
   const isDirty = metaChanged(session, form, coverFile)
 
@@ -834,7 +834,7 @@ function SessionDetailView({
                 {steps.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8 text-sm">
-                      Belum ada step. Klik "Tambah Step" untuk memulai.
+                      Belum ada step. Klik Tambah Step untuk memulai.
                     </TableCell>
                   </TableRow>
                 )}
