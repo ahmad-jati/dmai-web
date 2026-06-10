@@ -34,7 +34,7 @@ function dayLabel(dateKey: string, todayKey: string, yesterdayKey: string): stri
 }
 
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
 }
 
 function groupByDay(items: CompletionRecord[]): GroupedDay[] {
@@ -87,19 +87,17 @@ function HistorySkeleton() {
 
 function HistoryItemCard({ item }: { item: CompletionRecord }) {
   return (
-    <div className="flex items-start justify-between gap-4 bg-background rounded-xl border border-foreground/15 px-4 py-3 hover:border-foreground/30 transition-colors">
-      <div className="flex flex-col gap-0.5 min-w-0">
-        <p className="font-semibold text-sm truncate">{item.session_name}</p>
+    <div className="flex flex-col items-start justify-between gap-2 bg-background rounded-xl border border-foreground/15 px-4 py-3 hover:border-foreground/30 transition-colors group">
+      <div className="flex items-center gap-2 min-w-0">
+        <p className="font-semibold xs:text-p/5 text-xs/3.5">{item.session_name}</p>
         <Button
-          className="[&_svg]:size-3.5 bg-white w-fit px-4 py-2 mt-2 font-medium rounded-full hover:bg-celeste"
-          size="sm"
+          className="[&_svg]:size-3.5 h-fit bg-none w-fit p-0 border-0 font-medium rounded-full hidden group-hover:inline "
           
         >
           <Link 
             href={`/session/${item.session_slug}`}
             className="flex items-center gap-2"
           >
-            Lihat sesi 
             <ArrowRightIcon/>
           </Link>
         </Button>
@@ -117,12 +115,12 @@ function HistoryItemCard({ item }: { item: CompletionRecord }) {
 function DayGroup({ group }: { group: GroupedDay }) {
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-start gap-2">
+      <div className="flex items-center gap-2">
         <CalendarIcon className="w-4 h-4 text-muted-foreground shrink-0" />
-        <p className="text-sm font-semibold text-foreground">{group.label}</p>
-        <span className="text-xs text-muted-foreground">({group.items.length} sesi)</span>
+        <p className="xs:text-p/5 text-xs/3.5 font-semibold text-foreground">{group.label}</p>
+        <span className="xs:text-p/5 text-xs/3.5 text-muted-foreground">({group.items.length} sesi)</span>
       </div>
-      <div className="grid grid-cols-3 gap-2 pl-1">
+      <div className="grid md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-2 pl-1">
         {group.items.map((item) => (
           <HistoryItemCard key={item.id} item={item} />
         ))}
@@ -219,9 +217,9 @@ export function HistoryList() {
   const isEmpty = recentGroups.length === 0
 
   return (
-    <div className="flex items-center gap-6 w-full">
+    <div className="flex items-start gap-1 w-full">
 
-      <div className="w-130 h-130">
+      <div className="w-120 h-120 lg:block hidden">
         <Image
           src={'/tropicaline/Being-Still.png'}
           alt="Being Okay (Tropicaline Illustrations)"
@@ -232,11 +230,10 @@ export function HistoryList() {
         />
       </div>
 
-      {/* Header */}
-      <div className="flex flex-col gap-3.5 items-start w-full">
-        <h2 className="text-xl font-semibold">Riwayat Sesi</h2>
+      <div className="flex flex-col gap-3.5 items-start w-full lg:h-120 h-full">
+        <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">Riwayat Sesi</h2>
 
-        <div className="h-118 pr-4 pb-8 overflow-y-auto w-full">
+        <div className="pr-4 lg:pb-8 overflow-y-auto w-full">
           {/* {!isEmpty && (
             <p className="text-sm text-muted-foreground">
               {totalSessions} sesi dalam {RECENT_DAYS} hari terakhir
@@ -262,7 +259,7 @@ export function HistoryList() {
             {/* Older section */}
             {showOlder && olderGroups.length > 0 && (
               <div className="flex flex-col gap-6 pt-2 border-t border-foreground/10">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-1">
+                <p className="xs:text-p/5 text-xs/3.5 text-muted-foreground">
                   {OLDER_DAYS} hari sebelumnya
                 </p>
                 {olderGroups.map((group) => (
@@ -273,11 +270,11 @@ export function HistoryList() {
 
             {/* Load older button */}
             {hasOlderData && !showOlder && (
-              <div className="flex justify-center pt-2">
-                <button
+              <div className="flex justify-center pt-6">
+                <Button 
                   onClick={handleLoadOlder}
                   disabled={loadingOlder}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground border border-foreground/20 rounded-full hover:border-foreground/40 hover:bg-foreground/5 transition-all disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2 text-sm hover:border-foreground/40 hover:bg-foreground/5 transition-all disabled:opacity-50"
                 >
                   {loadingOlder ? (
                     <span className="animate-spin w-4 h-4 border-2 border-foreground/30 border-t-foreground/70 rounded-full" />
@@ -285,7 +282,7 @@ export function HistoryList() {
                     <ArrowDownIcon className="w-4 h-4" />
                   )}
                   {loadingOlder ? 'Memuat...' : `Lihat ${OLDER_DAYS} hari sebelumnya`}
-                </button>
+                </Button>
               </div>
             )}
 

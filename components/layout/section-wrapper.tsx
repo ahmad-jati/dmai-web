@@ -9,7 +9,7 @@ export function Section({ children, className }: SectionProps) {
   return (
     <section
       className={cn(
-        "w-full md:rounded-5xl rounded-3xl border border-foreground md:p-8 p-6",
+        "w-full md:rounded-5xl rounded-xl border border-foreground md:p-8 xs:p-6 p-4",
         className
       )}
     >

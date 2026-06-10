@@ -13,7 +13,7 @@ export default function Page() {
     <div className="w-full">
       <div className="flex lg:flex-row flex-col-reverse gap-8">
         <Section className="min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:max-w-120 w-full bg-white flex lg:flex-row flex-col gap-8 justify-center items-center">
-          <div className="w-full xs:h-64 h-full bg-celeste rounded-3xl lg:hidden flex items-center justify-center p-2">
+          <div className="w-full xs:h-64 h-full bg-celeste sm:rounded-3xl rounded-lg lg:hidden flex items-center justify-center p-2">
             <Image
               src={"/tropicaline/happy2.png"}
               alt=""

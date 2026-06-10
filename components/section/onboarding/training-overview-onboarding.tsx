@@ -28,14 +28,14 @@ export function TrainingOverviewOnboarding() {
   }, [])
 
   return (
-    <section className="bg-lemon flex flex-col gap-8 items-center">
+    <section className="bg-lemon flex flex-col xs:gap-8 gap-4 items-center">
       
       <div className="flex flex-col gap-3 sm:max-w-180 lg:px-6 sm:px-20 xl:hidden">
         <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-center">Discover 7 mindful sessions designed to support your journey. </h2>
-        <p className="font-medium sm:text-p/5 text-sm/4 text-center">Setiap sesi dirancang khusus untuk membantumu lebih dalam memahami, menerima, dan mengubah apa yang kamu rasakan.</p>
+        <p className="sm:text-p/5 xs:text-sm/4 text-xs/3.5 text-center font-medium">Setiap sesi dirancang khusus untuk membantumu lebih dalam memahami, menerima, dan mengubah apa yang kamu rasakan.</p>
       </div>
       <div className="flex gap-4 items-start h-full w-full">
-        <div className="w-76 xl:h-102 h-full xl:block hidden">
+        <div className="w-89 xl:h-119 h-full xl:block hidden">
           <Image
             src={'/tropicaline/Being-okay.png'}
             alt="Being Okay (Tropicaline Illustrations)"
@@ -58,19 +58,19 @@ export function TrainingOverviewOnboarding() {
               : sessions.map((session) => (
                   <div
                     key={session.slug}
-                    className="flex flex-col justify-between items-end gap-4 bg-background p-3 rounded-lg border border-foreground w-full"
+                    className="flex flex-col justify-between items-end xs:gap-4 gap-1 bg-background p-3 md:rounded-lg rounded-md border border-foreground w-full"
                   >
                     <div className="flex flex-col w-full justify-start gap-1">
-                      <p className="font-bold text-p/5 ">{session.session_name}</p>
-                      <p className="font-medium text-sm/4">{session.detail_short}</p>
+                      <p className="xs:text-p/5 text-sm/4 font-bold">{session.session_name}</p>
+                      <p className="font-medium xs:text-sm/4.5 text-xs/4">{session.detail_short}</p>
                     </div>
-                    <div>
+                    <div className="xs:h-8 h-6 flex justify-end">
                       <Image
                         src={session.icon}
                         alt={`${session.session_name} icon`}
                         width={400}
                         height={400}
-                        className="w-full h-8 object-contain"
+                        className="w-full h-full object-contain"
                         unoptimized
                       />
                     </div>

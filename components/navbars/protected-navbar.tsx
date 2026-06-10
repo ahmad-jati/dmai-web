@@ -62,7 +62,10 @@ export function ProtectedNavbar() {
   };
 
   return (
-    <nav className="w-full flex justify-between items-center py-4 bg-white sm:rounded-b-5xl px-8 rounded-b-3xl border border-foreground border-t-0">
+    <nav
+      id="navbar-app" 
+      className="w-full flex justify-between items-center py-4 bg-white sm:rounded-b-5xl md:p-8 xs:p-6 p-4 rounded-b-xl border border-foreground border-t-0
+      ">
       <Link
         href={'/homepage'}
         className="text-app-name hover:font-bold font-semibold"

@@ -80,44 +80,104 @@ export default function Page({ params }: Props) {
     fetchCount()
   }, [slug])
 
-  // Only block on data fetch — image loads naturally inside its container bg placeholder
   if (session === undefined) return <SessionDetailSkeleton />
   if (session === null) notFound()
 
   return (
     <div className="flex flex-col gap-8 w-full">
-      <Section className="flex gap-8 bg-celeste">
-        <div className="flex flex-col justify-between max-w-xl">
-          <div className="flex items-center gap-1 font-semibold text-sm">
+      <Section className="flex md:flex-row flex-col gap-8 bg-celeste">
+        <div className="flex flex-col md:items-start items-center md:justify-between md:gap-0 gap-4 lg:max-w-xl 2md:max-w-sm md:max-w-xs">
+          <div className="md:flex hidden items-center gap-1">
             <Link
               href={'/session' as Route}
-              className="hover:underline underline-offset-2"
+              className="hover:underline underline-offset-2 xs:text-p/5 text-xs/3.5 font-medium "
             >
               ALL SESSION
             </Link>
-            <p>/</p>
-            <p>{session.session_name.toUpperCase()}</p>
+            <p className="xs:text-p/5 text-xs/3.5 font-medium">/</p>
+            <p className="xs:text-p/5 text-xs/3.5 font-medium">{session.session_name.toUpperCase()}</p>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <h1>{session.session_name.toUpperCase()}</h1>
+          <div className="
+            rounded-lg border border-foreground bg-background p-2  
+            sm:h-70 xs:h-60 
+            md:hidden block 
+          ">
+            <div className="w-full h-full overflow-hidden rounded-sm bg-muted-foreground/10">
+              <Image
+                src={session.image_cover}
+                alt={session.session_name}
+                width={2000}
+                height={2000}
+                priority
+                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                unoptimized
+              />
+            </div>
+          </div>
+
+          <div className="md:hidden flex flex-col gap-2 items-center">
+            <h1 className="sm:text-h1/8 xs:text-[1.8rem]/8 text-xl/7 md:text-left text-center font-semibold">{session.session_name.toUpperCase()}</h1>
+
+            <div className="flex flex-col gap-1 items-center">
+              <div className="flex xs:flex-row flex-col items-center xs:gap-3 gap-1 text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <p className="font-medium xs:text-p/5 text-xs/3.5">{session.total_instruction} Instruksi</p>
+                  <PersonSimpleTaiChiIcon className="w-4 h-4" weight="fill" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <TimerIcon className="w-4 h-4" weight="fill" />
+                  <p className="font-medium xs:text-p/5 text-xs/3.5">{session.duration}</p>
+                </div>
+              </div>
+              <div className="md:hidden flex justify-center text-muted-foreground items-center gap-1 w-full">
+                <HeartIcon className="w-4 h-4" weight="fill" />
+                <p className="font-medium xs:text-p/5 text-xs/3.5"> 
+                  {completionCount === 0
+                    ? "Belum mengikuti sesi ini"
+                    : `Sesi diikuti ${completionCount} kali`}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* <div className="
+            rounded-lg border border-foreground bg-background p-2  
+            sm:h-70 xs:h-60 
+            md:hidden block 
+          ">
+            <div className="w-full h-full overflow-hidden rounded-sm bg-muted-foreground/10">
+              <Image
+                src={session.image_cover}
+                alt={session.session_name}
+                width={2000}
+                height={2000}
+                priority
+                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                unoptimized
+              />
+            </div>
+          </div> */}
+          
+          <div className="flex flex-col md:items-start items-center gap-4">
+            <h1 className="sm:text-h1/8 xs:text-[1.8rem]/8 text-h2/7 md:text-left text-center font-semibold md:block hidden">{session.session_name.toUpperCase()}</h1>
 
             {session.detail_full.map((para, i) => (
-              <p key={i} className="font-medium text-base">{para}</p>
+              <p key={i} className="font-medium xs:text-p/5 text-xs/3.5 md:text-left text-center max-w-120">{para}</p>
             ))}
 
-            <div className="flex flex-col gap-1">
+            <div className="md:flex hidden flex-col md:items-start items-center gap-1.5">
               <div className="flex items-center gap-1">
                 <PersonSimpleTaiChiIcon className="w-5 h-5" weight="fill" />
-                <p className="font-medium text-sm">{session.total_instruction} Instruksi</p>
+                <p className="font-medium xs:text-p/5 text-xs/3.5">{session.total_instruction} Instruksi</p>
               </div>
               <div className="flex items-center gap-1">
                 <TimerIcon className="w-5 h-5" weight="fill" />
-                <p className="font-medium text-sm">{session.duration}</p>
+                <p className="font-medium xs:text-p/5 text-xs/3.5">{session.duration}</p>
               </div>
               <div className="flex items-center gap-1">
                 <HeartIcon className="w-5 h-5" weight="fill" />
-                <p className="font-medium text-sm">
+                <p className="font-medium xs:text-p/5 text-xs/3.5">
                   {completionCount === 0
                     ? "Kamu belum pernah mengikuti sesi ini"
                     : `Kamu telah mengikuti sesi ini ${completionCount} kali`}
@@ -134,8 +194,7 @@ export default function Page({ params }: Props) {
           </Button>
         </div>
 
-        <div className="flex-1 rounded-5xl border border-foreground bg-background p-2 h-88">
-          {/* bg-muted-foreground/10 acts as the image placeholder while it loads — no blink */}
+        <div className="flex-1 rounded-5xl border border-foreground bg-background p-2 h-88 md:block hidden">
           <div className="w-full h-full overflow-hidden rounded-4xl bg-muted-foreground/10">
             <Image
               src={session.image_cover}
