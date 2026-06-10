@@ -69,7 +69,7 @@ export function SignUpForm({
     <div className='flex flex-col items-center gap-8'>
       <div className="flex flex-col gap-4">
         <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold md:text-left text-center">Let&apos;s prepare your account.</h2>
-        <p className="sm:text-p/5 text-sm/4 font-medium md:text-left text-center">
+        <p className="xs:text-p/5 text-xs/3.5 font-medium md:text-left text-center">
          Buat ruang kecil untuk dirimu hari ini, lalu jalani setiap sesi latihan sesuai dengan kenyamananmu sendiri.
         </p>
       </div>

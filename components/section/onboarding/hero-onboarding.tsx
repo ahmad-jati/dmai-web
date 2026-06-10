@@ -16,7 +16,7 @@ export function HeroOnboarding() {
           transition: 'opacity 500ms ease-out, transform 500ms ease-out',
         }}
       >
-        <div className="md:w-102 sm:h-78 w-full xs:h-60 h-44">
+        <div className="md:w-102 sm:h-74 w-full xs:h-60 h-44">
           <Image
             src={'/tropicaline/happy.png'}
             alt="Being Happy 2 (Tropicaline Illustrations)"

@@ -22,7 +22,7 @@ export default function Page() {
         <div className="flex flex-col gap-3.5 items-start text-foreground md:px-0 px-2 md:mt-0 xs:-mt-10 -mt-4">
           <MailboxIcon className="text-foreground md:w-10 md:h-10 w-16 h-16" />
           <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">Thank you for signing up!</h2>
-          <p className="sm:text-p/5 text-sm/4">
+          <p className="xs:text-p/5 text-xs/3.5 font-medium">
             Silakan <span className="font-bold">cek email </span> untuk mengonfirmasi akun sebelum masuk ke platform.{" "}
             <span className="lg:block"></span> Kamu bisa menutup tab ini.
           </p>
