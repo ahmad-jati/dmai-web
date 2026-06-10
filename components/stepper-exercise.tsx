@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import {
   RepeatIcon, SpeakerSlashIcon, SpeakerHighIcon,
   PauseIcon, PlayIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon,
-  RepeatOnceIcon, MusicNotesIcon,
+  RepeatOnceIcon, MusicNotesIcon, CaretDownIcon,
 } from "@phosphor-icons/react"
 import type { SessionInstruction } from "@/lib/data-detail-session"
 import { createClient } from "@/lib/supabase/client"
@@ -198,31 +198,183 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const totalSecs = step.duration_seconds % 60
   const totalTime = `${totalMins}:${totalSecs.toString().padStart(2, '0')}`
 
+  // ── BGM display label ─────────────────────────────────────────
+  const bgmLabel = isBGMStopped
+    ? 'Tanpa Musik'
+    : currentTrack
+      ? currentTrack.title
+      : 'Musik Latar'
+  const bgmSublabel = isBGMStopped
+    ? 'Hening total'
+    : currentTrack?.composer ?? null
+
+  // ── Shared: Music tray dropdown ───────────────────────────────
+  const MusicTray = ({ overlayClass = '' }: { overlayClass?: string }) => (
+    <>
+      <div className="fixed inset-0 z-10" onClick={() => setShowMusicTray(false)} />
+      <div className={cn(
+        "absolute z-20 w-60 bg-background border border-muted-foreground/30 rounded-2xl p-2.5 flex flex-col gap-0.5 animate-in slide-in-from-top-1 duration-150",
+        overlayClass
+      )}>
+        <span className="text-xs font-bold tracking-[0.18em] uppercase text-muted-foreground px-2 pb-1.5">
+          Musik Latar
+        </span>
+        {tracks.map((track, index) => (
+          <button
+            key={track.id}
+            onClick={() => { setCurrentTrackIndex(index); bgmSwitchTrack(track.audio_url); setShowMusicTray(false) }}
+            className={cn(
+              'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl text-left transition-all duration-150 ease-out',
+              index === currentTrackIndex && !isBGMStopped
+                ? 'bg-muted-foreground/15 text-foreground'
+                : 'text-foreground hover:bg-muted-foreground/15'
+            )}
+          >
+            <span className={cn(
+              'w-1.5 h-1.5 rounded-full shrink-0 transition-all',
+              index === currentTrackIndex && !isBGMStopped ? 'bg-muted-foreground' : 'bg-muted-foreground/25'
+            )} />
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-semibold truncate">{track.title}</span>
+              {track.composer && (
+                <span className="text-xs text-muted-foreground/70">{track.composer}</span>
+              )}
+            </div>
+          </button>
+        ))}
+        <div className="mt-0.5 pt-1.5 border-t border-muted-foreground/25">
+          <button
+            onClick={() => { bgmStop(); setShowMusicTray(false) }}
+            className={cn(
+              'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl text-left transition-all duration-150 ease-out',
+              isBGMStopped
+                ? 'bg-muted-foreground/15 text-foreground'
+                : 'text-foreground hover:bg-muted-foreground/15'
+            )}
+          >
+            <span className={cn(
+              'w-1.5 h-1.5 rounded-full shrink-0',
+              isBGMStopped ? 'bg-muted-foreground' : 'bg-muted-foreground/25'
+            )} />
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold">Tanpa Musik</span>
+              <span className="text-xs text-muted-foreground/70">Hening total</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </>
+  )
+
+  // ── Control buttons (shared) ──────────────────────────────────
+  const ControlButtons = () => (
+    <>
+      {/* Row 1: Prev + Next */}
+      <div className="flex items-center gap-2 col-span-2 2md:col-span-1 2md:contents">
+        <Button
+          onClick={goPrev}
+          disabled={currentStep === 0}
+          size={'sm'}
+          variant={'ghost'}
+          className="[&_svg]:size-3.5 flex-1 2md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 text-xs xs:text-sm text-muted-foreground disabled:bg-transparent disabled:text-muted-foreground/40 disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10"
+        >
+          <ArrowLeftIcon weight="bold" />
+          Sebelumnya
+        </Button>
+
+        {isLastStep ? (
+          <Button
+            onClick={goNextManual}
+            variant={'ghost'}
+            size={'sm'}
+            className="[&_svg]:size-3.5 flex-1 2md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 text-xs xs:text-sm text-muted-foreground font-medium rounded-full bg-transparent hover:bg-foreground/10"
+          >
+            Selesai
+            <CheckIcon weight="bold" />
+          </Button>
+        ) : (
+          <Button
+            onClick={goNextManual}
+            variant={'ghost'}
+            size={'sm'}
+            className="[&_svg]:size-3.5 flex-1 2md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 text-xs xs:text-sm text-muted-foreground font-medium rounded-full bg-transparent hover:bg-muted-foreground/10"
+          >
+            Berikutnya
+            <ArrowRightIcon weight="bold" />
+          </Button>
+        )}
+      </div>
+
+      {/* Row 2: Loop + Mute */}
+      <div className="flex items-center gap-2 col-span-2 2md:col-span-1 2md:contents">
+        <Button
+          onClick={() => setIsLooping((l) => !l)}
+          variant={'ghost'}
+          size={'sm'}
+          className={cn(
+            '[&_svg]:size-3.5 flex-1 2md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 text-xs xs:text-sm font-medium rounded-full bg-transparent',
+            isLooping
+              ? 'text-muted-foreground border border-muted-foreground bg-foreground/10 font-bold hover:bg-foreground/10'
+              : 'text-muted-foreground hover:bg-foreground/10'
+          )}
+        >
+          {isLooping
+            ? <RepeatOnceIcon weight="fill" />
+            : <RepeatIcon weight="fill" />
+          }
+          Ulangi
+        </Button>
+
+        <Button
+          onClick={() => setIsMuted((m) => !m)}
+          size={'sm'}
+          variant={'ghost'}
+          className={cn(
+            '[&_svg]:size-3.5 flex-1 2md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 text-xs xs:text-sm font-medium rounded-full bg-transparent',
+            isMuted
+              ? 'text-muted-foreground border border-muted-foreground bg-foreground/10 font-bold hover:bg-foreground/10'
+              : 'text-muted-foreground hover:bg-foreground/10'
+          )}
+        >
+          {isMuted
+            ? <SpeakerSlashIcon weight="fill" />
+            : <SpeakerHighIcon weight="fill" />
+          }
+          {isMuted ? 'Hening' : 'Suara'}
+        </Button>
+      </div>
+    </>
+  )
+
   // ── Loading ───────────────────────────────────────────────────
   if (!isReady) {
     return (
       <div className="w-full p-4 bg-celeste border border-foreground rounded-5xl">
-        <div className="flex flex-col gap-8 items-center w-full rounded-4xl relative p-8 h-[76dvh] overflow-hidden">
+        {/* Mobile: stacked */}
+        <div className="2md:hidden flex flex-col gap-4">
+          <div className="relative w-full h-40 rounded-3xl overflow-hidden">
+            <Image src={step.image} alt={step.title} fill unoptimized priority className="object-cover object-center" />
+            <div className="absolute inset-0 bg-black/30" />
+          </div>
+          <div className="flex items-center justify-center py-8">
+            <div className="flex flex-col items-center gap-3">
+              <Spinner />
+              <p className="text-xs/3.5 text-muted-foreground tracking-wide">Mempersiapkan sesi…</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop: immersive */}
+        <div className="hidden 2md:flex flex-col gap-8 items-center w-full rounded-4xl relative p-8 h-[76dvh] overflow-hidden">
           <div className="absolute inset-0 z-0">
-            <Image
-              key={step.image}
-              src={step.image}
-              alt={step.title}
-              fill
-              unoptimized
-              priority
-              className="object-cover object-center rounded-4xl"
-            />
-
+            <Image src={step.image} alt={step.title} fill unoptimized priority className="object-cover object-center rounded-4xl" />
             <div className="absolute inset-0 rounded-4xl bg-black/25" />
-
             <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
-
             <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/80 via-black/50 to-transparent rounded-b-4xl" />
           </div>
           <div className="relative z-10 flex flex-col items-center justify-center flex-1 gap-3">
             <Spinner />
-            <p className="text-sm text-white/70 tracking-wide">Mempersiapkan sesi…</p>
+            <p className="text-xs/3.5 text-white/70 tracking-wide">Mempersiapkan sesi…</p>
           </div>
         </div>
       </div>
@@ -233,7 +385,185 @@ export function StepperExercise({ instructions, onDone }: Props) {
   return (
     <div className="p-4 bg-celeste border border-foreground w-full rounded-5xl">
 
-      <div className="flex flex-col items-center w-full rounded-4xl relative h-[76dvh] overflow-hidden">
+      {/* ════════════════════════════════════════
+          MOBILE / TABLET layout (< 876px / 2md)
+          ════════════════════════════════════════ */}
+      <div className="2md:hidden flex flex-col gap-4">
+
+          <div className="bg-background rounded-md px-3 pb-2.5 flex items-center">
+            <button
+              onClick={() => setShowMusicTray((v) => !v)}
+              className="flex items-center gap-2 w-full group bg-amber-200"
+              aria-label="Pilih musik latar"
+            >
+              <MusicNotesIcon
+                weight="fill"
+                className={cn(
+                  "w-3.5 h-3.5 shrink-0 transition-colors",
+                  isBGMStopped ? "text-foreground/40" : "text-foreground/80"
+                )}
+              />
+              <div className="flex flex-col min-w-0 flex-1 text-left">
+                <span className="text-xs font-semibold text-foreground/90 truncate leading-tight">
+                  {bgmLabel}
+                </span>
+                {bgmSublabel && (
+                  <span className="text-[10px] text-foreground/55 truncate leading-tight">{bgmSublabel}</span>
+                )}
+              </div>
+              <CaretDownIcon
+                weight="bold"
+                className={cn(
+                  "w-3 h-3 shrink-0 text-foreground/60 transition-transform duration-200",
+                  showMusicTray && "rotate-180"
+                )}
+              />
+            </button>
+
+            {showMusicTray && (
+              <MusicTray overlayClass="bottom-full mb-2 left-0" />
+            )}
+          </div>
+
+        {/* ── Image card with overlaid step dots + BGM bar ── */}
+        <div className="relative w-full min-h-[calc(60dvh-52px)] rounded-3xl overflow-hidden">
+          <Image
+            key={step.image}
+            src={step.image}
+            alt={step.title}
+            fill
+            unoptimized
+            priority
+            className="object-cover object-center"
+          />
+          {/* subtle bottom fade for BGM bar legibility */}
+          {/* <div className="absolute inset-x-0 bottom-0 h-22 bg-linear-to-t from-black/60 to-transparent" /> */}
+          {/* <div className="absolute inset-x-0 top-0 h-22 bg-linear-to-b/ from-black/50 to-transparent" /> */}
+
+          {/* Step dots — top center */}
+          {/* <div className="absolute top-3 inset-x-0 flex justify-center items-center gap-1.5">
+            {instructions.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => jumpToStep(i)}
+                className={cn(
+                  'rounded-full transition-all duration-300 ease-in-out cursor-pointer',
+                  i === currentStep
+                    ? 'w-7 h-1.5 bg-white/90'
+                    : i < currentStep
+                    ? 'w-1.5 h-1.5 bg-white/55 hover:bg-white/70'
+                    : 'w-1.5 h-1.5 bg-white/30 hover:bg-white/45'
+                )}
+                aria-label={`Langkah ${i + 1}`}
+              />
+            ))}
+          </div> */}
+
+          {/* BGM bar — bottom of image */}
+          {/* <div className="absolute inset-x-0 bottom-0 px-3 pb-2.5">
+            <div className="relative">
+              <button
+                onClick={() => setShowMusicTray((v) => !v)}
+                className="flex items-center gap-2 w-full group"
+                aria-label="Pilih musik latar"
+              >
+                <MusicNotesIcon
+                  weight="fill"
+                  className={cn(
+                    "w-3.5 h-3.5 shrink-0 transition-colors",
+                    isBGMStopped ? "text-white/40" : "text-white/80"
+                  )}
+                />
+                <div className="flex flex-col min-w-0 flex-1 text-left">
+                  <span className="text-xs font-semibold text-white/90 truncate leading-tight">
+                    {bgmLabel}
+                  </span>
+                  {bgmSublabel && (
+                    <span className="text-[10px] text-white/55 truncate leading-tight">{bgmSublabel}</span>
+                  )}
+                </div>
+                <CaretDownIcon
+                  weight="bold"
+                  className={cn(
+                    "w-3 h-3 shrink-0 text-white/60 transition-transform duration-200",
+                    showMusicTray && "rotate-180"
+                  )}
+                />
+              </button>
+
+              {showMusicTray && (
+                <MusicTray overlayClass="bottom-full mb-2 left-0" />
+              )}
+            </div>
+          </div> */}
+        </div>
+
+        {/* ── Step info + timer + play ── */}
+        <div className="flex items-center gap-4 px-1">
+          {/* Progress ring + play */}
+          <div className="relative w-16 h-16 flex-shrink-0 flex items-center justify-center">
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" aria-hidden="true">
+              <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="3" />
+              <circle
+                cx="50" cy="50" r="44"
+                fill="none"
+                stroke="currentColor"
+                strokeOpacity="0.75"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                transform="rotate(-90 50 50)"
+                style={{ transition: 'stroke-dashoffset 1s linear' }}
+              />
+            </svg>
+            <button
+              onClick={() => setIsPlaying((p) => !p)}
+              aria-label={isPlaying ? 'Jeda latihan' : 'Lanjutkan latihan'}
+              className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center
+                        bg-foreground text-background
+                        transition-all duration-200 ease-out
+                        hover:cursor-pointer hover:scale-105 active:scale-95"
+            >
+              {isPlaying
+                ? <PauseIcon weight="fill" className="w-4 h-4" />
+                : <PlayIcon weight="fill" className="w-4 h-4" />
+              }
+            </button>
+          </div>
+
+          {/* Title + timer */}
+          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+            <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground/60">
+              Langkah {currentStep + 1} / {totalSteps}
+            </span>
+            <p className="text-p/5 xs:text-p/5 font-semibold text-foreground leading-tight truncate">{step.title}</p>
+            {step.description && (
+              <p className="text-xs/3.5 text-muted-foreground line-clamp-2 leading-relaxed">{step.description}</p>
+            )}
+            <p className="text-xs/3.5 text-muted-foreground/60 mt-0.5">
+              <span className="text-foreground/80 font-medium">{displayMins}:{displaySecs}</span>
+              <span className="mx-1 text-muted-foreground/30">/</span>
+              <span>{totalTime}</span>
+            </p>
+          </div>
+        </div>
+
+        {/* ── Controls: 2-col grid on small, 1 row on wider ── */}
+        <div className="flex flex-col gap-2 bg-background/70 border border-foreground/8 rounded-3xl px-2 py-2">
+          {/* sm and below: 2-col grid */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-1.5 sm:gap-1">
+            <ControlButtons />
+          </div>
+        </div>
+
+      </div>
+
+      {/* ════════════════════════════════════════
+          DESKTOP layout (≥ 876px / 2md)
+          ════════════════════════════════════════ */}
+      <div className="hidden 2md:flex flex-col items-center w-full rounded-4xl relative h-[76dvh] overflow-hidden">
+
         <div className="absolute inset-0 z-0">
           <Image
             key={step.image}
@@ -244,11 +574,8 @@ export function StepperExercise({ instructions, onDone }: Props) {
             priority
             className="object-cover object-center rounded-4xl"
           />
-
           <div className="absolute inset-0 rounded-4xl bg-black/25" />
-
           <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
-
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/80 via-black/50 to-transparent rounded-b-4xl" />
         </div>
 
@@ -256,86 +583,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
         <div className="relative z-10 flex flex-col items-center justify-between h-full w-full py-8 px-6">
 
           {/* Top bar */}
-          <div className="flex flex-row-reverse items-center w-full">
+          <div className="flex items-center w-full gap-3">
 
-            {/* Music button */}
-            <div className="relative flex-1 flex justify-end pr-2.5">
-              <button
-                onClick={() => setShowMusicTray((v) => !v)}
-                aria-label={isBGMStopped ? 'Musik dimatikan' : 'Musik latar'}
-                className="relative w-8 h-8 rounded-full flex items-center gap-2 justify-center group
-                          bg-background text-muted-foreground
-                          hover:bg-muted-foreground border border-foreground hover:cursor-pointer hover:text-white transition-all duration-150 ease-out"
-              >
-                <MusicNotesIcon weight={'fill'} className="w-3.5 h-3.5" />
-                <span className={cn(
-                  'absolute top-0.5 -right-0.5 w-2 h-2 rounded-full border border-background/40 transition-all duration-300',
-                  isBGMStopped ? 'bg-transparent border-none' : 'bg-muted-foreground group-hover:bg-background'
-                )} />
-              </button>
-
-              {showMusicTray && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowMusicTray(false)} />
-                  <div className="absolute top-full mt-2 right-0 z-20 w-56
-                                  bg-background border border-muted-foreground
-                                  rounded-2xl p-2.5 flex flex-col gap-0.5
-                                  animate-in slide-in-from-top-1 duration-150">
-
-                    <span className="text-xs font-bold tracking-[0.18em] uppercase text-muted-foreground px-2 pb-1.5">
-                      Musik Latar
-                    </span>
-
-                    {tracks.map((track, index) => (
-                      <button
-                        key={track.id}
-                        onClick={() => { setCurrentTrackIndex(index); bgmSwitchTrack(track.audio_url); setShowMusicTray(false) }}
-                        className={cn(
-                          'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl text-left transition-all duration-150 ease-out',
-                          index === currentTrackIndex && !isBGMStopped
-                            ? 'bg-muted-foreground/15 text-foreground'
-                            : 'text-foreground hover:bg-muted-foreground/15'
-                        )}
-                      >
-                        <span className={cn(
-                          'w-1.5 h-1.5 rounded-full shrink-0 transition-all',
-                          index === currentTrackIndex && !isBGMStopped ? 'bg-muted-foreground' : 'bg-muted-foreground/25'
-                        )} />
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-semibold truncate">{track.title}</span>
-                          {track.composer && (
-                            <span className="text-xs text-foreground">{track.composer}</span>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-
-                    <div className="mt-0.5 pt-1.5 border-t border-muted-foreground/25">
-                      <button
-                        onClick={() => { bgmStop(); setShowMusicTray(false) }}
-                        className={cn(
-                          'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl text-left transition-all duration-150 ease-out',
-                          isBGMStopped
-                            ? 'bg-muted-foreground/15 text-foreground'
-                            : 'text-foreground hover:bg-muted-foreground/15'
-                        )}
-                      >
-                        <span className={cn(
-                          'w-1.5 h-1.5 rounded-full shrink-0',
-                          isBGMStopped ? 'bg-white/60' : 'bg-muted-foreground/25'
-                        )} />
-                        <div className="flex flex-col">
-                          <span className="text-xs font-semibold">Tanpa Musik</span>
-                          <span className="text-xs text-foreground">Hening total</span>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Step dots */}
+            {/* Step dots — left */}
             <div className="flex items-center gap-1.5">
               {instructions.map((_, i) => (
                 <button
@@ -354,7 +604,44 @@ export function StepperExercise({ instructions, onDone }: Props) {
               ))}
             </div>
 
+            {/* Spacer */}
             <div className="flex-1" />
+
+            {/* BGM bar — top right, inline with icon + title + caret */}
+            <div className="relative">
+              <button
+                onClick={() => setShowMusicTray((v) => !v)}
+                aria-label="Pilih musik latar"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-sm border border-white/15 hover:bg-black/45 transition-all duration-150 group"
+              >
+                <MusicNotesIcon
+                  weight="fill"
+                  className={cn(
+                    "w-3.5 h-3.5 shrink-0 transition-colors",
+                    isBGMStopped ? "text-white/40" : "text-white/80"
+                  )}
+                />
+                <div className="flex flex-col min-w-0 text-left">
+                  <span className="text-xs font-semibold text-white/90 leading-tight truncate max-w-32">
+                    {bgmLabel}
+                  </span>
+                  {bgmSublabel && (
+                    <span className="text-[10px] text-white/55 leading-tight truncate max-w-32">{bgmSublabel}</span>
+                  )}
+                </div>
+                <CaretDownIcon
+                  weight="bold"
+                  className={cn(
+                    "w-3 h-3 shrink-0 text-white/60 transition-transform duration-200",
+                    showMusicTray && "rotate-180"
+                  )}
+                />
+              </button>
+
+              {showMusicTray && (
+                <MusicTray overlayClass="top-full mt-2 right-0" />
+              )}
+            </div>
           </div>
 
           {/* Middle: ring + step info */}
@@ -404,87 +691,20 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
             {/* Step title + description */}
             <div className="flex flex-col gap-2 max-w-md">
-              <p className="text-2xl font-semibold leading-tight text-white">{step.title}</p>
+              <p className="sm:text-h2/7 text-xl/5.5 font-semibold leading-tight text-white">{step.title}</p>
               {step.description && (
-                <p className="text-sm font-medium text-white/70 leading-relaxed">{step.description}</p>
+                <p className="text-p/5 xs:text-p/5 font-medium text-white/70 leading-relaxed">{step.description}</p>
               )}
             </div>
           </div>
 
           {/* Bottom: controls */}
-          <div className="flex flex-col items-center gap-2 px-3">
-            <div className="flex items-center justify-center gap-2 bg-background rounded-full px-2 py-1.5 w-full">
-
-              <Button
-                onClick={goPrev}
-                disabled={currentStep === 0}
-                size={'sm'}
-                variant={'ghost'}
-                className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground disabled:bg-transparent disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10"
-              >
-                <ArrowLeftIcon weight="bold" className="w-2 h-2" />
-                Sebelumnya
-              </Button>
-
-              <Button
-                onClick={() => setIsLooping((l) => !l)}
-                variant={'ghost'}
-                size={'sm'}
-                className={cn(
-                  '[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full bg-transparent',
-                  isLooping
-                    ? 'text-muted-foreground border border-muted-foreground bg-foreground/10 font-bold hover:bg-foreground/10'
-                    : 'text-muted-foreground hover:bg-foreground/10'
-                )}
-              >
-                {isLooping
-                  ? <RepeatOnceIcon weight="fill" />
-                  : <RepeatIcon weight="fill" />
-                }
-                Ulangi
-              </Button>
-
-              <Button
-                onClick={() => setIsMuted((m) => !m)}
-                size={'sm'}
-                variant={'ghost'}
-                className={cn(
-                  '[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full bg-transparent',
-                  isMuted
-                    ? 'text-muted-foreground border border-muted-foreground bg-foreground/10 font-bold hover:bg-foreground/10'
-                    : 'text-muted-foreground hover:bg-foreground/10'
-                )}
-              >
-                {isMuted
-                  ? <SpeakerSlashIcon weight="fill" />
-                  : <SpeakerHighIcon weight="fill" />
-                }
-                {isMuted ? 'Tanpa Instruksi Suara' : 'Dengan Instruksi Suara'}
-              </Button>
-
-              {isLastStep ? (
-                <Button
-                  onClick={goNextManual}
-                  variant={'ghost'}
-                  size={'sm'}
-                  className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground disabled:bg-transparent disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10"
-                >
-                  Selesai
-                  <CheckIcon weight="bold" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={goNextManual}
-                  variant={'ghost'}
-                  size={'sm'}
-                  className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground disabled:bg-transparent disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-muted-foreground/10"
-                >
-                  Berikutnya
-                  <ArrowRightIcon weight="bold" />
-                </Button>
-              )}
+          <div className="flex flex-col items-center gap-2 px-3 w-full">
+            <div className="flex items-center justify-center gap-2 bg-background rounded-full px-2 py-1.5 w-full max-w-lg">
+              <ControlButtons />
             </div>
           </div>
+
         </div>
       </div>
     </div>
