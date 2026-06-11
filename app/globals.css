@@ -302,21 +302,10 @@ html, body {
   flex-direction: column;
 }
 
-/* h1 {
-  line-height: 105%;
-  font-size: var(--text-h1);
-  font-weight: 600;
-} */
-
-/* h2 {
-  line-height: 105%;
-  font-size: var(--text-h2);
-  font-weight: 600;
-} */
-/* 
-p {
-  line-height: 108%;
-} */
+body.exercise-fullscreen .app-navbar,
+body.exercise-fullscreen .app-footer {
+  display: none;
+}
 
 input[type="password"] {
   font-family: Arial, sans-serif;

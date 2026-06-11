@@ -5,7 +5,7 @@ import { ArrowUpIcon } from "@phosphor-icons/react";
 
 export function FloatingButton(){
   return(
-    <div className="fixed bottom-2.5 right-10 z-140">
+    <div className="fixed bottom-2.5 right-10 z-49">
       <Button 
         className="relative rounded-full p-2"
         onClick={() => {
