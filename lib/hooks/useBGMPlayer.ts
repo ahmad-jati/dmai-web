@@ -1,8 +1,21 @@
 import { useRef, useCallback, useState, useEffect } from 'react'
 
-// No BGM_VOLUME constant — we never set volume programmatically.
-// The audio element plays at whatever the user's system/browser volume is (1.0 by default).
-// Fades only happen for smooth start/stop/switch transitions, always targeting 0 or 1.
+/**
+ * BGM player using Web Audio API for fade operations.
+ *
+ * Why Web Audio API instead of rAF on volume?
+ * ─ GainNode.linearRampToValueAtTime runs entirely off the main thread in the
+ *   browser's audio worklet. On a "potato" phone the JS thread can be starved
+ *   by layout/paint, causing rAF-based fades to stutter or freeze. The audio
+ *   scheduler is decoupled from that and never drops frames.
+ *
+ * The audio element still owns src/loop/preload; it is connected to the Web
+ * Audio graph via createMediaElementSource so we get both declarative loading
+ * AND smooth fades.
+ *
+ * Note: MediaElementSourceNode can only be created once per HTMLAudioElement,
+ * so we create both together and keep them for the lifetime of the hook.
+ */
 
 interface BGMControls {
   ref: React.MutableRefObject<HTMLAudioElement | null>
@@ -17,154 +30,191 @@ interface BGMControls {
   switchTrack: (src: string) => Promise<void>
 }
 
+// How long (ms) audio context creation is deferred after mount
+const LAZY_INIT_DELAY = 200
+
 export function useBGMPlayer(): BGMControls {
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const fadeTimerRef = useRef<number | null>(null)
-  const isBGMStoppedRef = useRef(true)
+  const ctxRef = useRef<AudioContext | null>(null)
+  const gainRef = useRef<GainNode | null>(null)
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null)
 
   const [isLoaded, setIsLoaded] = useState(false)
   const [currentTrack, setCurrentTrack] = useState<string | null>(null)
   const [isBGMStopped, setIsBGMStopped] = useState(true)
 
+  const ensureContext = useCallback(() => {
+    if (ctxRef.current) return
+
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const gain = ctx.createGain()
+    gain.gain.value = 0
+    gain.connect(ctx.destination)
+    ctxRef.current = ctx
+    gainRef.current = gain
+
+    if (audioRef.current && !sourceRef.current) {
+      const src = ctx.createMediaElementSource(audioRef.current)
+      src.connect(gain)
+      sourceRef.current = src
+    }
+  }, [])
+
+  // ── Audio element: created once, never re-created ────────────
   useEffect(() => {
     const audio = new Audio()
     audio.crossOrigin = 'anonymous'
     audio.loop = true
-    audio.volume = 1
+    // 'none' = browser won't preload until we set .src and call .load()
+    // This matters on low-end devices: no wasted bandwidth/decode at init.
+    audio.preload = 'none'
     audioRef.current = audio
+
+    // Defer AudioContext setup slightly so the page can finish its first paint
+    const t = setTimeout(() => {
+      ensureContext()
+    }, LAZY_INIT_DELAY)
+
     return () => {
+      clearTimeout(t)
       audio.pause()
       audio.src = ''
+      ctxRef.current?.close()
+    }
+  }, [ensureContext])
+
+  // ── Fade helper using Web Audio scheduler ────────────────────
+  // targetVolume: 0–1, durationMs: milliseconds
+  const scheduleFade = useCallback((targetVolume: number, durationMs: number) => {
+    const gain = gainRef.current
+    const ctx = ctxRef.current
+    if (!gain || !ctx) return
+
+    const now = ctx.currentTime
+    const durationSec = durationMs / 1000
+
+    // Cancel any running automation, snap to current value, then ramp
+    gain.gain.cancelScheduledValues(now)
+    gain.gain.setValueAtTime(gain.gain.value, now)
+    gain.gain.linearRampToValueAtTime(
+      Math.max(0, Math.min(1, targetVolume)),
+      now + durationSec
+    )
+  }, [])
+
+  // ── Resume suspended AudioContext (required after user gesture) ─
+  const resumeContext = useCallback(async () => {
+    if (ctxRef.current?.state === 'suspended') {
+      await ctxRef.current.resume()
     }
   }, [])
 
-  // Cancels any in-progress fade, then animates volume from current → target.
-  const smoothFade = useCallback((targetVolume: number, duration = 600) => {
-    if (!audioRef.current) return
-    if (fadeTimerRef.current) {
-      cancelAnimationFrame(fadeTimerRef.current)
-      fadeTimerRef.current = null
-    }
-
-    const startVolume = audioRef.current.volume
-    const startTime = performance.now()
-
-    const animate = (now: number) => {
-      if (!audioRef.current) return
-      const progress = Math.min((now - startTime) / duration, 1)
-      audioRef.current.volume = Math.max(0, Math.min(1, startVolume + (targetVolume - startVolume) * progress))
-      if (progress < 1) {
-        fadeTimerRef.current = requestAnimationFrame(animate)
-      } else {
-        fadeTimerRef.current = null
-      }
-    }
-    fadeTimerRef.current = requestAnimationFrame(animate)
-  }, [])
-
+  // ── load ─────────────────────────────────────────────────────
   const load = useCallback(async (src: string) => {
-    if (!audioRef.current) return
-    audioRef.current.src = src
-    audioRef.current.load()
+    const audio = audioRef.current
+    if (!audio) return
+    audio.preload = 'auto'
+    audio.src = src
+    audio.load()
     setCurrentTrack(src)
     setIsLoaded(true)
   }, [])
 
-  // Fade in from 0 → 1 on first play (avoids abrupt start).
+  // ── play (first start, fade in 0→1) ─────────────────────────
   const play = useCallback(async () => {
-    if (!audioRef.current) return
-    audioRef.current.volume = 0
-    await audioRef.current.play()
-    isBGMStoppedRef.current = false
-    setIsBGMStopped(false)
-    smoothFade(1, 1200)
-  }, [smoothFade])
-
-  // Fade out → pause (does NOT reset currentTime).
-  const pause = useCallback(() => {
-    if (!audioRef.current) return
-    smoothFade(0, 500)
-    setTimeout(() => {
-      audioRef.current?.pause()
-    }, 520)
-  }, [smoothFade])
-
-  // Fade back in from wherever volume is → resume playback.
-  const resume = useCallback(async () => {
-    if (!audioRef.current) return
-    if (!audioRef.current.paused) return
+    const audio = audioRef.current
+    if (!audio) return
+    ensureContext()
+    await resumeContext()
+    // Start silent then fade in — avoids the harsh pop on slow-loading audio
+    if (gainRef.current && ctxRef.current) {
+      gainRef.current.gain.cancelScheduledValues(ctxRef.current.currentTime)
+      gainRef.current.gain.setValueAtTime(0, ctxRef.current.currentTime)
+    }
     try {
-      audioRef.current.volume = 0
-      await audioRef.current.play()
-      isBGMStoppedRef.current = false
+      await audio.play()
       setIsBGMStopped(false)
-      smoothFade(1, 600)
+      scheduleFade(1, 1200)
+    } catch (err) {
+      console.warn('[BGM] play failed:', err)
+    }
+  }, [ensureContext, resumeContext, scheduleFade])
+
+  // ── pause (fade out then pause, keep position) ───────────────
+  const pause = useCallback(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    scheduleFade(0, 500)
+    setTimeout(() => audio.pause(), 520)
+  }, [scheduleFade])
+
+  // ── resume (fade back in) ────────────────────────────────────
+  const resume = useCallback(async () => {
+    const audio = audioRef.current
+    if (!audio || !audio.paused) return
+    ensureContext()
+    await resumeContext()
+    if (gainRef.current && ctxRef.current) {
+      gainRef.current.gain.cancelScheduledValues(ctxRef.current.currentTime)
+      gainRef.current.gain.setValueAtTime(0, ctxRef.current.currentTime)
+    }
+    try {
+      await audio.play()
+      setIsBGMStopped(false)
+      scheduleFade(1, 600)
     } catch (err) {
       console.warn('[BGM] resume failed:', err)
     }
-  }, [smoothFade])
+  }, [ensureContext, resumeContext, scheduleFade])
 
-  // Fade out → pause + reset position.
+  // ── stop (fade out, reset position) ─────────────────────────
   const stop = useCallback(() => {
-    if (!audioRef.current) return
-    smoothFade(0, 500)
+    const audio = audioRef.current
+    if (!audio) return
+    scheduleFade(0, 500)
     setTimeout(() => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.currentTime = 0
+      if (audio) {
+        audio.pause()
+        audio.currentTime = 0
       }
-      isBGMStoppedRef.current = true
       setIsBGMStopped(true)
     }, 520)
-  }, [smoothFade])
+  }, [scheduleFade])
 
-  // Switch track immediately with a quick crossfade:
-  // 1. Fade current out (if playing)
-  // 2. Swap src + start playing at volume 0
-  // 3. Fade in
-  // This always autoplays — whether BGM was playing or was user-stopped.
+  // ── switchTrack (crossfade swap) ─────────────────────────────
   const switchTrack = useCallback(async (src: string) => {
-    if (!audioRef.current) return
+    const audio = audioRef.current
+    if (!audio) return
+    ensureContext()
 
-    // Cancel any pending fade first
-    if (fadeTimerRef.current) {
-      cancelAnimationFrame(fadeTimerRef.current)
-      fadeTimerRef.current = null
-    }
-
-    // Fade out if currently audible
-    const wasPlaying = !audioRef.current.paused
+    const wasPlaying = !audio.paused
     if (wasPlaying) {
-      smoothFade(0, 400)
-      await new Promise<void>((r) => setTimeout(r, 420))
-      audioRef.current?.pause()
+      scheduleFade(0, 300)
+      await new Promise<void>((r) => setTimeout(r, 320))
+      audio.pause()
     }
 
-    if (!audioRef.current) return
-
-    // Swap the source
-    audioRef.current.src = src
-    audioRef.current.currentTime = 0
-    audioRef.current.volume = 0
-    audioRef.current.load()
+    audio.src = src
+    audio.currentTime = 0
+    audio.preload = 'auto'
+    audio.load()
     setCurrentTrack(src)
 
-    // Always autoplay the new track
+    // Snap gain to 0 before the new track starts
+    if (gainRef.current && ctxRef.current) {
+      gainRef.current.gain.cancelScheduledValues(ctxRef.current.currentTime)
+      gainRef.current.gain.setValueAtTime(0, ctxRef.current.currentTime)
+    }
+
+    await resumeContext()
     try {
-      await audioRef.current.play()
-      isBGMStoppedRef.current = false
+      await audio.play()
       setIsBGMStopped(false)
-      smoothFade(1, 600)
+      scheduleFade(1, 600)
     } catch (err) {
       console.warn('[BGM] switchTrack play failed:', err)
     }
-  }, [smoothFade])
-
-  useEffect(() => {
-    return () => {
-      if (fadeTimerRef.current) cancelAnimationFrame(fadeTimerRef.current)
-    }
-  }, [])
+  }, [ensureContext, resumeContext, scheduleFade])
 
   return {
     ref: audioRef,
