@@ -92,11 +92,11 @@ export default function ExercisePage({ params }: Props) {
         <div className="w-full">
           <Section className="bg-celeste flex flex-col items-center justify-center gap-8">
             <div className="flex flex-col items-center gap-2 text-center">
-              <p className="text-md font-medium">Kamu telah menyelesaikan sesi</p>
-              <h2 className="text-h2 font-semibold">{session.session_name}</h2>
+              <p className="xs:text-p/5 text-sm/4 font-medium">Kamu telah menyelesaikan sesi</p>
+              <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>
             </div>
 
-            <div className="rounded-4xl border border-foreground bg-background p-2 w-100 h-68">
+            <div className="rounded-4xl border border-foreground bg-background p-2 2xs:w-100 2xs:h-68 w-full h-60">
               <Image
                 src={session.image_cover}
                 alt={''}
@@ -108,10 +108,11 @@ export default function ExercisePage({ params }: Props) {
               />
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex 2xs:flex-row flex-col items-center gap-3">
               <Button
                 onClick={handleRepeat}
-                className="w-full flex items-center gap-2 bg-background"
+                variant={'link'}
+                className="w-full flex items-center gap-2"
               >
                 <RepeatIcon className="w-4 h-4" weight="fill" />
                 Ulangi Sesi Ini

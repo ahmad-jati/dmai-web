@@ -386,14 +386,13 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
   // ── Main UI ───────────────────────────────────────────────────
   return (
-    <Section className="bg-celeste">
+    <Section className="bg-celeste lg:p-4 md:p-4!">
 
       {/* ════════════════════════════════════════
           MOBILE / TABLET layout (< 876px / 2md)
           ════════════════════════════════════════ */}
       <div className="2md:hidden flex flex-col gap-3">
 
-        {/* BGM bar — anchored to bottom of image, tray rendered via fixed portal */}
         <div className="">
           <button
             ref={bgmButtonMobileRef}
@@ -426,7 +425,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
           </button>
         </div>
         
-        <div className="relative w-full min-h-[calc(50dvh-52px)] 2xs:rounded-3xl rounded-xl overflow-hidden">
+        <div className="relative w-full sm:min-h-[calc(60dvh-52px)] min-h-[calc(50dvh-52px)] 2xs:rounded-3xl rounded-xl overflow-hidden">
           <Image
             key={step.image}
             src={step.image}
@@ -438,81 +437,9 @@ export function StepperExercise({ instructions, onDone }: Props) {
           />
           <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
           <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
-
         </div>
 
-        <div className="flex items-center justify-between gap-6 w-fit mx-auto">
-          <Button
-            onClick={goPrev}
-            disabled={currentStep === 0}
-            size={'sm'}
-            variant={'default'}
-            className="[&_svg]:size-5 2md:flex-none flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground disabled:bg-transparent disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10 border-none"
-          >
-            <ArrowLeftIcon weight="bold" />
-            <span className="2xs:inline hidden">Sebelumnya</span>
-          </Button>
-
-          <div className="flex-1 relative w-16 h-16 shrink-0 flex items-center justify-center">
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" aria-hidden="true">
-              <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(94, 94, 94, 0.2)" strokeWidth="3" />
-              <circle
-                cx="50" cy="50" r="44"
-                fill="none"
-                stroke="rgba(94, 94, 94)"
-                strokeOpacity="0.75"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                transform="rotate(-90 50 50)"
-                style={{ transition: 'stroke-dashoffset 1s linear' }}
-              />
-            </svg>
-            <button
-              onClick={() => setIsPlaying((p) => !p)}
-              aria-label={isPlaying ? 'Jeda latihan' : 'Lanjutkan latihan'}
-              className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center
-                        bg-background text-muted-foreground
-                        transition-all duration-200 ease-out
-                        hover:cursor-pointer hover:scale-105 active:scale-95 active:bg-background/15"
-            >
-              {isPlaying
-                ? <PauseIcon weight="fill" className="w-4 h-4" />
-                : <PlayIcon weight="fill" className="w-4 h-4" />
-              }
-            </button>
-          </div>
-
-          {isLastStep ? (
-            <Button
-              onClick={goNextManual}
-              variant={'default'}
-              size={'sm'}
-              className="[&_svg]:size-5 2md:flex-none flex items-end justify-end gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground disabled:bg-transparent disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full hover:bg-foreground/10 border-none w-fit bg-transparent"
-            >
-              <span className="sm:inline hidden">Selesai</span>
-              <CheckIcon weight="bold" />
-            </Button>
-          ) : (
-            <Button
-              onClick={goNextManual}
-              variant={'default'}
-              size={'sm'}
-              className="[&_svg]:size-5 2md:flex-none flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground disabled:bg-transparent disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent border-none hover:bg-foreground/10 w-fit"
-            >
-              <span className="2xs:inline hidden">Berikutnya</span>
-              <ArrowRightIcon weight="bold" />
-            </Button>
-          )}
-        </div>
-
-        <p className="text-xs text-center font-medium text-muted-foreground/60 mb-2">
-          <span className="text-foreground/80 font-medium">{displayMins}:{displaySecs}</span>
-          <span className="mx-1 text-muted-foreground/30">/</span>
-          <span>{totalTime}</span>
-        </p>
-        <div className="flex flex-col gap-1 text-center my-2">
+        <div className="flex flex-col gap-1 text-center pt-2 pb-1">
           <span className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">
             Langkah {currentStep + 1} / {totalSteps}
           </span>
@@ -520,22 +447,120 @@ export function StepperExercise({ instructions, onDone }: Props) {
           <div className="flex flex-col gap-2 items-center xs:px-6">
             <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-foreground text-center">{step.title}</p>
             {step.description && (
-              <p className="text-base/5 text-muted-foreground text-center">{step.description}</p>
+              <p className="xs:text-p/5 text-sm/4 text-muted-foreground text-center">{step.description}</p>
             )}
           </div>
         </div>
 
-        
-        <div className="2md:bg-background bg-transparent rounded-3xl px-2 py-1.5">
-          <ControlButtons />
+        <div className="flex items-center 2xs:justify-between justify-center 2xs:gap-6 gap-3 w-full">
+          <Button
+            onClick={() => setIsLooping((l) => !l)}
+            variant={'ghost'}
+            size={'sm'}
+            className={cn(
+              '[&_svg]:size-5 p-2 text-xs xs:text-sm font-medium  ',
+              isLooping
+                ? 'text-foreground hover:bg-foreground/10 '
+                : 'text-muted-foreground hover:bg-foreground/10'
+            )}
+          >
+            {isLooping
+              ? <RepeatOnceIcon weight="fill" />
+              : <RepeatIcon weight="fill" />
+            }
+          </Button>
+
+          <div className="flex-1 flex flex-row 2xs:gap-13 gap-3 justify-center items-center ">
+            <Button
+              onClick={goPrev}
+              disabled={currentStep === 0}
+              size={'sm'}
+              variant={'default'}
+              className="[&_svg]:size-5 flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10 border-none 2sx:w-fit w-6"
+            >
+              <ArrowLeftIcon weight="bold" />
+              <span className="2xs:inline hidden">Sebelumnya</span>
+            </Button>
+
+            <div className=" relative w-18 h-18 shrink-0 flex items-center justify-center">
+              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(94, 94, 94, 0.2)" strokeWidth="3" />
+                <circle
+                  cx="50" cy="50" r="44"
+                  fill="none"
+                  stroke="rgba(94, 94, 94)"
+                  strokeOpacity="0.75"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  transform="rotate(-90 50 50)"
+                  style={{ transition: 'stroke-dashoffset 1s linear' }}
+                />
+              </svg>
+              <button
+                onClick={() => setIsPlaying((p) => !p)}
+                aria-label={isPlaying ? 'Jeda latihan' : 'Lanjutkan latihan'}
+                className="relative z-10 w-12 h-12 rounded-full flex items-center justify-center
+                          bg-background text-muted-foreground
+                          transition-all duration-200 ease-out
+                          hover:cursor-pointer hover:scale-105 active:scale-95 active:bg-background/15"
+              >
+                {isPlaying
+                  ? <PauseIcon weight="fill" className="w-6 h-6" />
+                  : <PlayIcon weight="fill" className="w-6 h-6" />
+                }
+              </button>
+            </div>
+
+            <Button
+              onClick={goNextManual}
+              variant={'default'}
+              size={'sm'}
+              className="[&_svg]:size-5 flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent border-none hover:bg-foreground/10 2sx:w-fit w-6"
+            >
+              <span className="2xs:inline hidden">Berikutnya</span>
+              <ArrowRightIcon weight="bold" />
+            </Button>
+          </div>
+
+          <Button
+            onClick={() => setIsMuted((m) => !m)}
+            size={'sm'}
+            variant={'ghost'}
+            className={cn(
+              '[&_svg]:size54 p-2 text-xs xs:text-sm font-medium ',
+              isMuted
+                ? 'text-foreground hover:bg-foreground/10'
+                : 'text-muted-foreground hover:bg-foreground/10'
+            )}
+          >
+            {isMuted
+              ? <SpeakerSlashIcon weight="fill" />
+              : <SpeakerHighIcon weight="fill" />
+            }
+            
+          </Button>
         </div>
+
+        <p className="xs:text-sm text-xs text-center font-medium text-muted-foreground/60 mb-2">
+          <span className="text-foreground/80 font-medium">{displayMins}:{displaySecs}</span>
+          <span className="mx-1 text-muted-foreground/30">/</span>
+          <span>{totalTime}</span>
+        </p>
+        
+
+        
+        {/* <div className="2md:bg-background bg-transparent rounded-3xl px-2 py-1.5">
+          <ControlButtons />
+        </div> */}
 
       </div>
 
       {/* ════════════════════════════════════════
           DESKTOP layout (≥ 876px / 2md)
           ════════════════════════════════════════ */}
-      <div className="hidden 2md:flex flex-col items-center w-full rounded-4xl relative h-[76dvh] overflow-hidden">
+      <div className="hidden 2md:flex flex-col items-center w-full rounded-4xl relative h-[74dvh] overflow-hidden">
 
         <div className="absolute inset-0 z-0">
           <Image
@@ -564,10 +589,10 @@ export function StepperExercise({ instructions, onDone }: Props) {
                 ref={bgmButtonRef}
                 onClick={() => openMusicTray(bgmButtonRef, false)}
                 aria-label="Pilih musik latar"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full
-                          bg-background text-muted-foreground
-                          hover:bg-muted-foreground border border-foreground hover:cursor-pointer hover:text-white
-                          transition-all duration-150 ease-out"
+                className="flex items-center gap-3 px-4 py-2 rounded-full
+                          bg-background/90 text-foreground/80
+                          hover:bg-muted-foreground/90 border border-foreground hover:cursor-pointer hover:text-white
+                          transition-all duration-150 ease-out w-60"
               >
                 <MusicNotesIcon
                   weight="fill"
@@ -576,18 +601,18 @@ export function StepperExercise({ instructions, onDone }: Props) {
                     isBGMStopped ? "opacity-40" : "opacity-100"
                   )}
                 />
-                <div className="flex flex-col min-w-0 text-left">
-                  <span className="text-xs font-semibold leading-tight truncate max-w-32">
+                <div className="flex flex-1 flex-col min-w-0 text-left">
+                  <span className="text-xs font-semibold leading-tight truncate max-w-42">
                     {bgmLabel}
                   </span>
                   {bgmSublabel && (
-                    <span className="text-2xs leading-tight truncate max-w-32 opacity-60">{bgmSublabel}</span>
+                    <span className="text-xs leading-tight truncate max-w-42 font-medium">{bgmSublabel}</span>
                   )}
                 </div>
                 <CaretDownIcon
                   weight="bold"
                   className={cn(
-                    "w-3 h-3 shrink-0 opacity-60 transition-transform duration-200",
+                    "w-4 h-4 shrink-0 transition-transform duration-200",
                     showMusicTray && !trayMobile && "rotate-180"
                   )}
                 />
@@ -607,24 +632,13 @@ export function StepperExercise({ instructions, onDone }: Props) {
                 >
                   {/* Tick line */}
                   <span className={cn(
-                    'block h-0.5 rounded-full transition-all duration-300',
+                    'block h-1 rounded-full transition-all duration-300',
                     i === currentStep
                       ? 'w-8 bg-background/90'
                       : i < currentStep
                       ? 'w-4 bg-background/55 group-hover:bg-background/70'
                       : 'w-4 bg-background/30 group-hover:bg-background/45'
                   )} />
-                  {/* Step number */}
-                  <span className={cn(
-                    'text-2xs font-semibold tracking-wide transition-all duration-200',
-                    i === currentStep
-                      ? 'text-background/90'
-                      : i < currentStep
-                      ? 'text-background/45'
-                      : 'text-background/25'
-                  )}>
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
                 </button>
               ))}
             </div>
@@ -633,7 +647,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
           </div>
 
           {/* Middle: ring + step info */}
-          <div className="flex flex-col items-center gap-6 text-center">
+          <div className="flex flex-col items-center gap-4 text-center">
             <span className="text-xs text-background/80 font-semibold tracking-[0.2em] uppercase">
               Langkah {currentStep + 1} / {totalSteps}
             </span>
@@ -671,17 +685,17 @@ export function StepperExercise({ instructions, onDone }: Props) {
             </div>
 
             {/* Timer */}
-            <p className="text-sm tracking-wide font-medium -mt-2">
+            <p className="xs:text-p/5 text-sm/4 tracking-wide font-medium -mt-2">
               <span className="text-white/90">{displayMins}:{displaySecs}</span>
               <span className="text-white/30 mx-1">/</span>
               <span className="text-white/50">{totalTime}</span>
             </p>
 
             {/* Step title + description */}
-            <div className="flex flex-col gap-2 max-w-md">
-              <p className="text-2xl font-semibold leading-tight text-white">{step.title}</p>
+            <div className="flex flex-col gap-3 max-w-md">
+              <p className="sm:text-h2/7 text-xl/5.5 font-semibold leading-tight text-white">{step.title}</p>
               {step.description && (
-                <p className="text-sm font-medium text-white/70 leading-relaxed">{step.description}</p>
+                <p className="xs:text-p/5 text-sm/4 font-medium text-white/70 leading-relaxed">{step.description}</p>
               )}
             </div>
           </div>

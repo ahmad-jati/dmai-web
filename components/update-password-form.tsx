@@ -78,8 +78,8 @@ export function UpdatePasswordForm({
       <Section className="flex lg:flex-row flex-col-reverse md:items-center justify-center items-end md:gap-8 gap-0 bg-lemon min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:px-20">
         <div className="lg:flex-1 w-full lg:max-w-120 flex flex-col gap-3.5 items-start text-foreground md:px-0 px-2 md:mt-0 xs:-mt-10 -mt-4">
           <PasswordIcon className="text-foreground md:w-10 md:h-10 w-16 h-16" />
-          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">Set your new password</h2>
-          <p className="xs:text-p/5 text-xs/3.5 font-medium">
+          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-pretty">Set your new password</h2>
+          <p className="xs:text-p/5 text-sm/4 font-medium text-pretty">
             Masukkan password baru yang ingin kamu gunakan untuk kembali mengakses akunmu.
           </p>
 

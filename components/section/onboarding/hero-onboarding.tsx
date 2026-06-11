@@ -29,7 +29,7 @@ export function HeroOnboarding() {
 
         <div className="flex-1 flex flex-col sm:gap-4 gap-2 items-center text-center text-foreground">
           <h1 className="sm:text-h1/8 xs:text-[1.8rem]/8 text-h2/7 font-semibold xs:max-w-90 w-full">Digital Mindful Autogenic Intervention.</h1>
-          <p className="xs:text-p/5 text-xs/3.5 max-w-140 font-medium">
+          <p className="xs:text-p/5 text-sm/4 max-w-140 font-medium text-pretty">
             Platform mindful yang dirancang untuk membantu kamu menjalani sesi latihan refleksi diri dengan suasana yang lebih tenang dan tidak terasa melelahkan.
           </p>
         </div>

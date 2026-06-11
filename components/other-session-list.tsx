@@ -45,7 +45,10 @@ export function OtherSessionList({ excludeSlug }: { excludeSlug?: string }) {
 
   return (
     <div className="flex flex-col gap-4 items-start">
-      <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold md:text-left text-center w-full">Other Session</h2>
+      <div className="flex flex-col w-full 2md:items-start items-center gap-2 sm:max-w-180 2md:max-w-80">
+        <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold sm:text-left text-center">Other Session</h2>
+        <p className="xs:text-p/5 text-sm/4 sm:max-w-140 font-medium sm:text-left text-center text-pretty">Temukan sesi lain yang bisa menemanimu hari ini.</p>
+      </div>
       <div className="grid lg:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-3.5 w-full">
         {loading
           ? Array.from({ length: 6 }).map((_, i) => <SessionCardSkeleton key={i} />)
@@ -91,21 +94,21 @@ export function OtherSessionList({ excludeSlug }: { excludeSlug?: string }) {
                     
                   </div>
 
-                  <p className="2md:mt-0 -mt-2 xs:text-p/5 text-sm/4 2md:max-w-140 font-medium text-muted-foreground 2md:text-left text-left">
+                  <p className="2md:mt-0 text-pretty -mt-2 xs:text-p/5 text-sm/4 2md:max-w-140 font-medium text-muted-foreground 2md:text-left text-left">
                     {session.detail_short}
                   </p>
 
                   <div className="flex-1 flex items-center gap-3">
                     <span className="flex items-center gap-1">
                       <PersonSimpleTaiChiIcon className="h-3 w-3 text-muted-foreground" weight="fill" />
-                      <p className="text-xs font-medium text-muted-foreground">
+                      <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
                         {session.total_instruction} Instruksi
                       </p>
                     </span>
 
                     <span className="flex items-center gap-1">
-                      <TimerIcon className="h-3 w-3 text--mutedforeground/" weight="fill" />
-                      <p className="text-xs font-medium text-muted-foreground">
+                      <TimerIcon className="h-3 w-3 text-muted-foreground" weight="fill" />
+                      <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
                         {session.duration}
                       </p>
                     </span>

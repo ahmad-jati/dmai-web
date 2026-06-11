@@ -25,25 +25,17 @@ export function SignUpForm({
   const [fullname, setFullname] = useState("")
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
-  // const [showRepeatPassword, setShowRepeatPassword] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
-
-    // if (password !== repeatPassword) {
-    //   setError("Passwords do not match");
-    //   setIsLoading(false);
-    //   return;
-    // }
 
     try {
       const { error } = await supabase.auth.signUp({
@@ -68,8 +60,8 @@ export function SignUpForm({
   return (
     <div className='flex flex-col items-center gap-8'>
       <div className="flex flex-col gap-4">
-        <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold md:text-left text-center">Let&apos;s prepare your account.</h2>
-        <p className="xs:text-p/5 text-xs/3.5 font-medium md:text-left text-center">
+        <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold md:text-left text-center text-pretty">Let&apos;s prepare your account.</h2>
+        <p className="xs:text-p/5 text-sm/4 font-medium md:text-left text-center text-pretty">
          Buat ruang kecil untuk dirimu hari ini, lalu jalani setiap sesi latihan sesuai dengan kenyamananmu sendiri.
         </p>
       </div>

@@ -69,8 +69,8 @@ export function LoginForm({
   return (
     <div className='flex flex-col items-center sm:gap-8 gap-6'>
       <div className="flex flex-col gap-2 lg:px-0 sm:px-10 xs:px-6 px-2">
-        <h2 className="xs:text-h2/7 text-xl/5.5 font-semibold lg:text-left text-center">Good to see you again.</h2>
-        <p className="xs:text-p/5 text-xs/3.5 font-medium lg:text-left text-center sm:max-w-120">
+        <h2 className="xs:text-h2/7 text-xl/5.5 font-semibold lg:text-left text-center text-pretty">Good to see you again.</h2>
+        <p className="xs:text-p/5 text-sm/4 font-medium lg:text-left text-center sm:max-w-120 text-pretty">
           Terima kasih sudah kembali dan memberi ruang untuk dirimu sendiri hari ini. Mari lanjutkan sesi dengan tenang.
         </p>
       </div>

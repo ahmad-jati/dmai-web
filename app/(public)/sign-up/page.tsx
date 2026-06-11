@@ -38,8 +38,6 @@ export default function Page() {
           </div>
           <SignUpForm />
         </Section>
-        {/* <Section className="w-full bg-white flex items-center">
-        </Section> */}
       </div>
     </div>
   );

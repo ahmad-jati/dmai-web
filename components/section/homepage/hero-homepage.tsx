@@ -21,7 +21,7 @@ export function HeroHomepage() {
 
       <div className="flex-1 flex flex-col gap-3.5 items-center text-center text-foreground">
         <h1 className="sm:text-h1/8 xs:text-[1.8rem]/8 text-xl/6 font-semibold max-w-90">A Space to Slow Down</h1>
-        <p className="xs:text-p/5 text-xs/3.5 sm:max-w-140 font-medium">
+        <p className="xs:text-p/5 text-sm/4 sm:max-w-140 font-medium text-pretty">
           Berikan dirimu waktu untuk berhenti sejenak, menenangkan pikiran, dan menjalani sesi dengan suasana yang lebih nyaman.
         </p>
       </div>

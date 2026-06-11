@@ -70,38 +70,40 @@ export function FeedbackDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onSkip() }}>
       <DialogContent
-        className="max-w-md"
+        className="sm:max-w-md max-w-sm"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">Bagaimana perasaanmu?</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            Setelah menyelesaikan <span className="font-medium text-foreground">{sessionName}</span>
+          <DialogTitle className="sm:text-h2/7 text-xl/5.5 font-semibold sm:pt-0 pt-2">Bagaimana perasaanmu?</DialogTitle>
+          <p className="xs:text-p/5 text-sm/4 text-muted-foreground font-medium">
+            Setelah menyelesaikan <span className="font-semibold text-foreground">{sessionName}</span>
           </p>
         </DialogHeader>
 
         {/* Mood Selector */}
-        <div className="flex justify-between gap-2 py-2">
+        <div className="grid grid-cols-5 gap-2 py-2">
           {MOODS.map((mood) => (
-            <button
+            <Button
               key={mood.value}
               onClick={() => setSelectedMood(mood.value)}
-              className={`flex flex-col items-center gap-1.5 flex-1 py-3 px-1 rounded-xl border-2 transition-all
+              variant={'default'}
+              size={'sm'}
+              className={`flex flex-col items-center md:gap-1.5 gap-0 flex-1 py-3 px-1 md:rounded-xl rounded-md border-2 transition-all h-full w-full
                 ${selectedMood === mood.value
-                  ? "border-foreground bg-foreground/5 scale-105"
+                  ? "border-muted-foreground/60 bg-muted-foreground/10 scale-105"
                   : "border-border hover:border-muted-foreground/40 hover:bg-muted/30"
                 }`}
             >
-              <span className="text-2xl">{mood.emoji}</span>
-              <span className="text-xs font-medium text-center leading-tight">{mood.label}</span>
-            </button>
+              <span className="md:text-2xl text-lg">{mood.emoji}</span>
+              <span className="text-xs font-medium text-center text-pretty">{mood.label}</span>
+            </Button>
           ))}
         </div>
 
         {/* Optional note */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium">
-            Catatan <span className="text-muted-foreground font-normal">(opsional)</span>
+          <label className="xs:text-p/5 text-sm/4 font-medium">
+            Catatan <span className="text-muted-foreground">(opsional)</span>
           </label>
           <Textarea
             placeholder="Ada yang ingin kamu bagikan? Tuliskan di sini..."
@@ -109,9 +111,9 @@ export function FeedbackDialog({
             onChange={(e) => setNote(e.target.value)}
             rows={3}
             className="resize-none text-sm"
-            maxLength={500}
+            maxLength={250}
           />
-          <p className="text-xs text-muted-foreground text-right">{note.length}/500</p>
+          <p className="text-xs text-muted-foreground text-right">{note.length}/250</p>
         </div>
 
         <DialogFooter className="flex gap-2 sm:flex-row">
@@ -125,11 +127,11 @@ export function FeedbackDialog({
           <Button
             onClick={handleSubmit}
             disabled={!selectedMood || saving}
-            className="flex-1 bg-foreground text-background hover:bg-foreground/90 disabled:opacity-40"
+            className="flex-1 bg-celeste text-foreground hover:bg-celeste/80 disabled:opacity-90"
           >
             {saving ? (
               <span className="flex items-center gap-2">
-                <Spinner className="shrink-0 text-background w-4 h-4" />
+                <Spinner className="shrink-0 text-foreground w-4 h-4" />
                 Menyimpan...
               </span>
             ) : (

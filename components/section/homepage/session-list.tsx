@@ -41,7 +41,7 @@ export function SessionList({ excludeSlug }: { excludeSlug?: string }) {
     <div id="session-list" className="flex flex-col gap-6 items-start">
       <div className="flex flex-col w-full 2md:items-start items-center gap-2 sm:max-w-180 2md:max-w-80">
         <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold sm:text-left text-center">All Session</h2>
-        <p className="xs:text-p/5 text-xs/3.5 sm:max-w-140 font-medium sm:text-left text-center">Mulai perlahan, pilih satu sesi yang terasa paling dekat denganmu.</p>
+        <p className="xs:text-p/5 text-sm/4 sm:max-w-140 font-medium sm:text-left text-center text-pretty">Mulai perlahan, pilih satu sesi yang terasa paling dekat denganmu.</p>
       </div>
 
       <div className="
@@ -87,28 +87,26 @@ export function SessionList({ excludeSlug }: { excludeSlug?: string }) {
                       variant={'default'}
                       className="[&_svg]:size-6 font-foreground bg-none rounded-none border-none p-0 2md:hidden block"
                     >
-                      <Link href={`/session/${session.slug}` as Route} className="">
-                        <ArrowUpRightIcon /> 
-                      </Link>
+                      <ArrowUpRightIcon /> 
                     </Button>
                     
                   </div>
 
-                  <p className="2md:mt-0 -mt-2 xs:text-p/5 text-sm/4 2md:max-w-140 font-medium line-clamp-3 2md:min-h-[3lh] text-muted-foreground 2md:text-left text-left">
+                  <p className="text-pretty 2md:mt-0 -mt-2 xs:text-p/5 text-sm/4 2md:max-w-140 font-medium line-clamp-3 2md:min-h-[3lh] text-muted-foreground 2md:text-left text-left">
                     {session.detail_short}
                   </p>
 
                   <div className="flex-1 flex items-center gap-3">
                     <span className="flex items-center gap-1">
                       <PersonSimpleTaiChiIcon className="h-3 w-3 text-muted-foreground" weight="fill" />
-                      <p className="text-xs font-medium text-muted-foreground">
+                      <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
                         {session.total_instruction} Instruksi
                       </p>
                     </span>
 
                     <span className="flex items-center gap-1">
                       <TimerIcon className="h-3 w-3 text--mutedforeground/" weight="fill" />
-                      <p className="text-xs font-medium text-muted-foreground">
+                      <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
                         {session.duration}
                       </p>
                     </span>
