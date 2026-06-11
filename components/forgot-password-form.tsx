@@ -51,8 +51,8 @@ export function ForgotPasswordForm({
       {success ? (
         <Section className="flex lg:flex-row flex-col-reverse lg:items-center justify-center items-end  lg:gap-8 gap-6 bg-white">
             <div className="flex-1 flex flex-col gap-3.5 items-start text-foreground max-w-120">
-              <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-center">Reset link is on its way</h2>
-              <p className="xs:text-p/5 text-xs/3.5 max-w-140 font-medium">
+              <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-center text-pretty">Reset link is on its way</h2>
+              <p className="xs:text-p/5 text-sm/4 max-w-140 font-medium text-pretty">
                 Tautan reset password sudah kami kirimkan. Silakan buka email kamu dan ikuti langkah berikutnya untuk membuat password baru. Kamu bisa menutup tab ini.
               </p>
             </div>

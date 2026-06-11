@@ -117,7 +117,7 @@ function DayGroup({ group }: { group: GroupedDay }) {
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <CalendarIcon className="w-4 h-4 text-muted-foreground shrink-0" />
-        <p className="xs:text-p/5 text-xs/3.5 font-semibold text-foreground">{group.label}</p>
+        <p className="xs:text-p/5 text-sm/4 font-semibold text-foreground">{group.label}</p>
         <span className="xs:text-p/5 text-xs/3.5 text-muted-foreground">({group.items.length} sesi)</span>
       </div>
       <div className="grid md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-2 pl-1">
@@ -259,7 +259,7 @@ export function HistoryList() {
             {/* Older section */}
             {showOlder && olderGroups.length > 0 && (
               <div className="flex flex-col gap-6 pt-2 border-t border-foreground/10">
-                <p className="xs:text-p/5 text-xs/3.5 text-muted-foreground">
+                <p className="xs:text-p/5 text-sm/4 text-muted-foreground">
                   {OLDER_DAYS} hari sebelumnya
                 </p>
                 {olderGroups.map((group) => (
