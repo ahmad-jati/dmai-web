@@ -346,7 +346,7 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
           MOBILE / TABLET  (< 2md / 876px)
           Fixed fullscreen with m-4 inset feel
           ════════════════════════════════════════════════════════ */}
-      <div className="2md:hidden fixed inset-0 z-55 flex flex-col gap-3 bg-celeste p-4 overflow-y-auto">
+      <div className="2md:hidden fixed inset-0 z-55 flex flex-col gap-3 bg-celeste p-8 overflow-y-auto">
 
         {/* Top bar: back button + BGM selector */}
         <div className="flex items-center gap-2 shrink-0">
@@ -392,7 +392,7 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
         </div>
 
         {/* Cover image */}
-        <div className="relative w-full flex-1 max-h-80 min-h-0 2xs:rounded-3xl rounded-xl overflow-hidden">
+        <div className="relative xs:w-60 w-full max-w-100 flex-1 max-h-80 min-h-0 2xs:rounded-3xl rounded-xl overflow-hidden">
           <Image
             key={step.image}
             src={step.image}
@@ -400,7 +400,7 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
             fill
             unoptimized
             priority
-            className="object-cover object-center"
+            className="object-cover object-center w-full h-full"
           />
           <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
           <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
@@ -514,8 +514,8 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
           DESKTOP  (≥ 2md / 876px)
           FIX: Now also fixed fullscreen like mobile — no Section wrapper
           ════════════════════════════════════════════════════════ */}
-      <div className="hidden 2md:flex fixed inset-0 z-40 items-stretch justify-stretch p-4 bg-celeste">
-        <div className="flex flex-col items-center w-full rounded-4xl relative overflow-hidden flex-1">
+      <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
+        <div className="flex flex-col items-center w-full rounded-4xl relative overflow-hidden flex-1"> 
 
           <div className="absolute inset-0 z-0">
             <Image
@@ -536,47 +536,10 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
           <div className="relative z-10 flex flex-col items-center justify-between h-full w-full py-8 px-6">
 
             {/* Top bar */}
-            <div className="flex flex-row items-center w-full gap-3">
+            <div className="flex flex-row-reverse items-center w-full">
 
-              {/* FIX: Back button on the left */}
-              {onBack ? (
-                <button
-                  onClick={onBack}
-                  aria-label="Kembali ke halaman sesi"
-                  className="flex items-center justify-center w-9 h-9 rounded-full
-                            bg-background/20 text-white border border-white/20
-                            hover:bg-background/35 hover:cursor-pointer
-                            transition-all duration-150 ease-out shrink-0"
-                >
-                  <ArrowLeftIcon weight="bold" className="w-4 h-4" />
-                </button>
-              ) : (
-                <div className="w-9 shrink-0" />
-              )}
-
-              {/* Step dots — centred */}
-              <div className="flex-1 flex items-center justify-center gap-3">
-                {instructions.map((instr, i) => (
-                  <button
-                    key={i}
-                    onClick={() => jumpToStep(i)}
-                    className="flex flex-col items-center gap-1 group transition-all duration-200 ease-out cursor-pointer"
-                    aria-label={`Langkah ${i + 1}: ${instr.title}`}
-                  >
-                    <span className={cn(
-                      'block h-1 rounded-full transition-all duration-300',
-                      i === currentStep
-                        ? 'w-8 bg-background/90'
-                        : i < currentStep
-                        ? 'w-4 bg-background/55 group-hover:bg-background/70'
-                        : 'w-4 bg-background/30 group-hover:bg-background/45'
-                    )} />
-                  </button>
-                ))}
-              </div>
-
-              {/* BGM pill — right-aligned */}
-              <div className="flex justify-end shrink-0">
+              {/* BGM pill */}
+              <div className="relative flex-1 flex justify-end">
                 <button
                   ref={bgmButtonRef}
                   onClick={() => openMusicTray(bgmButtonRef, false)}
@@ -603,10 +566,32 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
                 </button>
               </div>
 
+              {/* Step dots */}
+              <div className="flex items-center gap-3">
+                {instructions.map((instr, i) => (
+                  <button
+                    key={i}
+                    onClick={() => jumpToStep(i)}
+                    className="flex flex-col items-center gap-1 group transition-all duration-200 ease-out cursor-pointer"
+                    aria-label={`Langkah ${i + 1}: ${instr.title}`}
+                  >
+                    <span className={cn(
+                      'block h-1 rounded-full transition-all duration-300',
+                      i === currentStep
+                        ? 'w-8 bg-background/90'
+                        : i < currentStep
+                        ? 'w-4 bg-background/55 group-hover:bg-background/70'
+                        : 'w-4 bg-background/30 group-hover:bg-background/45'
+                    )} />
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex-1" />
             </div>
 
             {/* Middle: ring + step info */}
-            <div className="flex flex-col items-center gap-4 text-center">
+            <div className="flex flex-1 flex-col justify-center items-center gap-4 text-center">
               <span className="text-xs text-background/80 font-semibold tracking-[0.2em] uppercase">
                 Langkah {currentStep + 1} / {totalSteps}
               </span>
@@ -651,12 +636,18 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
               </p>
 
               {/* FIX: Fixed-height step title + description so controls stay anchored */}
-              <div className="flex flex-col gap-3 max-w-md h-28 overflow-hidden justify-start items-center">
-                <p className="sm:text-h2/7 text-xl/5.5 font-semibold leading-tight text-white line-clamp-2">{step.title}</p>
-                {step.description && (
-                  <p className="xs:text-p/5 text-sm/4 font-medium text-white/70 leading-relaxed line-clamp-2">{step.description}</p>
-                )}
+              <div className="flex flex-col gap-1 text-center pt-1 shrink-0 max-w-xl sm:max-w-lg h-40 overflow-y-auto justify-start">
+                <span className="text-xs font-semibold tracking-[0.18em] uppercase text-background">
+                  Langkah {currentStep + 1} / {totalSteps}
+                </span>
+                <div className="flex flex-col gap-2 items-center xs:px-6">
+                  <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-background text-center">{step.title}</p>
+                  {step.description && (
+                    <p className="xs:text-p/5 text-sm/4 text-background text-center">{step.description}</p>
+                  )}
+                </div>
               </div>
+
             </div>
 
             {/* Bottom: controls */}
