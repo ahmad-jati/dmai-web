@@ -97,7 +97,7 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
       } catch (err) {
         console.error('[BGM] init error:', err)
       } finally {
-        // FIX: 4-second splash before marking ready
+        // 4-second splash before marking ready
         setTimeout(() => setIsReady(true), 4000)
       }
     }
@@ -141,7 +141,7 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
   }, [isReady, bgmPlay])
 
   // ── 4. Sync play/pause ────────────────────────────────────────
-  // FIX: pause/resume narration instead of stop/replay from beginning
+  // Pause/resume narration instead of stop/replay from beginning
   useEffect(() => {
     if (!bgmStartedRef.current) return
     if (isPlaying === prevIsPlayingRef.current) return
@@ -324,11 +324,11 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
   // ── Loading ───────────────────────────────────────────────────
   if (!isReady) {
     return (
-      // FIX: fullscreen also on desktop — no Section wrapper, fixed inset-0
-      <div className="fixed inset-0 z-50 flex items-stretch justify-stretch p-4 bg-celeste">
-        <div className="flex-1 rounded-4xl overflow-hidden relative">
+      // Fullscreen also on desktop — no Section wrapper, fixed inset-0
+      <div className="fixed inset-0 z-50 flex items-stretch justify-stretch lg:px-28 2md:px-12 lg:py-14 py-8 px-8  bg-celeste">
+        <div className="flex-1 md:rounded-4xl rounded-xl overflow-hidden relative">
           <Image src={step.image} alt={step.title} fill unoptimized priority className="object-cover object-center" />
-          <div className="absolute inset-0 bg-black/30 rounded-4xl" />
+          <div className="absolute inset-0 bg-black/30 md:rounded-4xl rounded-xl" />
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             <Spinner />
             <p className="text-sm text-white/70 tracking-wide">Mempersiapkan sesi…</p>
@@ -391,22 +391,24 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
           </button>
         </div>
 
-        {/* Cover image */}
-        <div className="relative xs:w-60 w-full max-w-100 flex-1 max-h-80 min-h-0 2xs:rounded-3xl rounded-xl overflow-hidden">
-          <Image
-            key={step.image}
-            src={step.image}
-            alt={step.title}
-            fill
-            unoptimized
-            priority
-            className="object-cover object-center w-full h-full"
-          />
-          <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
-          <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
+        {/* Cover image — centered horizontally */}
+        <div className="flex justify-center shrink-0 flex-1 max-h-80 min-h-0">
+          <div className="relative xs:max-w-110 w-full h-full aspect-square 2xs:rounded-3xl rounded-xl overflow-hidden">
+            <Image
+              key={step.image}
+              src={step.image}
+              alt={step.title}
+              fill
+              unoptimized
+              priority
+              className="object-cover object-center w-full h-full"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
+          </div>
         </div>
 
-        {/* FIX: Fixed-height step label + title area so controls don't jump */}
+        {/* Fixed-height step label + title area so controls don't jump */}
         <div className="flex flex-col gap-1 text-center pt-1 shrink-0 h-32 overflow-y-auto justify-start">
           <span className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">
             Langkah {currentStep + 1} / {totalSteps}
@@ -512,10 +514,10 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
 
       {/* ════════════════════════════════════════════════════════
           DESKTOP  (≥ 2md / 876px)
-          FIX: Now also fixed fullscreen like mobile — no Section wrapper
+          Fixed fullscreen like mobile — no Section wrapper
           ════════════════════════════════════════════════════════ */}
       <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
-        <div className="flex flex-col items-center w-full rounded-4xl relative overflow-hidden flex-1"> 
+        <div className="flex flex-col items-center w-full md:rounded-4xl rounded-xl relative overflow-hidden flex-1"> 
 
           <div className="absolute inset-0 z-0">
             <Image
@@ -525,9 +527,9 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
               fill
               unoptimized
               priority
-              className="object-cover object-center rounded-4xl"
+              className="object-cover object-center md:rounded-4xl rounded-xl"
             />
-            <div className="absolute inset-0 rounded-4xl bg-black/25" />
+            <div className="absolute inset-0 md:rounded-4xl rounded-xl bg-black/25" />
             <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
             <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/80 via-black/50 to-transparent rounded-b-4xl" />
           </div>
@@ -536,7 +538,7 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
           <div className="relative z-10 flex flex-col items-center justify-between h-full w-full py-8 px-6">
 
             {/* Top bar */}
-            <div className="flex flex-row-reverse items-center w-full">
+            <div className="flex flex-row-reverse items-center w-full gap-3">
 
               {/* BGM pill */}
               <div className="relative flex-1 flex justify-end">
@@ -587,7 +589,21 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
                 ))}
               </div>
 
-              <div className="flex-1" />
+              {/* Back button — left side */}
+              <div className="flex-1 flex justify-start">
+                {onBack && (
+                  <button
+                    onClick={onBack}
+                    aria-label="Kembali ke halaman sesi"
+                    className="flex items-center justify-center w-9 h-9 rounded-full
+                              bg-background/90 text-foreground/80 border border-foreground
+                              hover:bg-muted-foreground/90 hover:text-white hover:cursor-pointer
+                              transition-all duration-150 ease-out"
+                  >
+                    <ArrowLeftIcon weight="bold" className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Middle: ring + step info */}
@@ -635,11 +651,8 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
                 <span className="text-white/50">{totalTime}</span>
               </p>
 
-              {/* FIX: Fixed-height step title + description so controls stay anchored */}
+              {/* Fixed-height step title + description so controls stay anchored */}
               <div className="flex flex-col gap-1 text-center pt-1 shrink-0 max-w-xl sm:max-w-lg h-40 overflow-y-auto justify-start">
-                <span className="text-xs font-semibold tracking-[0.18em] uppercase text-background">
-                  Langkah {currentStep + 1} / {totalSteps}
-                </span>
                 <div className="flex flex-col gap-2 items-center xs:px-6">
                   <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-background text-center">{step.title}</p>
                   {step.description && (

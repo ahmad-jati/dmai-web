@@ -22,10 +22,9 @@ type Props = {
 function ExerciseLoadingSkeleton() {
   return (
     <div className="w-full">
-      <div className="p-6 bg-celeste border border-foreground w-full rounded-5xl">
-        <div className="flex flex-col items-center w-full rounded-4xl relative h-[76dvh] overflow-hidden bg-foreground/8 animate-pulse">
-          <div className="absolute inset-0 bg-foreground/5 rounded-4xl" />
-          <div className="relative z-10 flex flex-col items-center justify-center h-full gap-3">
+      <div className="fixed inset-0 z-50 flex items-stretch justify-stretch lg:px-28 2md:px-12 lg:py-14 py-8 px-8 bg-celeste">
+        <div className="flex-1 md:rounded-4xl rounded-xl overflow-hidden relative">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             <Spinner />
             <p className="text-sm text-muted-foreground">Memuat sesi...</p>
           </div>
@@ -34,6 +33,8 @@ function ExerciseLoadingSkeleton() {
     </div>
   )
 }
+
+
 
 export default function ExercisePage({ params }: Props) {
   const { slug } = use(params)
