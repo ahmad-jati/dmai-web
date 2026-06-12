@@ -2,12 +2,16 @@ import { useRef, useCallback } from 'react'
 
 // Simple narration playback hook.
 // No duck/restore — BGM volume is never touched here.
-// playNarration(url, muted) — plays the audio at full volume, or silently if muted.
-// stopNarration()           — immediately stops and discards the current audio.
-// fadeMute(muted)           — smoothly mute/unmute the currently playing narration.
+// playNarration(url, muted)  — plays audio at full volume, or silently if muted.
+// pauseNarration()           — pauses (preserves position).
+// resumeNarration()          — resumes from where it was paused.
+// stopNarration()            — immediately stops and discards the current audio.
+// fadeMute(muted)            — smoothly mute/unmute the currently playing narration.
 
 interface NarrationControls {
   playNarration: (url: string, muted: boolean) => void
+  pauseNarration: () => void
+  resumeNarration: () => void
   stopNarration: () => void
   fadeMute: (muted: boolean) => void
 }
@@ -15,6 +19,8 @@ interface NarrationControls {
 export function useNarrationPlayback(): NarrationControls {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fadeTimerRef = useRef<number | null>(null)
+  // Track whether we've started playing (so resume works even before first play)
+  const hasPlayedRef = useRef(false)
 
   const cancelFade = () => {
     if (fadeTimerRef.current) {
@@ -25,11 +31,27 @@ export function useNarrationPlayback(): NarrationControls {
 
   const stopNarration = useCallback(() => {
     cancelFade()
+    hasPlayedRef.current = false
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.src = ''
       audioRef.current = null
     }
+  }, [])
+
+  const pauseNarration = useCallback(() => {
+    if (audioRef.current && !audioRef.current.paused) {
+      audioRef.current.pause()
+    }
+  }, [])
+
+  const resumeNarration = useCallback(() => {
+    if (!audioRef.current) return
+    audioRef.current.play().catch((err) => {
+      if (err.name !== 'AbortError') {
+        console.warn('[Narration] resume failed:', err)
+      }
+    })
   }, [])
 
   const playNarration = useCallback((url: string, muted: boolean) => {
@@ -46,6 +68,7 @@ export function useNarrationPlayback(): NarrationControls {
     audio.src = url
     audio.volume = muted ? 0 : 1
     audioRef.current = audio
+    hasPlayedRef.current = true
 
     audio.play().catch((err) => {
       // Autoplay blocked or element was replaced before play resolved — ignore
@@ -80,5 +103,5 @@ export function useNarrationPlayback(): NarrationControls {
     fadeTimerRef.current = requestAnimationFrame(animate)
   }, [])
 
-  return { playNarration, stopNarration, fadeMute }
+  return { playNarration, pauseNarration, resumeNarration, stopNarration, fadeMute }
 }

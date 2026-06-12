@@ -70,11 +70,11 @@ export function FeedbackDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onSkip() }}>
       <DialogContent
-        className="sm:max-w-md max-w-sm"
+        className="sm:max-w-md xs:max-w-sm"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle className="sm:text-h2/7 text-xl/5.5 font-semibold sm:pt-0 pt-2">Bagaimana perasaanmu?</DialogTitle>
+          <DialogTitle className="sm:text-h2/7 text-xl/5.5 font-semibold sm:pt-0 xs:pt-2 pt-4">Bagaimana perasaanmu?</DialogTitle>
           <p className="xs:text-p/5 text-sm/4 text-muted-foreground font-medium">
             Setelah menyelesaikan <span className="font-semibold text-foreground">{sessionName}</span>
           </p>
@@ -94,8 +94,8 @@ export function FeedbackDialog({
                   : "border-border hover:border-muted-foreground/40 hover:bg-muted/30"
                 }`}
             >
-              <span className="md:text-2xl text-lg">{mood.emoji}</span>
-              <span className="text-xs font-medium text-center text-pretty">{mood.label}</span>
+              <span className="md:text-2xl xs:text-lg text-sm">{mood.emoji}</span>
+              <span className="xs:text-xs text-2xs font-medium text-center text-pretty">{mood.label}</span>
             </Button>
           ))}
         </div>
