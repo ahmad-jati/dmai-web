@@ -1,5 +1,5 @@
 "use client";
-;
+
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
+import { EyeIcon, EyeSlashIcon, SpinnerIcon } from "@phosphor-icons/react";
 
 export function LoginForm({
   className,
@@ -30,7 +29,7 @@ export function LoginForm({
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -38,30 +37,40 @@ export function LoginForm({
       if (error) {
         if (error.status === 400) {
           setError("Email atau password yang kamu masukkan salah.");
-          return;
+        } else {
+          setError(error.message);
         }
-
-        setError(error.message);
+        // Only stop loading on error
+        setIsLoading(false);
         return;
       }
 
-      router.push("/protected");
-    } catch (error: unknown) {
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .single();
+
+      if (roleData?.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/homepage");
+      }
+    } catch (err: unknown) {
       setError(
-        error instanceof Error
-          ? error.message
+        err instanceof Error
+          ? err.message
           : "Terjadi kesalahan. Silakan coba lagi."
       );
-    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className='flex flex-col items-center gap-8'>
-      <div className="flex flex-col gap-4">
-        <h2>Good to see you again.</h2>
-        <p className="font-medium">
+    <div className='flex flex-col items-center sm:gap-8 gap-6'>
+      <div className="flex flex-col gap-2 lg:px-0 sm:px-10 xs:px-6 px-2">
+        <h2 className="xs:text-h2/7 text-xl/5.5 font-semibold lg:text-left text-center text-pretty">Good to see you again.</h2>
+        <p className="xs:text-p/5 text-sm/4 font-medium lg:text-left text-center sm:max-w-120 text-pretty">
           Terima kasih sudah kembali dan memberi ruang untuk dirimu sendiri hari ini. Mari lanjutkan sesi dengan tenang.
         </p>
       </div>
@@ -77,18 +86,19 @@ export function LoginForm({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="rounded-full px-3"
+                className="rounded-full px-3 text-sm"
                 autoComplete="off"
+                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Kata Sandi</Label>
                 <Link
-                  href={'/auth/forgot-password'}
-                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                  href={'/forgot-password'}
+                  className="ml-auto inline-block sm:text-sm text-xs underline-offset-4 hover:underline"
                 >
-                  Forgot your password?
+                  Lupa password?
                 </Link>
               </div>
 
@@ -98,34 +108,37 @@ export function LoginForm({
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
+                  placeholder="●●●●●●●●"
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pr-10 rounded-full"
+                  className="pr-10 rounded-full text-sm"
                   autoComplete="off"
+                  disabled={isLoading}
                 />
-
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeSlashIcon size={18} /> : <EyeIcon size={18} />}
                 </button>
               </div>
             </div>
             {error && <p className="text-sm text-red">{error}</p>}
-            <Button 
-              type="submit" 
-              className="w-full bg-green" 
+            <Button
+              type="submit"
+              className="w-full bg-green flex items-center gap-2"
               disabled={isLoading}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin" />}
+              {isLoading ? "Menghubungkan ke akunmu..." : "Masuk"}
             </Button>
           </div>
 
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-4 text-center sm:text-sm text-xs">
             Belum punya akun?{" "}
             <Link
-              href={'/auth/sign-up'}
+              href={'/sign-up'}
               className="hover:underline underline-offset-3 font-bold text-green"
             >
               Daftar disini

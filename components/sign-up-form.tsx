@@ -25,25 +25,17 @@ export function SignUpForm({
   const [fullname, setFullname] = useState("")
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
-  // const [showRepeatPassword, setShowRepeatPassword] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
-
-    // if (password !== repeatPassword) {
-    //   setError("Passwords do not match");
-    //   setIsLoading(false);
-    //   return;
-    // }
 
     try {
       const { error } = await supabase.auth.signUp({
@@ -57,7 +49,7 @@ export function SignUpForm({
         },
       });
       if (error) throw error;
-      router.push("/auth/sign-up-success");
+      router.push("/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -68,21 +60,21 @@ export function SignUpForm({
   return (
     <div className='flex flex-col items-center gap-8'>
       <div className="flex flex-col gap-4">
-        <h2>Glad you&apos;re here.</h2>
-        <p className="font-medium">
-          Mulailah perlahan dan jalani semua sesuai kenyamananmu sendiri.
+        <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold md:text-left text-center text-pretty">Let&apos;s prepare your account.</h2>
+        <p className="xs:text-p/5 text-sm/4 font-medium md:text-left text-center text-pretty">
+         Buat ruang kecil untuk dirimu hari ini, lalu jalani setiap sesi latihan sesuai dengan kenyamananmu sendiri.
         </p>
       </div>
       <div className="w-full">
         <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="fullname">Fullname</Label>
+                <Label htmlFor="fullname">Nama</Label>
                 <Input
                   id="fullname"
                   type="text"
-                  placeholder="Your name"
-                  className="rounded-full px-3"
+                  placeholder="DMAI"
+                  className="rounded-full px-3 text-sm font-medium"
                   required
                   value={fullname}
                   onChange={(e) => {
@@ -105,12 +97,12 @@ export function SignUpForm({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="off"
-                  className="rounded-full px-3"
+                  className="rounded-full px-3 text-sm font-medium"
                   />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Kata Sandi</Label>
                 </div>
 
                 <div className="relative">
@@ -120,8 +112,9 @@ export function SignUpForm({
                     required
                     value={password}
                     autoComplete="off"
+                    placeholder="●●●●●●●●"
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pr-10 rounded-full"
+                    className="pr-10 rounded-full text-sm font-medium"
                   />
 
                   <button
@@ -137,45 +130,14 @@ export function SignUpForm({
                   </button>
                 </div>
               </div>
-              {/* <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
-                </div>
-
-                <div className="relative">
-                  <Input
-                    id="repeat-password"
-                    type={showRepeatPassword ? "text" : "password"}
-                    required
-                    value={repeatPassword}
-                    autoComplete="off"
-                    onChange={(e) => setRepeatPassword(e.target.value)}
-                    className="pr-10 rounded-full"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowRepeatPassword(!showRepeatPassword)
-                    }
-                    className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
-                  >
-                    {showRepeatPassword ? (
-                      <EyeIcon className="h-4 w-4" />
-                    ) : (
-                      <EyeSlashIcon className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div> */}
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full bg-tangerine" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
+                {isLoading ? "Menyiapkan akun..." : "Daftar"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
               Sudah punya akun?{" "}
-              <Link href="/auth/login" className="hover:underline underline-offset-4 font-bold text-tangerine">
+              <Link href="/login" className="hover:underline underline-offset-4 font-bold text-tangerine">
                 Masuk disini
               </Link>
             </div>

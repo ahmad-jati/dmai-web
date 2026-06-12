@@ -1,58 +1,101 @@
-export const data_session = [
-  {
-    session_name: 'Motivation',
-    detail_short: 'Untuk membantu kamu menemukan semangat kembali.',
-    detail_full: ['Terkadang rasa lelah dan tekanan membuat semuanya terasa lebih berat dari biasanya. Sesi ini dirancang untuk menemanimu perlahan mengenali kembali tujuan kecil, membangun semangat sedikit demi sedikit, dan memberi jeda dari ramainya pikiran.', 'Tidak perlu terburu-buru. Ikuti setiap langkah sesuai ritmemu sendiri.'],
-    icon: '/flower-icon/small-icon-1.png',
-    total_instruction: 8,
-    duration: '20 menit 12 detik',
-  },
-  {
-    session_name: 'Self Reported',
-    detail_short: 'Mengenali dan memahami apa yang sedang kamu rasakan.',
-    detail_full: ['dummy'],
-    icon: '/flower-icon/small-icon-2.png',
-    total_instruction: 0,
-    duration: '0 menit',
-  },
-  {
-    session_name: 'Self Efficacy',
-    detail_short: 'Menguatkan kembali rasa percaya terhadap kemampuan diri.',
-    detail_full: ['dummy'],
-    icon: '/flower-icon/small-icon-3.png',
-    total_instruction: 0,
-    duration: '0 menit',
-  },
-  {
-    session_name: 'Isolation',
-    detail_short: 'Menemani saat kamu merasa sendiri dan sulit dipahami orang lain.',
-    detail_full: ['dummy'],
-    icon: '/flower-icon/small-icon-4.png',
-    total_instruction: 0,
-    duration: '0 menit',
-  },
-  {
-    session_name: 'Time Management',
-    detail_short: 'Membantu mengatur waktu agar harimu terasa lebih ringan.',
-    detail_full: ['dummy'],
-    icon: '/flower-icon/small-icon-5.png',
-    total_instruction: 0,
-    duration: '0 menit',
-  },
-  {
-    session_name: 'Positive Thinking',
-    detail_short: 'Membantu melihat sesuatu dengan sudut pandang yang lebih baik.',
-    detail_full: ['dummy'],
-    icon: '/flower-icon/small-icon-6.png',
-    total_instruction: 0,
-    duration: '0 menit',
-  },
-  {
-    session_name: 'Positive Affection',
-    detail_short: 'Menumbuhkan perasaan hangat dan nyaman dalam diri.',
-    detail_full: ['dummy'],
-    icon: '/flower-icon/small-icon.png',
-    total_instruction: 0,
-    duration: '0 menit',
-  },
-]
+// lib/data-detail-session.ts
+import { createClient } from '@/lib/supabase/client'
+
+export type SessionInstruction = {
+  step: number
+  title: string
+  description: string
+  duration_seconds: number
+  image: string
+  audio: string
+}
+
+export type SessionData = {
+  id: string
+  slug: string
+  session_name: string
+  detail_short: string
+  detail_full: string[]
+  icon: string
+  total_instruction: number
+  duration: string
+  instructions: SessionInstruction[]
+  image_cover: string
+}
+
+export async function fetchAllSessions(): Promise<SessionData[]> {
+  const supabase = createClient()
+  const { data: sessions, error } = await supabase
+    .from('sessions')
+    .select(`
+      id, slug, session_name, detail_short, detail_full,
+      icon_url, total_instruction, duration, image_cover_url,
+      session_steps (
+        step_number, title, description, duration_seconds, image_url, audio_url
+      )
+    `)
+    .order('sort_order', { ascending: true })
+
+  if (error || !sessions) return []
+
+  return sessions.map((s) => ({
+    id: s.id,
+    slug: s.slug,
+    session_name: s.session_name,
+    detail_short: s.detail_short ?? '',
+    detail_full: s.detail_full ?? [],
+    icon: s.icon_url ?? '',
+    total_instruction: s.total_instruction ?? 0,
+    duration: s.duration ?? '',
+    image_cover: s.image_cover_url ?? '',
+    instructions: (s.session_steps as any[])
+      .sort((a, b) => a.step_number - b.step_number)
+      .map((step) => ({
+        step: step.step_number,
+        title: step.title,
+        description: step.description ?? '',
+        duration_seconds: step.duration_seconds,
+        image: step.image_url ?? '',
+        audio: step.audio_url ?? '',
+      })),
+  }))
+}
+
+export async function fetchSessionBySlug(slug: string): Promise<SessionData | null> {
+  const supabase = createClient()
+  const { data: s, error } = await supabase
+    .from('sessions')
+    .select(`
+      id, slug, session_name, detail_short, detail_full,
+      icon_url, total_instruction, duration, image_cover_url,
+      session_steps (
+        step_number, title, description, duration_seconds, image_url, audio_url
+      )
+    `)
+    .eq('slug', slug)
+    .single()
+
+  if (error || !s) return null
+
+  return {
+    id: s.id,
+    slug: s.slug,
+    session_name: s.session_name,
+    detail_short: s.detail_short ?? '',
+    detail_full: s.detail_full ?? [],
+    icon: s.icon_url ?? '',
+    total_instruction: s.total_instruction ?? 0,
+    duration: s.duration ?? '',
+    image_cover: s.image_cover_url ?? '',
+    instructions: (s.session_steps as any[])
+      .sort((a, b) => a.step_number - b.step_number)
+      .map((step) => ({
+        step: step.step_number,
+        title: step.title,
+        description: step.description ?? '',
+        duration_seconds: step.duration_seconds,
+        image: step.image_url ?? '',
+        audio: step.audio_url ?? '',
+      })),
+  }
+}

@@ -1,32 +1,62 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Section } from "./layout/section-wrapper";
 import Image from "next/image";
+import { PasswordIcon } from "@phosphor-icons/react";
 
 export function UpdatePasswordForm({
-  className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
   const router = useRouter();
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const supabase = createClient();
+
+    // Handle hash-based recovery tokens (older Supabase email flow)
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken = hashParams.get("access_token");
+    const refreshToken = hashParams.get("refresh_token");
+    const type = hashParams.get("type");
+
+    if (accessToken && refreshToken && type === "recovery") {
+      supabase.auth
+        .setSession({ access_token: accessToken, refresh_token: refreshToken })
+        .then(({ error }) => {
+          if (!error) setSessionReady(true);
+          else setError("Link reset password tidak valid atau sudah kadaluarsa.");
+        });
+      return;
+    }
+
+    // Handle PKCE flow: session already set by /auth/confirm redirect
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSessionReady(true);
+      } else {
+        // Listen for PASSWORD_RECOVERY event
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            if (event === "PASSWORD_RECOVERY" && session) {
+              setSessionReady(true);
+            }
+          }
+        );
+        return () => subscription.unsubscribe();
+      }
+    });
+  }, []);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = createClient();
     setIsLoading(true);
@@ -35,10 +65,9 @@ export function UpdatePasswordForm({
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+      router.push("/homepage");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "Terjadi kesalahan");
     } finally {
       setIsLoading(false);
     }
@@ -46,43 +75,55 @@ export function UpdatePasswordForm({
 
   return (
     <div className="w-full">
-      <Section className="flex items-center justify-center gap-8 bg-white">
-        <div className="flex-1 flex flex-col gap-3.5 items-start text-foreground max-w-120">
-          <h2>Set your new password</h2>
-          <p className="text-lg">
+      <Section className="flex lg:flex-row flex-col-reverse md:items-center justify-center items-end md:gap-8 gap-0 bg-lemon min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:px-20">
+        <div className="lg:flex-1 w-full lg:max-w-120 flex flex-col gap-3.5 items-start text-foreground md:px-0 px-2 md:mt-0 xs:-mt-10 -mt-4">
+          <PasswordIcon className="text-foreground md:w-10 md:h-10 w-16 h-16" />
+          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-pretty">Set your new password</h2>
+          <p className="xs:text-p/5 text-sm/4 font-medium text-pretty">
             Masukkan password baru yang ingin kamu gunakan untuk kembali mengakses akunmu.
           </p>
-          <form onSubmit={handleForgotPassword} className="w-full">
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="password">New password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="New password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="rounded-full px-3"
-                />
+
+          {!sessionReady && !error && (
+            <p className="font-medium text-muted-foreground sm:text-p/5 text-sm/4">Memverifikasi sesi...</p>
+          )}
+
+          {error && (
+            <p className="sm:text-p/5 text-sm/4 font-medium text-red-500">{error}</p>
+          )}
+
+          {sessionReady && (
+            <form onSubmit={handleUpdatePassword} className="w-full">
+              <div className="flex flex-col gap-6">
+                <div className="grid gap-2">
+                  <Label htmlFor="password">Password Baru</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Password Baru"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="rounded-full px-3 text-sm"
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Simpan..." : "Simpan password baru"}
+                </Button>
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save new password"}
-              </Button>
-            </div>
-          </form>
+            </form>
+          )}
         </div>
 
-        <Image
-          src={'/tropicaline/Send.png'}
-          alt=""
-          width={2000}
-          height={2000}
-          className="w-107 h-96 object-contain "
-          loading="eager"
-        />
-
+        <div className="lg:w-76 lg:h-106 w-50 h-50">
+          <Image
+            src={'/tropicaline/Send.png'}
+            alt=""
+            width={2000}
+            height={2000}
+            priority
+            className="w-full h-full object-contain"
+          />
+        </div>
       </Section>
     </div>
   );

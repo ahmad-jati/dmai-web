@@ -2,16 +2,14 @@ import type { Metadata } from "next";
 import { Urbanist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import { Footer } from "@/components/footer";
-import { MainNavbar } from "@/components/main-navbar";
 
 const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
+  ? `https://dmai-web.vercel.app`
   : "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Digital Mindful Autogenic Intervention",
+  title: "DMAI — Digital Mindful Autogenic Intervention",
   description: "A calm mindfulness platform for guided reflective training sessions.",
 };
 
@@ -30,15 +28,11 @@ export default function RootLayout({
       <body className={`${urbanistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
         >
-          <div className="flex flex-col items-center px-16 gap-8 lg:max-w-7xl mx-auto min-h-dvh">
-            <MainNavbar/>
-            {children}
-            <Footer />
-          </div>
+          {children}
         </ThemeProvider>
       </body>
     </html>

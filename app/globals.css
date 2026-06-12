@@ -226,6 +226,7 @@
   --radius-md: calc(var(--radius) - 2px);  /* 10px */
   --radius-lg: var(--radius);              /* 12px */
   --radius-xl: calc(var(--radius) + 4px);  /* 16px */
+  --radius-2xl: calc(var(--radius) + 8px);  /* 16px */
   --radius-5xl: 2.5rem; /* 40px */
 
   --shadow-2xs: var(--shadow-2xs);
@@ -243,6 +244,7 @@
   --text-h1: 2rem;               /* 32px */
   --text-h1-mobile: 1.625rem;    /* 26px */
   --text-h2: 1.5rem;             /* 24px */
+  --text-p:1rem;                /* 16px */
 
   --text-lg: 1.125rem;           /* 18px */
   --text-base: 1rem;             /* 16px */
@@ -258,6 +260,16 @@
   --card-title-sm: 0.75rem;      /* 12px */
 
   --border-stroke: var(--foreground);
+
+  /* breakpoint custom */
+  --breakpoint-xs: 420px;
+  --breakpoint-2xs: 520px; 
+  --breakpoint-2md: 876px;
+  --breakpoint-2lg: 1110px
+  /* --breakpoint-xty2: 380px;
+  --breakpoint-ty: 426px;
+  --breakpoint-2ty: 496px;
+  --breakpoint-xsm: 520px; */
 } 
 
 @layer base {
@@ -267,21 +279,40 @@
 
   body {
     @apply bg-background text-foreground font-sans;
+    background-image:
+      linear-gradient(hsla(60, 2%, 16%, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(60, 4%, 15%, 0.12) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .dark body {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
   }
 }
 
-h1 {
-  line-height: 105%;
-  font-size: var(--text-h1);
-  font-weight: 600;
+html, body {
+  height: 100%;
 }
 
-h2 {
-  line-height: 105%;
-  font-size: var(--text-h2);
-  font-weight: 600;
+#__next {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
-p {
-  line-height: 108%;
+body.exercise-fullscreen .app-navbar,
+body.exercise-fullscreen .app-footer {
+  display: none;
 }
+
+input[type="password"] {
+  font-family: Arial, sans-serif;
+  font-size: 14px; 
+}
+input[type="password"]::placeholder {
+  font-family: Arial, sans-serif;
+  font-size: 14px;  
+}
+
