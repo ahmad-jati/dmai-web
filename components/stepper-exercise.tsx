@@ -15,7 +15,6 @@ import { useBGMPlayer } from "@/lib/hooks/useBGMPlayer"
 import { useNarrationPlayback } from "@/lib/hooks/useNarrationPlayback"
 import { useExerciseFullscreen } from "@/lib/hooks/useExerciseFullscreen"
 import { Spinner } from "./ui/spinner"
-import { Section } from "./layout/section-wrapper"
 
 type Track = {
   id: string
@@ -29,9 +28,10 @@ type Props = {
   instructions: SessionInstruction[]
   sessionName: string
   onDone: () => void
+  onBack?: () => void
 }
 
-export function StepperExercise({ instructions, onDone }: Props) {
+export function StepperExercise({ instructions, onDone, onBack }: Props) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
   const [isMuted, setIsMuted] = useState(false)
@@ -43,7 +43,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const [narrationKey, setNarrationKey] = useState(0)
   const [showMusicTray, setShowMusicTray] = useState(false)
 
-  // Fullscreen: hides navbar/footer while exercise is active
+  // Fullscreen: hides navbar/footer while exercise is active (both mobile & desktop)
   useExerciseFullscreen()
 
   // Ref for the BGM trigger button — used to position the fixed tray
@@ -56,7 +56,6 @@ export function StepperExercise({ instructions, onDone }: Props) {
   const narration = useNarrationPlayback()
 
   const {
-    ref: bgmRef,
     isBGMStopped,
     load: bgmLoad,
     play: bgmPlay,
@@ -66,11 +65,13 @@ export function StepperExercise({ instructions, onDone }: Props) {
     switchTrack: bgmSwitchTrack,
   } = bgm
 
-  const { playNarration, stopNarration, fadeMute } = narration
+  const { playNarration, pauseNarration, resumeNarration, stopNarration, fadeMute } = narration
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const bgmStartedRef = useRef(false)
   const prevIsPlayingRef = useRef(isPlaying)
+  // Track whether narration has started for the current step (for pause/resume logic)
+  const narrationStartedRef = useRef(false)
 
   const step = instructions[currentStep]
   const totalSteps = instructions.length
@@ -91,15 +92,13 @@ export function StepperExercise({ instructions, onDone }: Props) {
           .order('created_at')
         if (!error && data && data.length > 0) {
           setTracks(data as Track[])
-          // Load BGM src but don't play yet — actual play waits for user gesture
-          // or the autoplay effect below. This keeps init fast on slow devices.
           await bgmLoad(data[0].audio_url)
         }
       } catch (err) {
         console.error('[BGM] init error:', err)
       } finally {
-        // Small delay so the UI can settle before we mark ready + start audio
-        setTimeout(() => setIsReady(true), 800)
+        // FIX: 4-second splash before marking ready
+        setTimeout(() => setIsReady(true), 4000)
       }
     }
     init()
@@ -120,8 +119,6 @@ export function StepperExercise({ instructions, onDone }: Props) {
   }, [currentStep, totalSteps, instructions])
 
   // ── 3. BGM autoplay ───────────────────────────────────────────
-  // On slow devices we must not call play() during React hydration — wait for
-  // isReady (which already has a 800ms buffer) so layout paint is done first.
   useEffect(() => {
     if (!isReady || bgmStartedRef.current) return
     const tryPlay = async () => {
@@ -144,17 +141,27 @@ export function StepperExercise({ instructions, onDone }: Props) {
   }, [isReady, bgmPlay])
 
   // ── 4. Sync play/pause ────────────────────────────────────────
+  // FIX: pause/resume narration instead of stop/replay from beginning
   useEffect(() => {
     if (!bgmStartedRef.current) return
     if (isPlaying === prevIsPlayingRef.current) return
     prevIsPlayingRef.current = isPlaying
-    if (!isPlaying) { bgmPause(); stopNarration() }
-    else if (!isBGMStopped) bgmResume()
-  }, [isPlaying, isBGMStopped, bgmPause, bgmResume, stopNarration])
+    if (!isPlaying) {
+      bgmPause()
+      pauseNarration()
+    } else {
+      if (!isBGMStopped) bgmResume()
+      // Resume narration from where it was paused (don't restart)
+      if (narrationStartedRef.current) {
+        resumeNarration()
+      }
+    }
+  }, [isPlaying, isBGMStopped, bgmPause, bgmResume, pauseNarration, resumeNarration])
 
   // ── 5. Narration ──────────────────────────────────────────────
   useEffect(() => {
     if (!isReady || !isPlaying || !step.audio) return
+    narrationStartedRef.current = true
     playNarration(step.audio, isMuted)
     return () => stopNarration()
   }, [currentStep, narrationKey, isPlaying, isReady]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -183,13 +190,24 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
   const goNextManual = () => {
     setIsLooping(false)
+    narrationStartedRef.current = false
     if (currentStep < totalSteps - 1) { setCurrentStep((s) => s + 1); setElapsed(0) }
     else { setIsPlaying(false); bgmStop(); setTimeout(() => onDone(), 600) }
   }
   const goPrev = () => {
-    if (currentStep > 0) { setIsLooping(false); setCurrentStep((s) => s - 1); setElapsed(0) }
+    if (currentStep > 0) {
+      setIsLooping(false)
+      narrationStartedRef.current = false
+      setCurrentStep((s) => s - 1)
+      setElapsed(0)
+    }
   }
-  const jumpToStep = (i: number) => { setIsLooping(false); setCurrentStep(i); setElapsed(0) }
+  const jumpToStep = (i: number) => {
+    setIsLooping(false)
+    narrationStartedRef.current = false
+    setCurrentStep(i)
+    setElapsed(0)
+  }
 
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current)
@@ -204,6 +222,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
   useEffect(() => {
     setElapsed(0); setIsPlaying(true); setNarrationKey(0)
+    narrationStartedRef.current = false
   }, [currentStep])
 
   // ── Time helpers ──────────────────────────────────────────────
@@ -305,7 +324,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
   // ── Loading ───────────────────────────────────────────────────
   if (!isReady) {
     return (
-      // Fullscreen loading shell — same inset as the main UI
+      // FIX: fullscreen also on desktop — no Section wrapper, fixed inset-0
       <div className="fixed inset-0 z-50 flex items-stretch justify-stretch p-4 bg-celeste">
         <div className="flex-1 rounded-4xl overflow-hidden relative">
           <Image src={step.image} alt={step.title} fill unoptimized priority className="object-cover object-center" />
@@ -322,45 +341,58 @@ export function StepperExercise({ instructions, onDone }: Props) {
   // ── Main UI ───────────────────────────────────────────────────
   return (
     <div className="">
+
       {/* ════════════════════════════════════════════════════════
           MOBILE / TABLET  (< 2md / 876px)
           Fixed fullscreen with m-4 inset feel
           ════════════════════════════════════════════════════════ */}
-      <div className="2md:hidden fixed inset-0 z-40 flex flex-col gap-3 bg-celeste p-4 overflow-y-auto">
+      <div className="2md:hidden fixed inset-0 z-55 flex flex-col gap-3 bg-celeste p-8 overflow-y-auto">
 
-        {/* BGM selector pill */}
-        <button
-          ref={bgmButtonMobileRef}
-          onClick={() => openMusicTray(bgmButtonMobileRef, true)}
-          className="flex items-center gap-4 w-full 2xs:rounded-xl rounded-lg bg-background border border-muted-foreground p-3 shrink-0"
-          aria-label="Pilih musik latar"
-        >
-          <MusicNotesIcon
-            weight="fill"
-            className={cn(
-              "w-3.5 h-3.5 shrink-0 transition-colors",
-              isBGMStopped ? "text-foreground/40" : "text-foreground"
-            )}
-          />
-          <div className="flex flex-col min-w-0 flex-1 text-left">
-            <span className="text-xs font-semibold text-foreground truncate leading-tight">
-              {bgmLabel}
-            </span>
-            {bgmSublabel && (
-              <span className="text-xs font-medium text-muted-foreground truncate leading-tight">{bgmSublabel}</span>
-            )}
-          </div>
-          <CaretDownIcon
-            weight="bold"
-            className={cn(
-              "w-3 h-3 shrink-0 text-foreground transition-transform duration-200",
-              showMusicTray && trayMobile && "rotate-180"
-            )}
-          />
-        </button>
+        {/* Top bar: back button + BGM selector */}
+        <div className="flex items-center gap-2 shrink-0">
+          {onBack && (
+            <button
+              onClick={onBack}
+              aria-label="Kembali ke halaman sesi"
+              className="flex items-center justify-center w-9 h-9 rounded-lg bg-background border border-muted-foreground text-foreground hover:bg-foreground/10 transition-colors shrink-0"
+            >
+              <ArrowLeftIcon weight="bold" className="w-4 h-4" />
+            </button>
+          )}
+
+          <button
+            ref={bgmButtonMobileRef}
+            onClick={() => openMusicTray(bgmButtonMobileRef, true)}
+            className="flex items-center gap-4 flex-1 2xs:rounded-xl rounded-lg bg-background border border-muted-foreground p-3"
+            aria-label="Pilih musik latar"
+          >
+            <MusicNotesIcon
+              weight="fill"
+              className={cn(
+                "w-3.5 h-3.5 shrink-0 transition-colors",
+                isBGMStopped ? "text-foreground/40" : "text-foreground"
+              )}
+            />
+            <div className="flex flex-col min-w-0 flex-1 text-left">
+              <span className="text-xs font-semibold text-foreground truncate leading-tight">
+                {bgmLabel}
+              </span>
+              {bgmSublabel && (
+                <span className="text-xs font-medium text-muted-foreground truncate leading-tight">{bgmSublabel}</span>
+              )}
+            </div>
+            <CaretDownIcon
+              weight="bold"
+              className={cn(
+                "w-3 h-3 shrink-0 text-foreground transition-transform duration-200",
+                showMusicTray && trayMobile && "rotate-180"
+              )}
+            />
+          </button>
+        </div>
 
         {/* Cover image */}
-        <div className="relative w-full flex-1 min-h-0 2xs:rounded-3xl rounded-xl overflow-hidden">
+        <div className="relative xs:w-60 w-full max-w-100 flex-1 max-h-80 min-h-0 2xs:rounded-3xl rounded-xl overflow-hidden">
           <Image
             key={step.image}
             src={step.image}
@@ -368,19 +400,19 @@ export function StepperExercise({ instructions, onDone }: Props) {
             fill
             unoptimized
             priority
-            className="object-cover object-center"
+            className="object-cover object-center w-full h-full"
           />
           <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
           <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
         </div>
 
-        {/* Step label + title */}
-        <div className="flex flex-col gap-1 text-center pt-1 shrink-0">
+        {/* FIX: Fixed-height step label + title area so controls don't jump */}
+        <div className="flex flex-col gap-1 text-center pt-1 shrink-0 h-32 overflow-y-auto justify-start">
           <span className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">
             Langkah {currentStep + 1} / {totalSteps}
           </span>
           <div className="flex flex-col gap-2 items-center xs:px-6">
-            <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-foreground text-center">{step.title}</p>
+            <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-foreground text-center">{step.title} </p>
             {step.description && (
               <p className="xs:text-p/5 text-sm/4 text-muted-foreground text-center">{step.description}</p>
             )}
@@ -480,10 +512,10 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
       {/* ════════════════════════════════════════════════════════
           DESKTOP  (≥ 2md / 876px)
-          Normal in-flow card layout (unchanged)
+          FIX: Now also fixed fullscreen like mobile — no Section wrapper
           ════════════════════════════════════════════════════════ */}
-      <Section className="hidden 2md:block bg-celeste lg:p-4 md:p-4!">
-        <div className="flex flex-col items-center w-full rounded-4xl relative h-[74dvh] overflow-hidden">
+      <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
+        <div className="flex flex-col items-center w-full rounded-4xl relative overflow-hidden flex-1"> 
 
           <div className="absolute inset-0 z-0">
             <Image
@@ -559,7 +591,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
             </div>
 
             {/* Middle: ring + step info */}
-            <div className="flex flex-col items-center gap-4 text-center">
+            <div className="flex flex-1 flex-col justify-center items-center gap-4 text-center">
               <span className="text-xs text-background/80 font-semibold tracking-[0.2em] uppercase">
                 Langkah {currentStep + 1} / {totalSteps}
               </span>
@@ -603,13 +635,19 @@ export function StepperExercise({ instructions, onDone }: Props) {
                 <span className="text-white/50">{totalTime}</span>
               </p>
 
-              {/* Step title + description */}
-              <div className="flex flex-col gap-3 max-w-md">
-                <p className="sm:text-h2/7 text-xl/5.5 font-semibold leading-tight text-white">{step.title}</p>
-                {step.description && (
-                  <p className="xs:text-p/5 text-sm/4 font-medium text-white/70 leading-relaxed">{step.description}</p>
-                )}
+              {/* FIX: Fixed-height step title + description so controls stay anchored */}
+              <div className="flex flex-col gap-1 text-center pt-1 shrink-0 max-w-xl sm:max-w-lg h-40 overflow-y-auto justify-start">
+                <span className="text-xs font-semibold tracking-[0.18em] uppercase text-background">
+                  Langkah {currentStep + 1} / {totalSteps}
+                </span>
+                <div className="flex flex-col gap-2 items-center xs:px-6">
+                  <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-background text-center">{step.title}</p>
+                  {step.description && (
+                    <p className="xs:text-p/5 text-sm/4 text-background text-center">{step.description}</p>
+                  )}
+                </div>
               </div>
+
             </div>
 
             {/* Bottom: controls */}
@@ -683,7 +721,7 @@ export function StepperExercise({ instructions, onDone }: Props) {
 
           </div>
         </div>
-      </Section>
+      </div>
 
       {showMusicTray && <MusicTray />}
     </div>
