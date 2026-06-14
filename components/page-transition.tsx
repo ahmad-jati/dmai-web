@@ -13,7 +13,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
     const timer = setTimeout(() => {
       setDisplayChildren(children)
       setTransitionStage('enter')
-    }, 300)
+    }, 600)
     return () => clearTimeout(timer)
   }, [pathname, children])
 
@@ -22,29 +22,29 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       style={{
         animation:
           transitionStage === 'enter'
-            ? 'pageEnter 400ms ease-out'
-            : 'pageExit 300ms ease-in',
+            ? 'pageEnter 800ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+            : 'pageExit 600ms ease-in-out',
       }}
     >
       <style>{`
         @keyframes pageExit {
           from {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0px);
           }
           to {
             opacity: 0;
-            transform: translateY(8px);
+            transform: translateY(-12px);
           }
         }
         @keyframes pageEnter {
           from {
             opacity: 0;
-            transform: translateY(8px);
+            transform: translateY(12px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0px);
           }
         }
       `}</style>
