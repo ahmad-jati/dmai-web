@@ -91,7 +91,7 @@ export default function ExercisePage({ params }: Props) {
     return (
       <>
         <div className="w-full">
-          <Section className="bg-celeste flex flex-col items-center justify-center sm:gap-8 gap-6 sm:px-0 2xs:px-10 px-8">
+          <Section className="min-h-[calc(82svh-64px)] md:min-h-[calc(82dvh-52px)] bg-celeste flex flex-col items-center justify-center sm:gap-8 gap-6 sm:px-0 2xs:px-10 px-8">
             <div className="flex flex-col items-center gap-2 text-center">
               <p className="xs:text-p/5 text-sm/4 font-medium">Kamu telah menyelesaikan sesi</p>
               <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>

@@ -91,7 +91,7 @@ export function ProtectedNavbar() {
             <DropdownMenuContent align="end" className="sm:w-44 w-fit bg-background">
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="sm:hidden block">
-                  <p
+                   <p
                     className="sm:text-p/5 text-sm/4 font-medium text-muted-foreground transition-opacity duration-500 max-w-44 line-clamp-2"
                     style={{ opacity: greetingVisible && userName ? 1 : 0 }}
                   >

@@ -75,7 +75,7 @@ export function OtherSessionList({ excludeSlug }: { excludeSlug?: string }) {
                 </div>
 
                 <div className="
-                  flex flex-col items-start lg:gap-1.5 gap-2.5
+                  flex flex-col items-start xs:gap-1.5 gap-2
                   2md:px-1 w-full
                 ">
                   <div className="flex items-center w-full gap-2">
