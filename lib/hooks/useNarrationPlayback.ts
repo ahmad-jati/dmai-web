@@ -21,6 +21,8 @@ export function useNarrationPlayback(): NarrationControls {
   const fadeTimerRef = useRef<number | null>(null)
   // Track whether we've started playing (so resume works even before first play)
   const hasPlayedRef = useRef(false)
+  // Track pause state separately to help with resume logic
+  const isPausedRef = useRef(false)
 
   const cancelFade = () => {
     if (fadeTimerRef.current) {
@@ -32,6 +34,7 @@ export function useNarrationPlayback(): NarrationControls {
   const stopNarration = useCallback(() => {
     cancelFade()
     hasPlayedRef.current = false
+    isPausedRef.current = false
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.src = ''
@@ -46,11 +49,15 @@ export function useNarrationPlayback(): NarrationControls {
     cancelFade()
     if (audioRef.current && !audioRef.current.paused) {
       audioRef.current.pause()
+      isPausedRef.current = true
     }
   }, [])
 
   const resumeNarration = useCallback(() => {
     if (!audioRef.current) return
+    // Cancel any fade animation before resuming
+    cancelFade()
+    isPausedRef.current = false
     audioRef.current.play().catch((err) => {
       if (err.name !== 'AbortError') {
         console.warn('[Narration] resume failed:', err)
@@ -73,6 +80,7 @@ export function useNarrationPlayback(): NarrationControls {
     audio.volume = muted ? 0 : 1
     audioRef.current = audio
     hasPlayedRef.current = true
+    isPausedRef.current = false
 
     audio.play().catch((err) => {
       // Autoplay blocked or element was replaced before play resolved — ignore
@@ -94,7 +102,7 @@ export function useNarrationPlayback(): NarrationControls {
     // If audio is already paused, skip the animation entirely — just stamp the
     // target volume directly. This prevents a rAF loop from running while paused
     // and racing with the next audio.play() call on resume.
-    if (audio.paused) {
+    if (audio.paused || isPausedRef.current) {
       audio.volume = target
       return
     }
