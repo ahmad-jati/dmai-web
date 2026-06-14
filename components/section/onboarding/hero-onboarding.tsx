@@ -48,7 +48,7 @@ export function HeroOnboarding() {
 
         <Button 
           variant={'default'}
-          className="[&_svg]:size-3.5"
+          className="[&_svg]:size-3.5 hover:bg-background/80"
         >
           <Link href={'/login' as Route} className="flex gap-2 items-center">
             COBA SEKARANG

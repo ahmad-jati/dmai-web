@@ -34,6 +34,7 @@ export async function SessionListServer({ excludeSlug }: Props) {
         <Link
           key={session.slug}
           href={`/session/${session.slug}` as Route}
+          scroll={false}
           className="
             group flex flex-col 2md:items-start items-end 2md:gap-3 gap-0
             bg-background 2md:rounded-[20px] rounded-lg border border-foreground w-full overflow-hidden hover:shadow-md transition-shadow 

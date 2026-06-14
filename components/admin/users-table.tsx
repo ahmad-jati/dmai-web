@@ -81,7 +81,7 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
             <div className="flex-1 h-3 bg-muted rounded" style={{ width: `${55 + Math.random() * 30}%` }} />
             <div className="flex-1 h-3 bg-muted/70 rounded" style={{ width: `${60 + Math.random() * 25}%` }} />
             <div className="w-20 h-3 bg-muted/60 rounded" />
-            <div className="w-28 h-7 bg-muted/40 rounded-md" />
+            <div className="w-28 h-7 bg-muted/40 rounded-sm" />
           </div>
         ))}
       </div>
@@ -171,7 +171,7 @@ function UserTableSection({
                       size="sm"
                       disabled={sending === u.id}
                       onClick={() => onResetPassword(u.email, u.id)}
-                      className="rounded-md gap-1.5 hover:bg-celeste [&_svg]:size-3.5"
+                      className="rounded-sm gap-1.5 bg-background hover:bg-celeste text-foreground [&_svg]:size-3.5"
                     >
                       {sending === u.id
                         ? <SpinnerIcon className="w-3.5 h-3.5 animate-spin" />
@@ -193,7 +193,7 @@ function UserTableSection({
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => onPageChange(Math.max(1, page - 1))}
-                className={page === 1 ? "pointer-events-none opacity-40 rounded-md" : "cursor-pointer rounded-md hover:bg-muted-foreground/20"}
+                className={page === 1 ? "pointer-events-none opacity-40 rounded-sm" : "cursor-pointer rounded-sm hover:bg-muted-foreground/20"}
               />
             </PaginationItem>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
@@ -201,7 +201,7 @@ function UserTableSection({
                 <Button
                   variant={p === page ? "default" : "ghost"}
                   size="sm"
-                  className="w-8 h-8 p-0 rounded-md font-medium text-sm hover:bg-muted-foreground/20"
+                  className="w-8 h-8 p-0 rounded-sm font-medium text-sm hover:bg-muted-foreground/20"
                   onClick={() => onPageChange(p)}
                 >
                   {p}
@@ -211,7 +211,7 @@ function UserTableSection({
             <PaginationItem>
               <PaginationNext
                 onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-                className={page === totalPages ? "pointer-events-none opacity-40 rounded-md" : "cursor-pointer rounded-md hover:bg-muted-foreground/20"}
+                className={page === totalPages ? "pointer-events-none opacity-40 rounded-sm" : "cursor-pointer rounded-sm hover:bg-muted-foreground/20"}
               />
             </PaginationItem>
           </PaginationContent>
@@ -291,7 +291,7 @@ export function UsersTable() {
       <div className="flex flex-col gap-1">
         <h2 className="text-xl font-semibold">User Terdaftar</h2>
         <p className="text-sm text-muted-foreground">
-          {allUsers.length} User total — {admins.length} admin, {users.length} user biasa
+          {allUsers.length} User total — {admins.length} admin, {users.length} user
         </p>
       </div>
 
@@ -307,8 +307,8 @@ export function UsersTable() {
       />
 
       <UserTableSection
-        title="User Biasa"
-        icon={<UsersIcon className="w-4 h-4 text-muted-foreground" />}
+        title="User"
+      icon={<UsersIcon className="w-4 h-4 text-muted-foreground" />}
         users={users}
         page={userPage}
         totalPages={userTotalPages}
