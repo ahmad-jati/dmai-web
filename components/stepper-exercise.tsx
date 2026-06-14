@@ -159,12 +159,14 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
   }, [isPlaying, isBGMStopped, bgmPause, bgmResume, pauseNarration, resumeNarration])
 
   // ── 5. Narration ──────────────────────────────────────────────
+  // NOTE: isPlaying is intentionally NOT in deps — pause/resume is handled by
+  // effect #4. Including it here would restart narration from the beginning on resume.
   useEffect(() => {
-    if (!isReady || !isPlaying || !step.audio) return
+    if (!isReady || !step.audio) return
     narrationStartedRef.current = true
     playNarration(step.audio, isMuted)
     return () => stopNarration()
-  }, [currentStep, narrationKey, isPlaying, isReady]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentStep, narrationKey, isReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 6. Mute fade ──────────────────────────────────────────────
   const isMountedRef = useRef(false)
@@ -325,10 +327,10 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
   if (!isReady) {
     return (
       // Fullscreen also on desktop — no Section wrapper, fixed inset-0
-      <div className="fixed inset-0 z-50 flex items-stretch justify-stretch lg:px-28 2md:px-12 lg:py-14 py-8 px-8  bg-celeste">
-        <div className="flex-1 md:rounded-4xl rounded-xl overflow-hidden relative">
+      <div className="fixed inset-0 z-50 flex items-stretch justify-stretch p-4 bg-celeste">
+        <div className="flex-1 rounded-4xl overflow-hidden relative">
           <Image src={step.image} alt={step.title} fill unoptimized priority className="object-cover object-center" />
-          <div className="absolute inset-0 bg-black/30 md:rounded-4xl rounded-xl" />
+          <div className="absolute inset-0 bg-black/30 rounded-4xl" />
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             <Spinner />
             <p className="text-sm text-white/70 tracking-wide">Mempersiapkan sesi…</p>
@@ -392,8 +394,8 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
         </div>
 
         {/* Cover image — centered horizontally */}
-        <div className="flex justify-center shrink-0 flex-1 max-h-80 min-h-0">
-          <div className="relative xs:max-w-110 w-full h-full aspect-square 2xs:rounded-3xl rounded-xl overflow-hidden">
+        <div className="flex justify-center shrink-0">
+          <div className="relative xs:max-w-40 w-full aspect-square 2xs:rounded-3xl rounded-xl overflow-hidden">
             <Image
               key={step.image}
               src={step.image}
@@ -517,7 +519,7 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
           Fixed fullscreen like mobile — no Section wrapper
           ════════════════════════════════════════════════════════ */}
       <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
-        <div className="flex flex-col items-center w-full md:rounded-4xl rounded-xl relative overflow-hidden flex-1"> 
+        <div className="flex flex-col items-center w-full rounded-4xl relative overflow-hidden flex-1"> 
 
           <div className="absolute inset-0 z-0">
             <Image
@@ -527,9 +529,9 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
               fill
               unoptimized
               priority
-              className="object-cover object-center md:rounded-4xl rounded-xl"
+              className="object-cover object-center rounded-4xl"
             />
-            <div className="absolute inset-0 md:rounded-4xl rounded-xl bg-black/25" />
+            <div className="absolute inset-0 rounded-4xl bg-black/25" />
             <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
             <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/80 via-black/50 to-transparent rounded-b-4xl" />
           </div>
