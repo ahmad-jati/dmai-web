@@ -303,9 +303,11 @@ html, body {
 }
 
 body.exercise-fullscreen .app-navbar,
-body.exercise-fullscreen .app-footer {
+body.exercise-fullscreen .app-footer,
+body.exercise-fullscreen #navbar-app {
   display: none;
 }
+ 
 
 input[type="password"] {
   font-family: Arial, sans-serif;

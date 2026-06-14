@@ -91,29 +91,29 @@ export default function ExercisePage({ params }: Props) {
     return (
       <>
         <div className="w-full">
-          <Section className="bg-celeste flex flex-col items-center justify-center gap-8">
+          <Section className="bg-celeste flex flex-col items-center justify-center sm:gap-8 gap-6 sm:px-0 2xs:px-10 px-8">
             <div className="flex flex-col items-center gap-2 text-center">
               <p className="xs:text-p/5 text-sm/4 font-medium">Kamu telah menyelesaikan sesi</p>
               <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>
             </div>
 
-            <div className="rounded-4xl border border-foreground bg-background p-2 2xs:w-100 2xs:h-68 w-full h-60">
+            <div className="2xs:rounded-3xl rounded-xl border border-foreground bg-background p-2 sm:w-100 xs:h-68 w-full h-40">
               <Image
                 src={session.image_cover}
                 alt={''}
                 width={2000}
                 height={2000}
                 priority
-                className="w-full h-full object-cover rounded-3xl bg-muted-foreground/10"
+                className="w-full h-full object-cover 2xs:rounded-xl rounded-md bg-muted-foreground/10"
                 unoptimized
               />
             </div>
 
-            <div className="flex 2xs:flex-row flex-col items-center gap-3">
+            <div className="flex xs:flex-row flex-col items-center xs:gap-3 gap-1">
               <Button
                 onClick={handleRepeat}
                 variant={'link'}
-                className="w-full flex items-center gap-2"
+                className="w-full flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5"
               >
                 <RepeatIcon className="w-4 h-4" weight="fill" />
                 Ulangi Sesi Ini
@@ -121,12 +121,12 @@ export default function ExercisePage({ params }: Props) {
 
               <Button
                 variant="outline"
-                className="w-full flex items-center gap-2 bg-background"
+                className="w-full flex items-center gap-2 bg-background sm:[&_svg]:size-4 [&_svg]:size-3.5"
                 asChild
               >
                 <Link href={"/homepage" as Route}>
                   <HouseIcon className="w-4 h-4" weight="fill" />
-                  Kembali ke Beranda
+                  Kembali ke Homepage
                 </Link>
               </Button>
             </div>

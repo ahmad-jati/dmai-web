@@ -375,15 +375,15 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
           MOBILE / TABLET  (< 2md / 876px)
           Fixed fullscreen with m-4 inset feel
           ════════════════════════════════════════════════════════ */}
-      <div className="2md:hidden fixed inset-0 z-55 flex flex-col gap-3 bg-celeste p-8 overflow-y-auto">
+      <div className="2md:hidden fixed inset-0 z-55 flex flex-col gap-3 bg-celeste p-6 overflow-y-auto">
 
         {/* Top bar: back button + BGM selector */}
-        <div className="flex items-center gap-2 shrink-0 ">
+        <div className="flex items-center gap-3 shrink-0 ">
           <Button
             onClick={handleBack}
             aria-label="Kembali ke halaman sesi"
             variant={'default'}
-            className="2xs:rounded-xl rounded-lg px-4 py-3 h-full! border-muted-foreground"
+            className="2xs:rounded-xl rounded-lg p-3 h-full! border-muted-foreground"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
           </Button>
@@ -420,7 +420,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
         </div>
 
         {/* Cover image — centered horizontally */}
-        <div className="flex justify-center shrink-0 flex-1 sm:px-16 xs:px-0 2xs:min-h-[calc(56dvh-52px)]">
+        <div className="flex justify-center shrink-0 flex-1 sm:px-16 xs:px-0 2xs:min-h-[calc(56dvh-52px)] mt-2">
           <div className="relative w-full h-full 2xs:rounded-3xl rounded-xl overflow-hidden">
             <Image
               key={step.image}
@@ -437,14 +437,14 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
         </div>
 
         {/* Fixed-height step label + title area so controls don't jump */}
-        <div className="flex flex-col gap-1 text-center pt-1 shrink-0 h-32 overflow-y-auto justify-start">
-          <span className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">
+        <div className="flex flex-col gap-1 text-center pt-1 shrink-0 h-32 overflow-y-auto justify-center my-2">
+          <span className="text-2xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">
             Langkah {currentStep + 1} / {totalSteps}
           </span>
           <div className="flex flex-col gap-2 items-center xs:px-6">
-            <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-foreground text-center">{step.title} </p>
+            <p className="sm:text-h2/7 text-lg/5.5 font-semibold text-foreground text-center">{step.title} </p>
             {step.description && (
-              <p className="xs:text-p/5 text-sm/4 text-muted-foreground text-center">{step.description}</p>
+              <p className="xs:text-p/5 text-sm/4 text-muted-foreground text-center text-pretty">{step.description}</p>
             )}
           </div>
         </div>
@@ -532,7 +532,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
         </div>
 
         {/* Timer */}
-        <p className="xs:text-sm text-xs text-center font-medium text-muted-foreground/60 pb-2 shrink-0">
+        <p className="xs:text-sm text-xs text-center font-medium text-muted-foreground/60 shrink-0">
           <span className="text-foreground/80 font-medium">{displayMins}:{displaySecs}</span>
           <span className="mx-1 text-muted-foreground/30">/</span>
           <span>{totalTime}</span>

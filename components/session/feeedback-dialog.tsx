@@ -74,14 +74,14 @@ export function FeedbackDialog({
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle className="sm:text-h2/7 text-xl/5.5 font-semibold sm:pt-0 xs:pt-2 pt-4">Bagaimana perasaanmu?</DialogTitle>
-          <p className="xs:text-p/5 text-sm/4 text-muted-foreground font-medium">
+          <DialogTitle className="sm:text-h2/7 xs:text-xl/5.5 text-base/5 font-semibold sm:pt-0 xs:pt-2 pt-4">Bagaimana perasaanmu?</DialogTitle>
+          <p className="xs:text-p/5 text-xs/4 text-muted-foreground font-medium">
             Setelah menyelesaikan <span className="font-semibold text-foreground">{sessionName}</span>
           </p>
         </DialogHeader>
 
         {/* Mood Selector */}
-        <div className="grid grid-cols-5 gap-2 py-2">
+        <div className="grid xs:grid-cols-5 grid-cols-3 gap-2 py-2">
           {MOODS.map((mood) => (
             <Button
               key={mood.value}
@@ -100,7 +100,7 @@ export function FeedbackDialog({
           ))}
         </div>
 
-        {/* Optional note */}
+      {/* Optional note */}
         <div className="flex flex-col gap-1.5">
           <label className="xs:text-p/5 text-sm/4 font-medium">
             Catatan <span className="text-muted-foreground">(opsional)</span>
@@ -110,7 +110,7 @@ export function FeedbackDialog({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
-            className="resize-none text-sm"
+            className="resize-none text-sm h-18 overflow-y-auto"
             maxLength={250}
           />
           <p className="text-xs text-muted-foreground text-right">{note.length}/250</p>
