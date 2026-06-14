@@ -7,6 +7,8 @@ export function SplashScreen() {
   const [gone, setGone] = useState(false)
 
   useEffect(() => {
+    document.body.style.overflow = 'hidden'
+
     const fadeTimer = setTimeout(() => setFading(true), 2400)
     const removeTimer = setTimeout(() => setGone(true), 3000)
     return () => {
@@ -14,6 +16,10 @@ export function SplashScreen() {
       clearTimeout(removeTimer)
     }
   }, [])
+
+  useEffect(() => {
+    if (gone) document.body.style.overflow = ''
+  }, [gone])
 
   if (gone) return null
 

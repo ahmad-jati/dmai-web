@@ -23,22 +23,21 @@ export function CompletionCount({ slug }: { slug: string }) {
     fetchCount()
   }, [slug])
 
-  // Render nothing until loaded — avoids layout shift
-  if (count === null) return null
-
   return (
     <div className="flex items-center gap-1">
       <HeartIcon className="w-5 h-5" weight="fill" />
-      <p className="font-medium xs:text-p/5 text-xs/3.5">
-        {count === 0
-          ? "Kamu belum pernah mengikuti sesi ini"
-          : `Kamu telah mengikuti sesi ini ${count} kali`}
-      </p>
+      {count === null
+        ? <div className="h-4 w-40 bg-foreground/10 rounded animate-pulse" />
+        : <p className="font-medium xs:text-p/5 text-xs/3.5">
+            {count === 0
+              ? "Kamu belum pernah mengikuti sesi ini"
+              : `Kamu telah mengikuti sesi ini ${count} kali`}
+          </p>
+      }
     </div>
   )
 }
 
-// Mobile variant — smaller icons, centered
 export function CompletionCountMobile({ slug }: { slug: string }) {
   const [count, setCount] = useState<number | null>(null)
 
@@ -58,16 +57,17 @@ export function CompletionCountMobile({ slug }: { slug: string }) {
     fetchCount()
   }, [slug])
 
-  if (count === null) return null
-
   return (
     <div className="2md:hidden flex justify-center text-muted-foreground items-center gap-1 w-full">
       <HeartIcon className="w-4 h-4" weight="fill" />
-      <p className="font-medium xs:text-p/5 text-xs/3.5">
-        {count === 0
-          ? "Belum mengikuti sesi ini"
-          : `Sesi diikuti ${count} kali`}
-      </p>
+      {count === null
+        ? <div className="h-3.5 w-32 bg-foreground/10 rounded animate-pulse" />
+        : <p className="font-medium xs:text-p/5 text-xs/3.5">
+            {count === 0
+              ? "Belum mengikuti sesi ini"
+              : `Sesi diikuti ${count} kali`}
+          </p>
+      }
     </div>
   )
 }
