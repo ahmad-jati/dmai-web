@@ -1,30 +1,7 @@
-// lib/data-detail-session.ts
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 
-export type SessionInstruction = {
-  step: number
-  title: string
-  description: string
-  duration_seconds: number
-  image: string
-  audio: string
-}
-
-export type SessionData = {
-  id: string
-  slug: string
-  session_name: string
-  detail_short: string
-  detail_full: string[]
-  icon: string
-  total_instruction: number
-  duration: string
-  instructions: SessionInstruction[]
-  image_cover: string
-}
-
-export async function fetchAllSessions(): Promise<SessionData[]> {
-  const supabase = createClient()
+export async function fetchAllSessions() {
+  const supabase = await createClient()
   const { data: sessions, error } = await supabase
     .from('sessions')
     .select(`
@@ -48,7 +25,7 @@ export async function fetchAllSessions(): Promise<SessionData[]> {
     total_instruction: s.total_instruction ?? 0,
     duration: s.duration ?? '',
     image_cover: s.image_cover_url ?? '',
-    instructions: (s.session_steps as any[])
+    instructions: [...(s.session_steps ?? [])]
       .sort((a, b) => a.step_number - b.step_number)
       .map((step) => ({
         step: step.step_number,
@@ -61,8 +38,8 @@ export async function fetchAllSessions(): Promise<SessionData[]> {
   }))
 }
 
-export async function fetchSessionBySlug(slug: string): Promise<SessionData | null> {
-  const supabase = createClient()
+export async function fetchSessionBySlug(slug: string) {
+  const supabase = await createClient()
   const { data: s, error } = await supabase
     .from('sessions')
     .select(`
@@ -87,7 +64,7 @@ export async function fetchSessionBySlug(slug: string): Promise<SessionData | nu
     total_instruction: s.total_instruction ?? 0,
     duration: s.duration ?? '',
     image_cover: s.image_cover_url ?? '',
-    instructions: (s.session_steps as any[])
+    instructions: [...(s.session_steps ?? [])]
       .sort((a, b) => a.step_number - b.step_number)
       .map((step) => ({
         step: step.step_number,
