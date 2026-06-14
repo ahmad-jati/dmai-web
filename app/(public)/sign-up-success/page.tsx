@@ -7,7 +7,7 @@ import { MailboxIcon } from "@phosphor-icons/react";
 export default function Page() {
   return (
     <div className="w-full">
-      <Section className="flex lg:flex-row flex-col lg:items-center justify-center items-end lg:gap-8 gap-0 bg-lemon min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:px-20">
+      <Section className="min-h-[calc(74svh-64px)] md:min-h-[calc(82dvh-52px)] flex lg:flex-row flex-col lg:items-center justify-center items-end lg:gap-8 gap-0 bg-lemon lg:px-20">
         <div className="lg:w-67 lg:h-96 w-50 h-60">
           <Image
             src={'/tropicaline/compress/Scooter.png'}

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { fetchAllSessions, type SessionData } from "@/lib/data-detail-session";
+import { fetchAllSessions, type SessionData } from "@/lib/data-detail-session.client"
 
 function SkeletonCard() {
   return (

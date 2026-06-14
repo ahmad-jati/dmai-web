@@ -20,7 +20,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
   return (
     <div className="flex flex-col gap-8 w-full">
-      <Section className="flex 2md:flex-row flex-col justify-between gap-8 bg-celeste">
+      <Section className="flex 2md:flex-row flex-col justify-between gap-8 bg-celeste min-h-[calc(64svh-64px)] md:min-h-[calc(42dvh-52px)]">
         <div className="flex flex-col 2md:items-start items-center 2md:justify-between 2md:gap-0 gap-4 lg:max-w-xl 2md:max-w-sm">
           
           <div className="2md:flex hidden items-center gap-1">
