@@ -169,10 +169,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
       if (!isBGMStopped) bgmResume()
       // Resume narration from where it was paused (don't restart)
       if (narrationStartedRef.current) {
-        // Small delay to ensure pause fully completes before resuming
-        setTimeout(() => {
-          resumeNarration()
-        }, 10)
+        resumeNarration()
       }
     }
   }, [isPlaying, isBGMStopped, bgmPause, bgmResume, pauseNarration, resumeNarration])
@@ -188,7 +185,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
     return () => stopNarration()
   }, [currentStep, narrationKey, isReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 6. Mute fade ──────────────────────────────────────────────
+  // ── 6. Mute fade ────────────────────��─────────────────────────
   const isMountedRef = useRef(false)
   useEffect(() => {
     if (!isMountedRef.current) { isMountedRef.current = true; return }
@@ -383,7 +380,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
       {/* ════════════════════════════════════════════════════════
           MOBILE / TABLET  (< 2md / 876px)
           Fixed fullscreen with m-4 inset feel
-          ════════════════════════════════════════════════════════ */}
+          ═════════════════════════════��══════════════════════════ */}
       <div className="2md:hidden fixed inset-0 z-55 flex flex-col gap-3 bg-celeste p-6 overflow-y-auto">
 
         {/* Top bar: back button + BGM selector */}
