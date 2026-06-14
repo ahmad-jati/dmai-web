@@ -99,7 +99,7 @@ function HistoryItemCard({ item }: { item: CompletionRecord }) {
       <Button
         variant="outline"
         size="sm"
-        className="shrink-0 h-fit! xs:text-xs text-2xs xs:px-2.5 px-2 py-1! xs:gap-1.5 gap-1 font-medium xs:[&_svg]:size-3.5 [&_svg]:size-3 rounded-sm!"
+        className="shrink-0 h-fit! xs:text-xs text-2xs xs:px-2.5 px-2 py-1! xs:gap-1.5 gap-1 font-medium xs:[&_svg]:size-3.5 [&_svg]:size-3 rounded-sm! hover:bg-white"
         asChild
       >
         <Link href={`/session/${item.session_slug}`}>

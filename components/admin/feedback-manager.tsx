@@ -107,10 +107,10 @@ function FeedbackSkeleton() {
       <div className="h-6 bg-muted rounded w-48" />
       <div className="grid grid-cols-5 gap-3">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-24 bg-white border border-border rounded-md" style={{ animationDelay: `${i * 60}ms` }} />
+          <div key={i} className="h-24 bg-white border border-border rounded-sm" style={{ animationDelay: `${i * 60}ms` }} />
         ))}
       </div>
-      <div className="h-64 bg-white border border-border rounded-md" />
+      <div className="h-64 bg-white border border-border rounded-sm" />
     </div>
   )
 }
@@ -205,7 +205,7 @@ function FeedbackDetailDialog({
           </div>
           <div className="flex flex-col gap-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Catatan</p>
-            <div className="bg-muted/40 border border-border rounded-md p-3 text-sm leading-relaxed">
+            <div className="bg-muted/40 border border-border rounded-sm p-3 text-sm leading-relaxed">
               {record.note? `${record.note}` : "-"}
             </div>
           </div>
@@ -336,7 +336,7 @@ export function FeedbackManager() {
             return (
               <div
                 key={mood}
-                className="flex flex-col items-center gap-2 p-4 bg-white border border-border rounded-md"
+                className="flex flex-col items-center gap-2 p-4 bg-white border border-border rounded-sm"
               >
                 <span className="text-3xl">{cfg.emoji}</span>
                 <p className="text-xl font-bold">{count}</p>
@@ -393,7 +393,7 @@ export function FeedbackManager() {
           {/* Filters + rows per page */}
           <div className="flex items-center gap-2">
             <Select value={filterSession} onValueChange={(v) => handleFilterChange("session", v)}>
-              <SelectTrigger className="w-44 h-8 text-sm rounded-md">
+              <SelectTrigger className="w-44 h-8 text-sm rounded-sm">
                 <SelectValue placeholder="Semua sesi" />
               </SelectTrigger>
               <SelectContent>
@@ -404,7 +404,7 @@ export function FeedbackManager() {
               </SelectContent>
             </Select>
             <Select value={filterMood} onValueChange={(v) => handleFilterChange("mood", v)}>
-              <SelectTrigger className="w-36 h-8 text-sm rounded-md">
+              <SelectTrigger className="w-36 h-8 text-sm rounded-sm">
                 <SelectValue placeholder="Semua mood" />
               </SelectTrigger>
               <SelectContent>
@@ -419,7 +419,7 @@ export function FeedbackManager() {
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-muted-foreground whitespace-nowrap">Tampilkan</span>
               <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-                <SelectTrigger className="w-fit h-8 text-sm rounded-md">
+                <SelectTrigger className="w-fit h-8 text-sm rounded-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -471,7 +471,7 @@ export function FeedbackManager() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="rounded-sm gap-1.5 hover:bg-celeste [&_svg]:size-3.5"
+                        className="rounded-sm gap-1.5 bg-background hover:bg-lemon text-foreground [&_svg]:size-3.5"
                         onClick={() => { setDetailRecord(r); setDetailOpen(true) }}
                       >
                         <ChatCenteredTextIcon className="w-3.5 h-3.5" />
@@ -499,7 +499,7 @@ export function FeedbackManager() {
                 <PaginationItem>
                   <PaginationPrevious
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className={page === 1 ? "pointer-events-none opacity-40 rounded-md" : "cursor-pointer rounded-md hover:bg-muted-foreground/20"}
+                    className={page === 1 ? "pointer-events-none opacity-40 rounded-sm" : "cursor-pointer rounded-sm hover:bg-muted-foreground/20"}
                   />
                 </PaginationItem>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
@@ -507,7 +507,7 @@ export function FeedbackManager() {
                     <Button
                       variant={p === page ? "default" : "ghost"}
                       size="sm"
-                      className="w-8 h-8 p-0 rounded-md font-medium text-sm hover:bg-muted-foreground/20"
+                      className="w-8 h-8 p-0 rounded-sm font-medium text-sm hover:bg-muted-foreground/20"
                       onClick={() => setPage(p)}
                     >
                       {p}
@@ -517,7 +517,7 @@ export function FeedbackManager() {
                 <PaginationItem>
                   <PaginationNext
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className={page === totalPages ? "pointer-events-none opacity-40 rounded-md" : "cursor-pointer rounded-md hover:bg-muted-foreground/20"}
+                    className={page === totalPages ? "pointer-events-none opacity-40 rounded-sm" : "cursor-pointer rounded-sm hover:bg-muted-foreground/20"}
                   />
                 </PaginationItem>
               </PaginationContent>

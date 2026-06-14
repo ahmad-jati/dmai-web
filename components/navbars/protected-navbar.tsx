@@ -113,7 +113,7 @@ export function ProtectedNavbar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={logout}
-                  className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md text-destructive hover:bg-destructive/70 hover:cursor-pointer hover:text-background"
+                  className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md hover:border-2 border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive! shadow-none hover:cursor-pointer"
                 >
                   <SignOutIcon />
                   Logout
