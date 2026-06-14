@@ -2,13 +2,13 @@ import { SessionListSkeleton } from "@/components/section/homepage/session-list-
 
 export default function Loading() {
   return (
-    <div className="flex flex-col items-center md:px-16 px-6 gap-8 lg:max-w-7xl mx-auto w-full sm:pt-32 xs:pt-30 pt-26">
+    <div className="flex flex-col items-center  gap-8 lg:max-w-7xl mx-auto w-full pt-0">
       <div className="flex flex-col gap-8 w-full">
         {/* Hero section placeholder */}
-        <div className="rounded-2xl bg-lemon animate-pulse w-full h-48 sm:h-56" />
+        <div className="bg-celeste animate-pulse w-full min-h-[calc(64svh-64px)] md:min-h-[calc(42dvh-52px)] md:rounded-5xl rounded-xl border border-foreground" />
 
         {/* Session list section placeholder */}
-        <div className="rounded-2xl bg-lavender p-6 flex flex-col gap-6">
+        <div className="md:rounded-5xl rounded-xl border border-foreground bg-pink p-6 flex flex-col gap-6">
           {/* Section header */}
           <div className="flex flex-col gap-2">
             <div className="h-7 bg-foreground/10 rounded w-36 animate-pulse" />
