@@ -40,6 +40,10 @@ export function useNarrationPlayback(): NarrationControls {
   }, [])
 
   const pauseNarration = useCallback(() => {
+    // Must cancel any in-flight fade first — if a rAF loop is still running while
+    // we pause, the loop keeps touching .volume and can cause audio.play() on resume
+    // to throw an AbortError (silently swallowed), leaving narration dead.
+    cancelFade()
     if (audioRef.current && !audioRef.current.paused) {
       audioRef.current.pause()
     }
@@ -86,6 +90,15 @@ export function useNarrationPlayback(): NarrationControls {
 
     cancelFade()
     const target = muted ? 0 : 1
+
+    // If audio is already paused, skip the animation entirely — just stamp the
+    // target volume directly. This prevents a rAF loop from running while paused
+    // and racing with the next audio.play() call on resume.
+    if (audio.paused) {
+      audio.volume = target
+      return
+    }
+
     const start = audio.volume
     const startTime = performance.now()
     const duration = 300
