@@ -169,7 +169,10 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
       if (!isBGMStopped) bgmResume()
       // Resume narration from where it was paused (don't restart)
       if (narrationStartedRef.current) {
-        resumeNarration()
+        // Small delay to ensure pause fully completes before resuming
+        setTimeout(() => {
+          resumeNarration()
+        }, 10)
       }
     }
   }, [isPlaying, isBGMStopped, bgmPause, bgmResume, pauseNarration, resumeNarration])
