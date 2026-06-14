@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   RepeatIcon, SpeakerSlashIcon, SpeakerHighIcon,
   PauseIcon, PlayIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon,
   RepeatOnceIcon, MusicNotesIcon, CaretDownIcon,
-  HouseSimpleIcon,
 } from "@phosphor-icons/react"
 import type { SessionInstruction } from "@/lib/data-detail-session"
 import { createClient } from "@/lib/supabase/client"
@@ -16,7 +16,6 @@ import { useBGMPlayer } from "@/lib/hooks/useBGMPlayer"
 import { useNarrationPlayback } from "@/lib/hooks/useNarrationPlayback"
 import { useExerciseFullscreen } from "@/lib/hooks/useExerciseFullscreen"
 import { Spinner } from "./ui/spinner"
-import { Arrow } from "@radix-ui/react-dropdown-menu"
 
 type Track = {
   id: string
@@ -29,11 +28,13 @@ type Track = {
 type Props = {
   instructions: SessionInstruction[]
   sessionName: string
+  sessionSlug: string
   onDone: () => void
   onBack?: () => void
 }
 
-export function StepperExercise({ instructions, onDone, onBack }: Props) {
+export function StepperExercise({ instructions, sessionName, sessionSlug, onDone, onBack }: Props) {
+  const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
   const [isMuted, setIsMuted] = useState(false)
@@ -83,6 +84,15 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
   const strokeDashoffset = circumference * (1 - progress / 100)
   const currentTrack = tracks[currentTrackIndex]
 
+  // ── Back navigation ───────────────────────────────────────────
+  const handleBack = () => {
+    if (onBack) {
+      onBack()
+    } else {
+      router.push(`/session/${sessionSlug}`)
+    }
+  }
+
   // ── 1. Fetch BGM ──────────────────────────────────────────────
   useEffect(() => {
     const init = async () => {
@@ -100,7 +110,8 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
         console.error('[BGM] init error:', err)
       } finally {
         // 4-second splash before marking ready
-        setTimeout(() => setIsReady(true), 4000)
+        // 9scd
+        setTimeout(() => setIsReady(true), 9000)
       }
     }
     init()
@@ -328,15 +339,29 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
   // ── Loading ───────────────────────────────────────────────────
   if (!isReady) {
     return (
-      // Fullscreen also on desktop — no Section wrapper, fixed inset-0
-      <div className="fixed inset-0 z-50 flex items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
-        <div className="flex-1 rounded-4xl overflow-hidden relative">
-          <Image src={step.image} alt={step.title} fill unoptimized priority className="object-cover object-center" />
-          <div className="absolute inset-0 bg-black/30 rounded-4xl" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-            <Spinner />
-            <p className="text-sm text-white/70 tracking-wide">Mempersiapkan sesi…</p>
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
+        {/* Session name */}
+        <h1 className="md:text-h1/8 text-2xl/7 text-center font-semibold">{sessionName}</h1>
+
+        {/* Session picture */}
+        <div className="relative md:w-100 w-60 aspect-square 2xs:rounded-3xl rounded-xl overflow-hidden">
+            <Image
+              key={step.image}
+              src={step.image}
+              alt={step.title}
+              fill
+              unoptimized
+              priority
+              className="object-cover object-center w-full h-full"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
           </div>
+
+        {/* Loading indicator */}
+        <div className="flex flex-col items-center gap-2 text-foreground">
+          <Spinner className="text-foreground"/>
+          <p className="text-sm tracking-wide">Mempersiapkan sesi…</p>
         </div>
       </div>
     )
@@ -353,12 +378,12 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
       <div className="2md:hidden fixed inset-0 z-55 flex flex-col gap-3 bg-celeste p-8 overflow-y-auto">
 
         {/* Top bar: back button + BGM selector */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 ">
           <Button
-            onClick={onBack}
+            onClick={handleBack}
             aria-label="Kembali ke halaman sesi"
             variant={'default'}
-            className="2xs:rounded-xl rounded-lg p-3 h-full border-muted-foreground"
+            className="2xs:rounded-xl rounded-lg px-4 py-3 h-full! border-muted-foreground"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
           </Button>
@@ -540,11 +565,46 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
           {/* Content layer */}
           <div className="relative z-10 flex flex-col items-center justify-between h-full w-full py-8 px-6">
 
-            {/* Top bar */}
-            <div className="flex flex-row-reverse justify-between items-center w-full bg-blue-100/20">
+            {/* Top bar: back (left) — step dots (center) — BGM (right) */}
+            <div className="flex items-center justify-between w-full gap-4">
 
-              {/* BGM pill */}
-              <div className="flex justify-end flex-1 bg-amber-100/20">
+              {/* Back button — left */}
+              <div className="flex-1 flex justify-start">
+                <button
+                  onClick={handleBack}
+                  aria-label="Kembali ke halaman sesi"
+                  className="flex items-center justify-center w-9 h-9 rounded-full
+                            bg-background/90 text-foreground/80 border border-foreground
+                            hover:bg-muted-foreground/90 hover:text-white hover:cursor-pointer
+                            transition-all duration-150 ease-out"
+                >
+                  <ArrowLeftIcon weight="bold" className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Step dots — center */}
+              <div className="flex items-center gap-3">
+                {instructions.map((instr, i) => (
+                  <button
+                    key={i}
+                    onClick={() => jumpToStep(i)}
+                    className="flex flex-col items-center gap-1 group transition-all duration-200 ease-out cursor-pointer"
+                    aria-label={`Langkah ${i + 1}: ${instr.title}`}
+                  >
+                    <span className={cn(
+                      'block h-1 rounded-full transition-all duration-300',
+                      i === currentStep
+                        ? 'w-8 bg-background/90'
+                        : i < currentStep
+                        ? 'w-4 bg-background/55 group-hover:bg-background/70'
+                        : 'w-4 bg-background/30 group-hover:bg-background/45'
+                    )} />
+                  </button>
+                ))}
+              </div>
+
+              {/* BGM pill — right */}
+              <div className="flex-1 flex justify-end">
                 <button
                   ref={bgmButtonRef}
                   onClick={() => openMusicTray(bgmButtonRef, false)}
@@ -571,49 +631,6 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
                 </button>
               </div>
 
-              {/* Step dots */}
-              <div className="flex items-center gap-3 flex-1 bg-amber-50/20">
-                {instructions.map((instr, i) => (
-                  <button
-                    key={i}
-                    onClick={() => jumpToStep(i)}
-                    className="flex flex-col items-center gap-1 group transition-all duration-200 ease-out cursor-pointer"
-                    aria-label={`Langkah ${i + 1}: ${instr.title}`}
-                  >
-                    <span className={cn(
-                      'block h-1 rounded-full transition-all duration-300',
-                      i === currentStep
-                        ? 'w-8 bg-background/90'
-                        : i < currentStep
-                        ? 'w-4 bg-background/55 group-hover:bg-background/70'
-                        : 'w-4 bg-background/30 group-hover:bg-background/45'
-                    )} />
-                  </button>
-                ))}
-              </div>
-
-              <div className="bg-amber-100/20  flex-1 ">
-                <Button variant="link" size="sm" className="[&_svg]:size-3.5 rounded-md gap-2 p-0 text-sm w-fit text-background">
-                  <ArrowLeftIcon className="w-4 h-4" />
-                  Kembali 
-                </Button>
-              </div>
-
-              {/* Back button — left side */}
-              <div className="flex-1 flex justify-start">
-                {onBack && (
-                  <button
-                    onClick={onBack}
-                    aria-label="Kembali ke halaman sesi"
-                    className="flex items-center justify-center w-9 h-9 rounded-full
-                              bg-background/90 text-foreground/80 border border-foreground
-                              hover:bg-muted-foreground/90 hover:text-white hover:cursor-pointer
-                              transition-all duration-150 ease-out"
-                  >
-                    <ArrowLeftIcon weight="bold" className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
             </div>
 
             {/* Middle: ring + step info */}

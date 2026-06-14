@@ -162,6 +162,7 @@ export default function ExercisePage({ params }: Props) {
         key={key}
         instructions={session.instructions}
         sessionName={session.session_name}
+        sessionSlug={session.slug}
         onDone={handleDone}
       />
     </div>

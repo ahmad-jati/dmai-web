@@ -15,11 +15,11 @@ import { toast } from "sonner"
 import { Spinner } from "@/components/ui/spinner"
 
 const MOODS = [
-  { value: "sangat_baik", label: "Sangat Baik", emoji: "😄" },
-  { value: "baik", label: "Baik", emoji: "🙂" },
-  { value: "netral", label: "Netral", emoji: "😐" },
-  { value: "kurang_baik", label: "Kurang Baik", emoji: "😔" },
   { value: "buruk", label: "Buruk", emoji: "😞" },
+  { value: "kurang_baik", label: "Kurang Baik", emoji: "😔" },
+  { value: "netral", label: "Netral", emoji: "😐" },
+  { value: "baik", label: "Baik", emoji: "🙂" },
+  { value: "sangat_baik", label: "Sangat Baik", emoji: "😄" },
 ] as const
 
 export type MoodValue = (typeof MOODS)[number]["value"]
