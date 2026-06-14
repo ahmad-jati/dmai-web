@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Urbanist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { PageTransition } from "@/components/page-transition";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -32,7 +33,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          {children}
+          <PageTransition>{children}</PageTransition>
         </ThemeProvider>
       </body>
     </html>

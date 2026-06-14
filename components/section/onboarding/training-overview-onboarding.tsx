@@ -6,12 +6,12 @@ import { fetchAllSessions, type SessionData } from "@/lib/data-detail-session";
 
 function SkeletonCard() {
   return (
-    <div className="flex flex-col justify-between items-end gap-4 bg-background/60 p-3 rounded-lg border border-foreground/20 h-24 animate-pulse">
+    <div className="flex flex-col justify-between items-end xs:gap-4 gap-2 bg-background/60 p-3 xs:rounded-lg rounded-md border border-foreground/20 xs:h-24 h-20 animate-pulse">
       <div className="flex flex-col gap-1.5 w-full">
-        <div className="h-3 bg-foreground/10 rounded w-3/4" />
-        <div className="h-2.5 bg-foreground/8 rounded w-full" />
+        <div className="xs:h-3 h-2.5 bg-foreground/10 rounded w-3/4" />
+        <div className="xs:h-2.5 h-2 bg-foreground/8 rounded w-full" />
       </div>
-      <div className="h-6 w-10 bg-foreground/8 rounded" />
+      <div className="xs:h-6 h-5 xs:w-10 w-8 bg-foreground/8 rounded" />
     </div>
   )
 }
