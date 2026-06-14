@@ -5,7 +5,7 @@ export default function Loading() {
     <div className="flex flex-col items-center  gap-8 lg:max-w-7xl mx-auto w-full pt-0">
       <div className="flex flex-col gap-8 w-full">
         {/* Hero section placeholder */}
-        <div className="bg-celeste animate-pulse w-full min-h-[calc(64svh-64px)] md:min-h-[calc(42dvh-52px)] md:rounded-5xl rounded-xl border border-foreground" />
+        <div className="bg-celeste animate-pulse w-full min-h-[calc(64svh-64px)] md:min-h-[calc(68dvh-52px)] md:rounded-5xl rounded-xl border border-foreground" />
 
         {/* Session list section placeholder */}
         <div className="md:rounded-5xl rounded-xl border border-foreground bg-pink p-6 flex flex-col gap-6">
