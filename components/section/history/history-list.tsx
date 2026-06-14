@@ -222,7 +222,7 @@ export function HistoryList() {
 
       <div className="w-120 h-120 lg:block hidden">
         <Image
-          src={'/tropicaline/Being-Still.png'}
+          src={'/tropicaline/compress/Being-Still.png'}
           alt="Being Okay (Tropicaline Illustrations)"
           width={2000}
           height={2000}

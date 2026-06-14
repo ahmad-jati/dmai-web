@@ -37,7 +37,7 @@ export function TrainingOverviewOnboarding() {
       <div className="flex gap-4 items-start h-full w-full">
         <div className="w-89 xl:h-119 h-full xl:block hidden">
           <Image
-            src={'/tropicaline/Being-okay.png'}
+            src={'/tropicaline/compress/Being-okay.png'}
             alt="Being Okay (Tropicaline Illustrations)"
             width={2000}
             height={2000}

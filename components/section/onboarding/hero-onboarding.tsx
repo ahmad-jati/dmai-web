@@ -18,7 +18,7 @@ export function HeroOnboarding() {
       >
         <div className="md:w-102 sm:h-74 w-full xs:h-60 h-44">
           <Image
-            src={'/tropicaline/happy.png'}
+            src={'/tropicaline/compress/happy.png'}
             alt="Being Happy 2 (Tropicaline Illustrations)"
             width={2000}
             height={2000}
