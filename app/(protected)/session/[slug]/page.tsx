@@ -168,7 +168,10 @@ export default function Page({ params }: Props) {
             </div>
           </div>
 
-          <Button className="w-fit [&_svg]:size-3">
+          <Button 
+            variant={'default'}
+            className="flex gap-2 items-center [&_svg]:size-3"
+          >
             <Link href={`/session/${slug}/exercise` as Route} className="flex items-center gap-2">
               MULAI SESI
               <PlayIcon className="w-5 h-5" weight="fill" />
