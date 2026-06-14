@@ -10,7 +10,7 @@ export default function Page() {
       <Section className="flex lg:flex-row flex-col lg:items-center justify-center items-end lg:gap-8 gap-0 bg-lemon min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:px-20">
         <div className="lg:w-67 lg:h-96 w-50 h-60">
           <Image
-            src={'/tropicaline/Scooter.png'}
+            src={'/tropicaline/compress/Scooter.png'}
             alt=""
             width={2000}
             height={2000}

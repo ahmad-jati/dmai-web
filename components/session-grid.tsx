@@ -16,13 +16,13 @@ type SessionGridProps = {
 
 function SessionCardSkeleton() {
   return (
-    <div className="flex flex-col justify-between items-end gap-4 bg-background p-3 rounded-lg border border-foreground/30 w-full h-40 animate-pulse">
+    <div className="flex flex-col justify-between items-end gap-4 bg-background p-3 rounded-lg border border-foreground/30 w-full xs:h-40 h-32 animate-pulse">
       <div className="flex flex-col gap-1.5 w-full">
-        <div className="h-3.5 bg-muted rounded w-3/4" />
-        <div className="h-3 bg-muted rounded w-full" />
-        <div className="h-2.5 bg-muted/60 rounded w-1/2 mt-0.5" />
+        <div className="xs:h-3.5 h-3 bg-muted rounded w-3/4" />
+        <div className="xs:h-3 h-2.5 bg-muted rounded w-full" />
+        <div className="xs:h-2.5 h-2 bg-muted/60 rounded w-1/2 mt-0.5" />
       </div>
-      <div className="w-8 h-8 bg-muted rounded-md shrink-0" />
+      <div className="xs:w-8 xs:h-8 w-6 h-6 bg-muted rounded-md shrink-0" />
     </div>
   )
 }

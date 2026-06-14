@@ -75,6 +75,9 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
   const prevIsPlayingRef = useRef(isPlaying)
   // Track whether narration has started for the current step (for pause/resume logic)
   const narrationStartedRef = useRef(false)
+  // Ref mirror of isMuted — lets effect #5 always read the current mute state
+  // without adding isMuted as a dep (which would restart narration on every toggle).
+  const isMutedRef = useRef(isMuted)
 
   const step = instructions[currentStep]
   const totalSteps = instructions.length
@@ -173,18 +176,20 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
 
   // ── 5. Narration ──────────────────────────────────────────────
   // NOTE: isPlaying is intentionally NOT in deps — pause/resume is handled by
-  // effect #4. Including it here would restart narration from the beginning on resume.
+  // effect #4. isMuted is also excluded — we read isMutedRef.current instead so
+  // toggling mute never restarts narration from the beginning.
   useEffect(() => {
     if (!isReady || !step.audio) return
     narrationStartedRef.current = true
-    playNarration(step.audio, isMuted)
+    playNarration(step.audio, isMutedRef.current)
     return () => stopNarration()
   }, [currentStep, narrationKey, isReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 6. Mute fade ──────────────────────────────────────────────
+  // ── 6. Mute fade ────────────────────��─────────────────────────
   const isMountedRef = useRef(false)
   useEffect(() => {
     if (!isMountedRef.current) { isMountedRef.current = true; return }
+    isMutedRef.current = isMuted  // sync ref before fading
     fadeMute(isMuted)
   }, [isMuted]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -341,6 +346,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
         {/* Session name */}
+        <p className="text-p text-muted-foreground -mb-2 text-center font-semibold">DMAI - Session</p>
         <h1 className="md:text-h1/8 text-2xl/7 text-center font-semibold">{sessionName}</h1>
 
         {/* Session picture */}
@@ -361,7 +367,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
         {/* Loading indicator */}
         <div className="flex flex-col items-center gap-2 text-foreground">
           <Spinner className="text-foreground"/>
-          <p className="text-sm tracking-wide">Mempersiapkan sesi…</p>
+          <p className="text-sm font-medium tracking-wide">Mempersiapkan sesi…</p>
         </div>
       </div>
     )
@@ -374,7 +380,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
       {/* ════════════════════════════════════════════════════════
           MOBILE / TABLET  (< 2md / 876px)
           Fixed fullscreen with m-4 inset feel
-          ════════════════════════════════════════════════════════ */}
+          ═════════════════════════════��══════════════════════════ */}
       <div className="2md:hidden fixed inset-0 z-55 flex flex-col gap-3 bg-celeste p-6 overflow-y-auto">
 
         {/* Top bar: back button + BGM selector */}
@@ -383,7 +389,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
             onClick={handleBack}
             aria-label="Kembali ke halaman sesi"
             variant={'default'}
-            className="2xs:rounded-xl rounded-lg p-3 h-full! border-muted-foreground"
+            className="2xs:rounded-xl xs:rounded-lg rounded-sm [&_svg]:size-4 px-1 py-1.5 xs:h-full h-fit border-muted-foreground "
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
           </Button>
@@ -391,7 +397,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
           <button
             ref={bgmButtonMobileRef}
             onClick={() => openMusicTray(bgmButtonMobileRef, true)}
-            className="flex items-center gap-4 flex-1 2xs:rounded-xl rounded-lg bg-background border border-muted-foreground p-3"
+            className="flex items-center justify-between xs:gap-4 gap-2 flex-1 2xs:rounded-xl rounded-lg bg-background border border-muted-foreground p-3"
             aria-label="Pilih musik latar"
           >
             <MusicNotesIcon
@@ -401,12 +407,15 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
                 isBGMStopped ? "text-foreground/40" : "text-foreground"
               )}
             />
-            <div className="flex flex-col min-w-0 flex-1 text-left">
-              <span className="text-xs font-semibold text-foreground truncate leading-tight">
+            <div className="flex flex-col items-start flex-1 gap-1 min-w-0 text-left overflow-hidden">
+              <span className="text-xs/3 font-semibold text-foreground text-clip">
                 {bgmLabel}
               </span>
+
               {bgmSublabel && (
-                <span className="text-xs font-medium text-muted-foreground truncate leading-tight">{bgmSublabel}</span>
+                <span className="text-xs/3 font-medium text-muted-foreground truncate text-clip">
+                  {bgmSublabel}
+                </span>
               )}
             </div>
             <CaretDownIcon
@@ -538,6 +547,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
           <span>{totalTime}</span>
         </p>
 
+        <p className="xs:text-p text-sm text-muted-foreground/40 text-center font-semibold">DMAI - {sessionName} Session</p>
       </div>
 
       {/* ════════════════════════════════════════════════════════
@@ -690,7 +700,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
             </div>
 
             {/* Bottom: controls */}
-            <div className="flex flex-col items-center gap-2 px-3">
+            <div className="flex flex-col items-center gap-3.5 px-3">
               <div className="flex items-center justify-center gap-2 bg-background rounded-full px-2 py-1.5 w-full">
 
                 <Button
@@ -756,6 +766,8 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
                   </Button>
                 )}
               </div>
+
+              <p className="lg:text-p text-sm text-white/40 text-center font-semibold">DMAI - {sessionName} Session</p>
             </div>
 
           </div>

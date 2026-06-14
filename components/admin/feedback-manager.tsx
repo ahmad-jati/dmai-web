@@ -80,7 +80,7 @@ const ALL_MOODS = MOOD_DISPLAY_ORDER
 function MoodBadge({ mood }: { mood: MoodValue }) {
   const cfg = MOOD_CONFIG[mood]
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${cfg.color}`}>
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 w-fit rounded-full border text-xs font-medium ${cfg.color}`}>
       <span>{cfg.emoji}</span>
       {cfg.label}
     </span>
@@ -125,7 +125,7 @@ function MoodStatsBar({ stats, total }: { stats: MoodStat[]; total: number }) {
     const count = found?.count ?? 0
     const pct = (count / total) * 100
     return { mood, count, pct }
-  }).filter((s) => s.pct > 0)
+  })
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -157,9 +157,9 @@ function MoodStatsBar({ stats, total }: { stats: MoodStat[]; total: number }) {
         ))}
       </div>
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 mt-1">
+      <div className="grid grid-cols-5 gap-3 w-full mt-1">
         {segments.map(({ mood, count, pct }) => (
-          <div key={mood} className="flex items-center gap-1.5">
+          <div key={mood} className="flex items-center w-full justify-center gap-2 ">
             <div className={`w-2.5 h-2.5 rounded-full ${MOOD_CONFIG[mood].barColor}`} />
             <span className="text-xs text-muted-foreground">
               {MOOD_CONFIG[mood].emoji} {MOOD_CONFIG[mood].label} ({count} · {pct.toFixed(1)}%)
@@ -197,23 +197,22 @@ function FeedbackDetailDialog({
           <div className="flex flex-col gap-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Pengguna</p>
             <p className="font-medium">{record.user_full_name ?? "—"}</p>
-            <p className="text-sm text-muted-foreground">{record.user_email}</p>
+            <p className="text-sm text-muted-foreground font-medium">{record.user_email}</p>
           </div>
           <div className="flex flex-col gap-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Perasaan</p>
             <MoodBadge mood={record.mood} />
           </div>
-          {record.note && (
-            <div className="flex flex-col gap-1">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Catatan</p>
-              <div className="bg-muted/40 border border-border rounded-md p-3 text-sm leading-relaxed">
-                {record.note}
-              </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Catatan</p>
+            <div className="bg-muted/40 border border-border rounded-md p-3 text-sm leading-relaxed">
+              {record.note? `${record.note}` : "-"}
             </div>
-          )}
+          </div>
+          
           <div className="flex flex-col gap-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Waktu</p>
-            <p className="text-sm">{fmtDate(record.created_at)}</p>
+            <p className="text-sm font-medium">{fmtDate(record.created_at)}</p>
           </div>
         </div>
       </DialogContent>
@@ -347,7 +346,7 @@ export function FeedbackManager() {
             )
           })}
         </div>
-        <MoodStatsBar stats={moodStats} total={totalFeedback} />
+        {/* <MoodStatsBar stats={moodStats} total={totalFeedback} /> */}
       </div>
 
       {/* ── Per Session ── */}
@@ -420,7 +419,7 @@ export function FeedbackManager() {
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-muted-foreground whitespace-nowrap">Tampilkan</span>
               <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-                <SelectTrigger className="w-16 h-8 text-sm rounded-md">
+                <SelectTrigger className="w-fit h-8 text-sm rounded-md">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

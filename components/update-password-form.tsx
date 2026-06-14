@@ -128,7 +128,7 @@ export function UpdatePasswordForm({
 
         <div className="lg:w-76 lg:h-106 w-50 h-50">
           <Image
-            src={'/tropicaline/Send.png'}
+            src={'/tropicaline/compress/Send.png'}
             alt=""
             width={2000}
             height={2000}

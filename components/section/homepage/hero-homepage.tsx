@@ -9,7 +9,7 @@ export function HeroHomepage() {
     <div className="flex  flex-col items-center sm:gap-8 gap-6 md:px-0 px-2 md:pb-0 pb-3">
       <div className="md:w-102 sm:h-82 w-full xs:h-76 h-50">
         <Image
-          src={'/tropicaline/parachute1.png'}
+          src={'/tropicaline/compress/parachute1.png'}
           alt="Parachute (Tropicaline Illustrations)"
           width={2000}
           height={2000}

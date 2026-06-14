@@ -10,15 +10,27 @@ export function HeroOnboarding() {
 
   return (
     <>
+      <style>{`
+        @keyframes hero-fadein-up {
+          from { 
+            opacity: 0; 
+            transform: translateY(24px);
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0);
+          }
+        }
+      `}</style>
       <div
         className="flex  flex-col items-center sm:gap-8 xs:gap-6 gap-4 md:px-0 xs:px-2 md:pb-0 pb-3"
         style={{
-          transition: 'opacity 500ms ease-out, transform 500ms ease-out',
+          animation: 'hero-fadein-up 700ms ease-out 600ms both',
         }}
       >
         <div className="md:w-102 sm:h-74 w-full xs:h-60 h-44">
           <Image
-            src={'/tropicaline/happy.png'}
+            src={'/tropicaline/compress/happy.png'}
             alt="Being Happy 2 (Tropicaline Illustrations)"
             width={2000}
             height={2000}

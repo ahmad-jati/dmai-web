@@ -8,7 +8,11 @@ export function SplashScreen() {
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => setFading(true), 2400)
-    return () => clearTimeout(fadeTimer)
+    const removeTimer = setTimeout(() => setGone(true), 3000)
+    return () => {
+      clearTimeout(fadeTimer)
+      clearTimeout(removeTimer)
+    }
   }, [])
 
   if (gone) return null
@@ -17,11 +21,13 @@ export function SplashScreen() {
     <div
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6 bg-celeste"
       style={{
-        opacity: fading ? 0 : 1,
-        transition: 'opacity 600ms ease-out',
-        pointerEvents: 'none',
+        transform: fading ? 'translateY(-100%)' : 'translateY(0)',
+        transition: 'transform 600ms ease-in-out',
+        pointerEvents: fading ? 'none' : 'auto',
       }}
-      onTransitionEnd={() => setGone(true)}
+      onTransitionEnd={() => {
+        if (fading) setGone(true)
+      }}
     >
       <style>{`
         @keyframes splash-fadein {

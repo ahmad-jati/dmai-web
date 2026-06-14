@@ -59,7 +59,7 @@ export function ForgotPasswordForm({
 
             <div className="lg:w-107 lg:h-96 w-70 h-40 ">
               <Image
-                src={'/tropicaline/Email.png'}
+                src={'/tropicaline/compress/Email.png'}
                 alt=""
                 width={2000}
                 height={2000}
@@ -100,7 +100,7 @@ export function ForgotPasswordForm({
 
             <div className="lg:w-107 lg:h-96 w-70 h-40 ">
               <Image
-                src={'/tropicaline/Email.png'}
+                src={'/tropicaline/compress/Email.png'}
                 alt=""
                 width={2000}
                 height={2000}

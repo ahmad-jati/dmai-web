@@ -1,6 +1,6 @@
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useEffect } from 'react'
 
-// Simple narration playback hook.
+// Simple narration playback hook using a DOM audio element.
 // No duck/restore — BGM volume is never touched here.
 // playNarration(url, muted)  — plays audio at full volume, or silently if muted.
 // pauseNarration()           — pauses (preserves position).
@@ -19,8 +19,26 @@ interface NarrationControls {
 export function useNarrationPlayback(): NarrationControls {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fadeTimerRef = useRef<number | null>(null)
-  // Track whether we've started playing (so resume works even before first play)
-  const hasPlayedRef = useRef(false)
+
+  // Initialize the DOM audio element on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // Create a hidden audio element in the DOM
+    let audio = document.getElementById('narration-audio') as HTMLAudioElement
+    if (!audio) {
+      audio = document.createElement('audio')
+      audio.id = 'narration-audio'
+      audio.crossOrigin = 'anonymous'
+      audio.style.display = 'none'
+      document.body.appendChild(audio)
+    }
+    audioRef.current = audio
+
+    return () => {
+      // Don't remove on unmount — keep it for the next session
+    }
+  }, [])
 
   const cancelFade = () => {
     if (fadeTimerRef.current) {
@@ -31,23 +49,27 @@ export function useNarrationPlayback(): NarrationControls {
 
   const stopNarration = useCallback(() => {
     cancelFade()
-    hasPlayedRef.current = false
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.src = ''
-      audioRef.current = null
+    const audio = audioRef.current
+    if (audio) {
+      audio.pause()
+      audio.currentTime = 0
+      audio.src = ''
     }
   }, [])
 
   const pauseNarration = useCallback(() => {
-    if (audioRef.current && !audioRef.current.paused) {
-      audioRef.current.pause()
+    cancelFade()
+    const audio = audioRef.current
+    if (audio && !audio.paused) {
+      audio.pause()
     }
   }, [])
 
   const resumeNarration = useCallback(() => {
-    if (!audioRef.current) return
-    audioRef.current.play().catch((err) => {
+    const audio = audioRef.current
+    if (!audio || audio.src === '') return
+    cancelFade()
+    audio.play().catch((err) => {
       if (err.name !== 'AbortError') {
         console.warn('[Narration] resume failed:', err)
       }
@@ -55,23 +77,18 @@ export function useNarrationPlayback(): NarrationControls {
   }, [])
 
   const playNarration = useCallback((url: string, muted: boolean) => {
-    // Stop whatever was playing first
-    cancelFade()
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.src = ''
-      audioRef.current = null
-    }
+    const audio = audioRef.current
+    if (!audio) return
 
-    const audio = new Audio()
-    audio.crossOrigin = 'anonymous'
+    // Stop and reset current playback
+    cancelFade()
+    audio.pause()
+    audio.currentTime = 0
     audio.src = url
     audio.volume = muted ? 0 : 1
-    audioRef.current = audio
-    hasPlayedRef.current = true
 
+    // Play the audio
     audio.play().catch((err) => {
-      // Autoplay blocked or element was replaced before play resolved — ignore
       if (err.name !== 'AbortError') {
         console.warn('[Narration] play failed:', err)
       }
@@ -79,13 +96,20 @@ export function useNarrationPlayback(): NarrationControls {
   }, [])
 
   // Smooth mute/unmute of the currently playing narration only.
-  // Does NOT touch BGM.
   const fadeMute = useCallback((muted: boolean) => {
     const audio = audioRef.current
-    if (!audio) return
+    if (!audio || audio.src === '') return
 
     cancelFade()
     const target = muted ? 0 : 1
+
+    // If audio is paused, just set volume directly
+    if (audio.paused) {
+      audio.volume = target
+      return
+    }
+
+    // Animate the volume transition
     const start = audio.volume
     const startTime = performance.now()
     const duration = 300

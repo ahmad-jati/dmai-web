@@ -10,18 +10,18 @@ import { Button } from "./ui/button";
 
 function SessionCardSkeleton() {
   return (
-    <div className="flex flex-row-reverse gap-3 bg-background rounded-[20px] border border-foreground/20 w-full overflow-hidden animate-pulse h-32">
+    <div className="flex flex-row-reverse gap-3 bg-background rounded-[20px] border border-foreground/20 w-full overflow-hidden animate-pulse h-28 2xs:h-32">
       {/* image placeholder — right side */}
-      <div className="w-28 shrink-0 bg-foreground/8 rounded-r-[17px]" />
+      <div className="w-24 2xs:w-28 shrink-0 bg-foreground/8 rounded-r-[17px]" />
       {/* text side */}
       <div className="flex flex-col justify-between p-3 flex-1 min-w-0">
         <div className="flex flex-col gap-2">
-          <div className="h-3.5 bg-foreground/10 rounded w-3/4" />
-          <div className="h-3 bg-foreground/8 rounded w-full" />
+          <div className="h-3 2xs:h-3.5 bg-foreground/10 rounded w-3/4" />
+          <div className="h-2.5 2xs:h-3 bg-foreground/8 rounded w-full" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <div className="h-2.5 bg-foreground/8 rounded w-1/2" />
-          <div className="h-2.5 bg-foreground/6 rounded w-2/5" />
+          <div className="h-2 2xs:h-2.5 bg-foreground/8 rounded w-1/2" />
+          <div className="h-2 2xs:h-2.5 bg-foreground/6 rounded w-2/5" />
         </div>
       </div>
     </div>
@@ -75,7 +75,7 @@ export function OtherSessionList({ excludeSlug }: { excludeSlug?: string }) {
                 </div>
 
                 <div className="
-                  flex flex-col items-start lg:gap-1.5 gap-2.5
+                  flex flex-col items-start xs:gap-1.5 gap-2
                   2md:px-1 w-full
                 ">
                   <div className="flex items-center w-full gap-2">
