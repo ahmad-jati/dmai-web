@@ -27,7 +27,7 @@ export function HeroHomepage() {
 
       <Button
         variant={'default'}
-        className="flex gap-2 items-center [&_svg]:size-3.5"
+        className="flex gap-2 items-center [&_svg]:size-3.5 hover:bg-background/80"
         onClick={() => {
           document.getElementById("session-list")?.scrollIntoView({ behavior: "smooth" });
         }}

@@ -79,8 +79,8 @@ function MusicSkeleton() {
             <div className="w-8 h-3 bg-muted/60 rounded" />
             <div className="flex-1 h-3 bg-muted rounded" />
             <div className="w-32 h-3 bg-muted/70 rounded" />
-            <div className="w-24 h-8 bg-muted/40 rounded-md" />
-            <div className="w-20 h-8 bg-muted/40 rounded-md" />
+            <div className="w-24 h-8 bg-muted/40 rounded-sm" />
+            <div className="w-20 h-8 bg-muted/40 rounded-sm" />
           </div>
         ))}
       </div>
@@ -277,7 +277,7 @@ function MusicFormDialog({
               variant="outline"
               size="sm"
               onClick={() => audioRef.current?.click()}
-              className="w-fit rounded-md gap-2 [&_svg]:size-3.5 hover:bg-celeste"
+              className="w-fit rounded-sm gap-2 [&_svg]:size-3.5 bg-background hover:bg-lemon text-foreground"
             >
               <SpeakerHighIcon className="w-4 h-4" />
               {mode === "edit" && form.audio_url ? 'Ganti Audio' : 'Upload Audio'}
@@ -293,13 +293,13 @@ function MusicFormDialog({
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="rounded-md text-sm hover:bg-destructive/20">
+          <Button variant="outline" onClick={onClose} className="rounded-sm text-sm hover:bg-destructive/50">
             Batal
           </Button>
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-md gap-2 text-sm [&_svg]:size-4 bg-celeste"
+            className="rounded-sm gap-2 text-sm [&_svg]:size-4 bg-background hover:bg-lemon text-foreground"
           >
             {saving
               ? <><Spinner className="shrink-0 text-foreground" /> Menyimpan...</>
@@ -364,13 +364,13 @@ function DeleteMusicDialog({
           Tindakan ini tidak dapat dibatalkan.
         </p>
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="rounded-md text-sm">
+          <Button variant="outline" onClick={onClose} className="rounded-sm text-sm">
             Batal
           </Button>
           <Button
             onClick={handleDelete}
             disabled={deleting}
-            className="rounded-md gap-2 text-sm [&_svg]:size-4 bg-destructive text-white hover:bg-destructive/90"
+            className="rounded-sm gap-2 text-sm [&_svg]:size-4 bg-destructive text-white hover:bg-destructive/90"
           >
             {deleting
               ? <><Spinner className="shrink-0 text-white" /> Menghapus...</>
@@ -457,7 +457,7 @@ export function MusicManager() {
         <Button
           onClick={() => setAddOpen(true)}
           size="sm"
-          className="rounded-md gap-1.5 [&_svg]:size-3.5 bg-celeste hover:bg-celeste/80 text-foreground"
+          className="rounded-sm gap-1.5 [&_svg]:size-3.5 bg-background hover:bg-lemon text-foreground"
         >
           <PlusIcon className="w-3.5 h-3.5" />
           Tambah Musik
@@ -491,7 +491,7 @@ export function MusicManager() {
                   <TableCell className="text-center text-muted-foreground text-sm">{i + 1}.</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-md bg-muted border border-border flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-sm bg-muted border border-border flex items-center justify-center shrink-0">
                         <MusicNoteIcon className="w-4 h-4 text-muted-foreground" />
                       </div>
                       <span className="font-medium text-sm">{r.title}</span>
@@ -516,7 +516,7 @@ export function MusicManager() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="rounded-sm gap-1 hover:bg-celeste [&_svg]:size-3.5 px-2"
+                        className="rounded-sm gap-1 bg-background hover:bg-lemon text-foreground [&_svg]:size-3.5 px-2"
                         onClick={() => { setEditTarget(r); setEditOpen(true) }}
                       >
                         <PencilSimpleIcon className="w-3.5 h-3.5" />
@@ -541,7 +541,7 @@ export function MusicManager() {
 
       {/* Inline audio preview row */}
       {previewId && (
-        <div className="border border-border rounded-md p-3 bg-muted/30 flex items-center gap-3">
+        <div className="border border-border rounded-sm p-3 bg-muted/30 flex items-center gap-3">
           <MusicNoteIcon className="w-4 h-4 text-muted-foreground shrink-0" />
           <div className="flex flex-col gap-0.5 min-w-0">
             <p className="text-sm font-medium truncate">
