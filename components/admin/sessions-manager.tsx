@@ -31,9 +31,12 @@ import {
   SpeakerHighIcon,
   PlusIcon,
   TrashIcon,
+  ArrowUpRightIcon,
 } from "@phosphor-icons/react"
 import { Badge } from "../ui/badge"
 import Image from "next/image"
+import Link from "next/link"
+import { Route } from "next"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -79,11 +82,11 @@ function AdminSkeleton() {
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
-            className="flex flex-col gap-2 p-4 bg-white border border-border rounded-md animate-pulse"
+            className="flex flex-col gap-2 p-4 bg-white border border-border rounded-sm animate-pulse"
             style={{ animationDelay: `${i * 60}ms` }}
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 bg-muted rounded-md shrink-0" />
+              <div className="w-10 h-10 bg-muted rounded-sm shrink-0" />
               <div className="flex flex-col gap-1 flex-1">
                 <div className="h-3 bg-muted rounded w-3/4" />
                 <div className="h-2.5 bg-muted/60 rounded w-1/2" />
@@ -198,8 +201,8 @@ function StepEditorDialog({
         />
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="rounded-md text-sm hover:bg-destructive/20">Batal</Button>
-          <Button onClick={handleSave} disabled={saving} className="rounded-md gap-2 text-sm [&_svg]:size-4 bg-celeste">
+          <Button variant="outline" onClick={onClose} className="rounded-sm text-sm hover:bg-destructive/50">Batal</Button>
+          <Button onClick={handleSave} disabled={saving} className="rounded-sm gap-2 text-sm [&_svg]:size-4 bg-background hover:bg-lemon text-foreground">
             {saving ? <Spinner className="shrink-0 text-foreground" /> : <FloppyDiskIcon className="w-4 h-4" />}
             {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
           </Button>
@@ -365,8 +368,8 @@ function AddStepDialog({
         />
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="rounded-md text-sm hover:bg-destructive/20">Batal</Button>
-          <Button onClick={handleAdd} disabled={saving} className="rounded-md gap-2 text-sm [&_svg]:size-4 bg-celeste">
+          <Button variant="outline" onClick={onClose} className="rounded-sm text-sm hover:bg-destructive/50">Batal</Button>
+          <Button onClick={handleAdd} disabled={saving} className="rounded-sm gap-2 text-sm [&_svg]:size-4 bg-background hover:bg-lemon text-foreground">
             {saving ? <Spinner className="shrink-0 text-foreground" /> : <PlusIcon className="w-4 h-4" />}
             {saving ? 'Menyimpan...' : 'Tambah Step'}
           </Button>
@@ -450,11 +453,11 @@ function DeleteStepDialog({
           Step <span className="font-medium text-foreground">{step.title}</span> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.
         </p>
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="rounded-md text-sm">Batal</Button>
+          <Button variant="outline" onClick={onClose} className="rounded-sm text-sm">Batal</Button>
           <Button
             onClick={handleDelete}
             disabled={deleting}
-            className="rounded-md gap-2 text-sm [&_svg]:size-4 bg-destructive text-white hover:bg-destructive/90"
+            className="rounded-sm gap-2 text-sm [&_svg]:size-4 bg-destructive text-white hover:bg-destructive/90"
           >
             {deleting ? <Spinner className="shrink-0 text-white" /> : <TrashIcon className="w-4 h-4" />}
             {deleting ? 'Menghapus...' : 'Ya, Hapus'}
@@ -529,7 +532,7 @@ function StepFormFields({
               alt="preview"
               width={60}
               height={60}
-              className="w-20 h-20 object-cover border border-border rounded-md shrink-0 bg-muted-foreground/10"
+              className="w-20 h-20 object-cover border border-border rounded-sm shrink-0 bg-muted-foreground/10"
               unoptimized
             />
           )}
@@ -541,7 +544,7 @@ function StepFormFields({
               variant="outline"
               size="sm"
               onClick={() => imageRef.current?.click()}
-              className="w-fit rounded-md gap-2 [&_svg]:size-4 hover:bg-celeste"
+              className="w-fit rounded-sm gap-2 [&_svg]:size-4 bg-background hover:bg-lemon text-foreground"
             >
               <ImageIcon className="w-4 h-4" />
               {imagePreview ? 'Ganti Gambar' : 'Upload Gambar'}
@@ -563,7 +566,7 @@ function StepFormFields({
           variant="outline"
           size="sm"
           onClick={() => audioRef.current?.click()}
-          className="w-fit rounded-md gap-2 [&_svg]:size-3.5 hover:bg-celeste"
+          className="w-fit rounded-sm gap-2 [&_svg]:size-3.5 bg-background hover:bg-lemon text-foreground"
         >
           <SpeakerHighIcon className="w-4 h-4" />
           {form.audio_url ? 'Ganti Audio' : 'Upload Audio'}
@@ -708,26 +711,35 @@ function SessionDetailView({
 
   return (
     <div className="flex flex-col gap-8">
-      <Button variant="link" size="sm" onClick={onBack} className="[&_svg]:size-3.5 rounded-md gap-2 p-0 text-sm w-fit">
+      <Button variant="link" size="sm" onClick={onBack} className="[&_svg]:size-3.5 rounded-sm gap-2 p-0 text-sm w-fit">
         <ArrowLeftIcon className="w-4 h-4" />
-        Kembali ke Daftar Sesi
+        Kembali
       </Button>
 
       <div className="flex gap-8 items-start">
         {/* ── Meta Edit Form ── */}
         <div className="flex flex-col gap-5 w-80 shrink-0">
-          <h2 className="text-lg font-semibold">{session.session_name}</h2>
+        
+          <Link 
+            href={`/session/${session.slug}` as Route}
+            className="text-2xl font-semibold underline-none flex items-center gap-3 group hover:underline underline-offset-2 "
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {session.session_name}
+            <ArrowUpRightIcon className="w-4 h-4 group-hover:inline hidden"/>
+          </Link>
 
           <div className="flex flex-col gap-2">
             <Label>Gambar Cover</Label>
-            <div className="w-full aspect-square rounded-md overflow-hidden border border-border bg-muted">
+            <div className="w-full aspect-square rounded-sm overflow-hidden border border-border bg-muted">
               {coverPreview ? (
                 <Image src={coverPreview} alt="cover" width={320} height={320} className="w-full h-full object-cover bg-muted-foreground/10" unoptimized />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">Belum ada gambar</div>
               )}
             </div>
-            <Button variant="outline" size="sm" onClick={() => coverRef.current?.click()} className="w-fit rounded-md gap-2 [&_svg]:size-4 hover:bg-celeste">
+            <Button variant="outline" size="sm" onClick={() => coverRef.current?.click()} className="w-fit rounded-sm gap-2 [&_svg]:size-4 bg-background hover:bg-lemon text-foreground">
               <ImageIcon className="w-4 h-4" />
               {coverPreview ? 'Ganti Cover' : 'Upload Cover'}
             </Button>
@@ -756,7 +768,7 @@ function SessionDetailView({
             ))}
           </div>
 
-          <Button onClick={handleSaveMeta} disabled={saving || !isDirty} className="rounded-md gap-2 [&_svg]:size-4 bg-celeste w-full disabled:bg-muted-foreground/20 disabled:cursor-not-allowed">
+          <Button onClick={handleSaveMeta} disabled={saving || !isDirty} className="rounded-sm gap-2 [&_svg]:size-4 bg-background hover:bg-lemon text-foreground w-full disabled:bg-muted-foreground/10">
             {saving ? <Spinner className="shrink-0 text-foreground" /> : <FloppyDiskIcon className="w-4 h-4" />}
             {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
           </Button>
@@ -771,7 +783,7 @@ function SessionDetailView({
             <Button
               size="sm"
               onClick={() => setAddStepOpen(true)}
-              className="rounded-md gap-1.5 [&_svg]:size-3.5 bg-celeste hover:bg-celeste/80 text-foreground"
+              className="rounded-sm gap-1.5 [&_svg]:size-3.5 bg-background hover:bg-lemon text-foreground"
             >
               <PlusIcon className="w-3.5 h-3.5" />
               Tambah Step
@@ -798,9 +810,9 @@ function SessionDetailView({
                     </TableCell>
                     <TableCell>
                       {step.image_url ? (
-                        <Image src={step.image_url} alt={step.title ?? `Step ${step.step_number}`} width={48} height={48} className="w-12 h-12 object-cover border border-border rounded-md bg-muted-foreground/10" unoptimized />
+                        <Image src={step.image_url} alt={step.title ?? `Step ${step.step_number}`} width={48} height={48} className="w-12 h-12 object-cover border border-border rounded-sm bg-muted-foreground/10" unoptimized />
                       ) : (
-                        <div className="w-12 h-12 bg-muted border border-border rounded-md flex items-center justify-center text-xs text-muted-foreground">—</div>
+                        <div className="w-12 h-12 bg-muted border border-border rounded-sm flex items-center justify-center text-xs text-muted-foreground">—</div>
                       )}
                     </TableCell>
                     <TableCell className="font-medium text-sm">{step.title}</TableCell>
@@ -813,7 +825,7 @@ function SessionDetailView({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-sm gap-1 hover:bg-celeste [&_svg]:size-3.5 px-2"
+                          className="rounded-sm gap-1 bg-background hover:bg-celeste text-foreground [&_svg]:size-3.5 px-2"
                           onClick={() => { setEditingStep(step); setStepEditorOpen(true) }}
                         >
                           <PencilSimpleIcon className="w-3.5 h-3.5" />
@@ -876,10 +888,10 @@ function SessionCard({ session, onClick }: { session: SessionRecord; onClick: ()
   return (
     <button
       onClick={onClick}
-      className="flex flex-col gap-2.5 p-3.5 bg-white border border-border hover:border-muted-foreground/40 hover:shadow-sm transition-all text-left rounded-md group w-full"
+      className="flex flex-col gap-2.5 p-3.5 bg-white border border-border hover:border-muted-foreground/40 hover:shadow-sm transition-all text-left rounded-sm group w-full"
     >
       <div className="flex items-start gap-3 w-full">
-        <div className="w-14 h-14 rounded-md overflow-hidden border border-border bg-muted shrink-0">
+        <div className="w-14 h-14 rounded-sm overflow-hidden border border-border bg-muted shrink-0">
           {session.image_cover_url ? (
             <Image src={session.image_cover_url} alt={session.session_name} width={48} height={48} className="w-full h-full object-cover bg-muted-foreground/10" unoptimized />
           ) : (
@@ -891,7 +903,7 @@ function SessionCard({ session, onClick }: { session: SessionRecord; onClick: ()
           <Badge variant="secondary" className="w-fit text-xs">{session.steps.length} steps</Badge>
         </div>
       </div>
-      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{session.detail_short}</p>
+      <p className="text-sm/4.5 text-muted-foreground line-clamp-2">{session.detail_short}</p>
     </button>
   )
 }
@@ -952,7 +964,7 @@ export function SessionsManager() {
         <h2 className="text-xl font-semibold">Kelola Sesi Terapi</h2>
         <p className="text-sm text-muted-foreground mt-0.5">{sessions.length} sesi tersedia</p>
       </div>
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {sessions.map((s) => (
           <SessionCard key={s.id} session={s} onClick={() => setActiveSession(s)} />
         ))}

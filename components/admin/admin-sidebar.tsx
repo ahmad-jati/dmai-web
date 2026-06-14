@@ -23,14 +23,20 @@ type AdminSidebarProps = {
 
 export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const [adminEmail, setAdminEmail] = useState<string | null>(null)
+  const [adminName, setAdminName] = useState<string | null>(null)
   const router = useRouter()
   const pathname = usePathname()
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const get = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
+
+      console.log(user)
+      setAdminName(user?.user_metadata?.full_name ?? null)
       setAdminEmail(user?.email ?? null)
+      setIsLoading(false)
     }
     get()
   }, [])
@@ -94,9 +100,13 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
 
       {/* Footer */}
       <div className="px-3 pb-5 border-t border-border pt-4 flex flex-col items-center gap-3">
-        <p className="text-sm text-foreground truncate w-full text-center font-medium">
-          Hi, {adminEmail}
-        </p>
+        {isLoading ? (
+          <div className="h-4 w-full rounded bg-muted animate-pulse" />
+        ) : (
+          <p className="text-p/4.5 text-foreground line-clamp-2 w-full text-center font-medium px-3 text-clip">
+            Hi, {adminName ?? adminEmail}
+          </p>
+        )}
         <Button
           variant="ghost"
           onClick={logout}
@@ -126,7 +136,7 @@ function SidebarLink({
       href={href as Route}
       className={`flex items-center gap-3 px-3 py-2 text-sm transition-colors font-semibold rounded-md
         ${active
-          ? "bg-white text-foreground"
+          ? "bg-lemon text-foreground"
           : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
         }`}
     >
