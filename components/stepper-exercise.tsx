@@ -9,7 +9,7 @@ import {
   PauseIcon, PlayIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon,
   RepeatOnceIcon, MusicNotesIcon, CaretDownIcon,
 } from "@phosphor-icons/react"
-import type { SessionInstruction } from "@/lib/data-detail-session"
+import type { SessionData } from "@/lib/data-detail-session.client"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import { useBGMPlayer } from "@/lib/hooks/useBGMPlayer"
@@ -24,6 +24,7 @@ type Track = {
   audio_url: string
   duration_seconds: number | null
 }
+type SessionInstruction = SessionData['instructions'][number]
 
 type Props = {
   instructions: SessionInstruction[]
