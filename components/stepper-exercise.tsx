@@ -392,7 +392,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
             onClick={handleBack}
             aria-label="Kembali ke halaman sesi"
             variant={'default'}
-            className="2xs:rounded-xl [&_svg]:size-4 rounded-sm px-1 py-1.5 h-fit! border-muted-foreground "
+            className="2xs:rounded-xl xs:rounded-lg rounded-sm [&_svg]:size-4 px-1 py-1.5 xs:h-full h-fit border-muted-foreground "
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
           </Button>
@@ -703,7 +703,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
             </div>
 
             {/* Bottom: controls */}
-            <div className="flex flex-col items-center gap-2 px-3">
+            <div className="flex flex-col items-center gap-3.5 px-3">
               <div className="flex items-center justify-center gap-2 bg-background rounded-full px-2 py-1.5 w-full">
 
                 <Button
@@ -770,7 +770,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
                 )}
               </div>
 
-              <p className="xs:text-p text-sm text-white/40 text-center font-semibold">DMAI - {sessionName} Session</p>
+              <p className="lg:text-p text-sm text-white/40 text-center font-semibold">DMAI - {sessionName} Session</p>
             </div>
 
           </div>
