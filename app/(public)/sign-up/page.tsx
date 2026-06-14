@@ -12,16 +12,16 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <div className="w-full">
-      <div className="flex md:flex-row flex-col sm:gap-8 gap-6 w-full min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)]">
+      <div className="flex md:flex-row flex-col sm:gap-8 gap-6 w-full min-h-[calc(60svh-64px)] md:min-h-[calc(70dvh-52px)]">
         <Section className="bg-white p-4! w-full lg:block hidden">
-          <div className="lg:h-full w-full h-66 rounded-4xl  bg-tangerine flex items-center justify-center p-2">
+          <div className="min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:h-full w-full h-66 rounded-4xl bg-tangerine flex items-center justify-center p-2">
             <Image
               src={"/tropicaline/Together.png"}
               alt=""
               width={2000}
               height={2000}
               priority
-              className=" h-full w-full object-contain"
+              className="w-122 h-full lg:object-cover object-contain"
             />
           </div>
         </Section>

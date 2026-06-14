@@ -34,10 +34,13 @@ export function HeroOnboarding() {
           </p>
         </div>
 
-        <Button asChild variant={'default'}>
+        <Button 
+          variant={'default'}
+          className="[&_svg]:size-3.5"
+        >
           <Link href={'/login' as Route} className="flex gap-2 items-center">
             COBA SEKARANG
-            <ArrowRightIcon className="w-5 h-5" />
+            <ArrowRightIcon/>
           </Link>
         </Button>
       </div>

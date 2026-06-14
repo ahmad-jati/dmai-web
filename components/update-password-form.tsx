@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Section } from "./layout/section-wrapper";
 import Image from "next/image";
-import { PasswordIcon } from "@phosphor-icons/react";
+import { PasswordIcon, SpinnerIcon } from "@phosphor-icons/react";
 
 export function UpdatePasswordForm({
   ...props
@@ -75,7 +75,7 @@ export function UpdatePasswordForm({
 
   return (
     <div className="w-full">
-      <Section className="flex lg:flex-row flex-col-reverse md:items-center justify-center items-end md:gap-8 gap-0 bg-lemon min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:px-20">
+      <Section className="flex lg:flex-row flex-col-reverse md:items-center justify-center items-end md:gap-8 gap-0 bg-white min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:px-20">
         <div className="lg:flex-1 w-full lg:max-w-120 flex flex-col gap-3.5 items-start text-foreground md:px-0 px-2 md:mt-0 xs:-mt-10 -mt-4">
           <PasswordIcon className="text-foreground md:w-10 md:h-10 w-16 h-16" />
           <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-pretty">Set your new password</h2>
@@ -84,7 +84,7 @@ export function UpdatePasswordForm({
           </p>
 
           {!sessionReady && !error && (
-            <p className="font-medium text-muted-foreground sm:text-p/5 text-sm/4">Memverifikasi sesi...</p>
+            <p className="font-medium text-muted-foreground sm:text-p/5 text-sm/4 italic">Memverifikasi sesi...</p>
           )}
 
           {error && (
@@ -103,11 +103,23 @@ export function UpdatePasswordForm({
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="rounded-full px-3 text-sm"
+                    className="rounded-full pr-10 text-sm "
+                    disabled={isLoading}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Simpan..." : "Simpan password baru"}
+                  <Button
+                    type="submit"
+                    className={`max-w-66 w-full bg-lemon flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5`}
+                    disabled={isLoading}
+                  >
+                  {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin" />}
+                  {isLoading ? (
+                    <span className="text-center leading-tight px-1">
+                      Memperbarui password kamu
+                    </span>
+                  ) : (
+                    "Simpan password baru"
+                  )}
                 </Button>
               </div>
             </form>

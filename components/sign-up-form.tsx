@@ -16,7 +16,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
+import { EyeIcon, EyeSlashIcon, SpinnerIcon } from "@phosphor-icons/react";
 
 export function SignUpForm({
   className,
@@ -57,8 +57,8 @@ export function SignUpForm({
     }
   };
 
-  return (
-    <div className='flex flex-col items-center gap-8'>
+return (
+    <div className='flex flex-col items-center sm:gap-8 gap-4 '>
       <div className="flex flex-col gap-4">
         <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold md:text-left text-center text-pretty">Let&apos;s prepare your account.</h2>
         <p className="xs:text-p/5 text-sm/4 font-medium md:text-left text-center text-pretty">
@@ -66,8 +66,8 @@ export function SignUpForm({
         </p>
       </div>
       <div className="w-full">
-        <form onSubmit={handleSignUp}>
-            <div className="flex flex-col gap-6">
+        <form onSubmit={handleSignUp} className="w-full flex flex-col justify-center items-center">
+            <div className="flex flex-col sm:gap-6 gap-4 w-full">
               <div className="grid gap-2">
                 <Label htmlFor="fullname">Nama</Label>
                 <Input
@@ -87,6 +87,7 @@ export function SignUpForm({
                   autoComplete="off"
                   />
               </div>
+              
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -100,6 +101,7 @@ export function SignUpForm({
                   className="rounded-full px-3 text-sm font-medium"
                   />
               </div>
+
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Kata Sandi</Label>
@@ -130,10 +132,25 @@ export function SignUpForm({
                   </button>
                 </div>
               </div>
+
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full bg-tangerine" disabled={isLoading}>
-                {isLoading ? "Menyiapkan akun..." : "Daftar"}
-              </Button>
+              
+              <div className="w-full flex justify-center">
+              <Button
+                type="submit"
+                className={`max-w-80 w-full bg-tangerine flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5`}
+                disabled={isLoading}
+              >
+              {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin" />}
+              {isLoading ? (
+                <span className="text-center leading-tight px-1">
+                  Menyiapkan akun...
+                </span>
+              ) : (
+                "Daftar"
+              )}
+            </Button>
+            </div>
             </div>
             <div className="mt-4 text-center text-sm">
               Sudah punya akun?{" "}
