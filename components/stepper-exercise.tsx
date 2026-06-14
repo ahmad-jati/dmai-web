@@ -570,16 +570,15 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
 
               {/* Back button — left */}
               <div className="flex-1 flex justify-start">
-                <button
+                <Button
                   onClick={handleBack}
+                  variant={'link'}
                   aria-label="Kembali ke halaman sesi"
-                  className="flex items-center justify-center w-9 h-9 rounded-full
-                            bg-background/90 text-foreground/80 border border-foreground
-                            hover:bg-muted-foreground/90 hover:text-white hover:cursor-pointer
-                            transition-all duration-150 ease-out"
+                  className="flex items-center justify-center text-background"
                 >
                   <ArrowLeftIcon weight="bold" className="w-4 h-4" />
-                </button>
+                  Kembali
+                </Button>
               </div>
 
               {/* Step dots — center */}

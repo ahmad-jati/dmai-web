@@ -26,7 +26,7 @@ function ExerciseLoadingSkeleton() {
         <div className="flex-1 md:rounded-4xl rounded-xl overflow-hidden relative">
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             <Spinner />
-            <p className="text-sm text-muted-foreground">Memuat sesi...</p>
+            <p className="text-sm text-muted-foreground">Mempersiapkan sesi...</p>
           </div>
         </div>
       </div>
