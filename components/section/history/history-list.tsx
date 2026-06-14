@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { CalendarIcon, ClockIcon, ArrowDownIcon, ArrowArcRightIcon, ArrowRightIcon } from "@phosphor-icons/react"
+import { CalendarIcon, ClockIcon, ArrowDownIcon, ArrowArcRightIcon, ArrowRightIcon, SpinnerIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
@@ -87,25 +87,26 @@ function HistorySkeleton() {
 
 function HistoryItemCard({ item }: { item: CompletionRecord }) {
   return (
-    <div className="flex flex-col items-start justify-between gap-2 bg-background rounded-xl border border-foreground/15 px-4 py-3 hover:border-foreground/30 transition-colors group">
-      <div className="flex items-center gap-2 min-w-0">
-        <p className="font-semibold xs:text-p/5 text-xs/3.5">{item.session_name}</p>
-        <Button
-          className="[&_svg]:size-3.5 h-fit bg-none w-fit p-0 border-0 font-medium rounded-full hidden group-hover:inline "
-          
-        >
-          <Link 
-            href={`/session/${item.session_slug}`}
-            className="flex items-center gap-2"
-          >
-            <ArrowRightIcon/>
-          </Link>
-        </Button>
+    <div className="flex items-center justify-between gap-3 bg-background rounded-xl border border-foreground/15 px-4 py-3 hover:border-foreground/30 transition-colors">
+      <div className="flex flex-col gap-1.5 min-w-0">
+        <p className="font-semibold xs:text-p/5 text-xs/3.5 truncate">{item.session_name}</p>
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <ClockIcon className="w-3.5 h-3.5 shrink-0" />
+          <span className="text-xs font-medium">{formatTime(item.completed_at)}</span>
+        </div>
       </div>
-      <div className="flex items-center gap-1.5 shrink-0 text-muted-foreground">
-        <ClockIcon className="w-3.5 h-3.5" />
-        <span className="text-xs font-medium">{formatTime(item.completed_at)}</span>
-      </div>
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="shrink-0 h-fit! xs:text-xs text-2xs xs:px-2.5 px-2 py-1! xs:gap-1.5 gap-1 font-medium xs:[&_svg]:size-3.5 [&_svg]:size-3 rounded-sm!"
+        asChild
+      >
+        <Link href={`/session/${item.session_slug}`}>
+          Lihat 
+          <ArrowRightIcon className="w-3.5 h-3.5" />
+        </Link>
+      </Button>
     </div>
   )
 }
@@ -120,7 +121,7 @@ function DayGroup({ group }: { group: GroupedDay }) {
         <p className="xs:text-p/5 text-sm/4 font-semibold text-foreground">{group.label}</p>
         <span className="xs:text-p/5 text-xs/3.5 text-muted-foreground">({group.items.length} sesi)</span>
       </div>
-      <div className="grid md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-2 pl-1">
+      <div className="grid 2xs:grid-cols-2 grid-cols-1 gap-2 pl-1">
         {group.items.map((item) => (
           <HistoryItemCard key={item.id} item={item} />
         ))}
@@ -234,12 +235,6 @@ export function HistoryList() {
         <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">Riwayat Sesi</h2>
 
         <div className="pr-4 lg:pb-8 overflow-y-auto w-full">
-          {/* {!isEmpty && (
-            <p className="text-sm text-muted-foreground">
-              {totalSessions} sesi dalam {RECENT_DAYS} hari terakhir
-              {showOlder ? ` + ${OLDER_DAYS} hari sebelumnya` : ''}
-            </p>
-          )} */}
           
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
@@ -258,8 +253,8 @@ export function HistoryList() {
 
             {/* Older section */}
             {showOlder && olderGroups.length > 0 && (
-              <div className="flex flex-col gap-6 pt-2 border-t border-foreground/10">
-                <p className="xs:text-p/5 text-sm/4 text-muted-foreground">
+              <div className="flex flex-col sm:gap-6 gap-4 sm::mt-8 mt-6 border-t border-foreground/10">
+                <p className="xs:text-p/5 text-sm/4 text-muted-foreground pt-2">
                   {OLDER_DAYS} hari sebelumnya
                 </p>
                 {olderGroups.map((group) => (
@@ -274,10 +269,10 @@ export function HistoryList() {
                 <Button 
                   onClick={handleLoadOlder}
                   disabled={loadingOlder}
-                  className="flex items-center gap-2 px-4 py-2 text-sm hover:border-foreground/40 hover:bg-foreground/5 transition-all disabled:opacity-50"
+                  className="max-w-80 w-full bg-white flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5"
                 >
                   {loadingOlder ? (
-                    <span className="animate-spin w-4 h-4 border-2 border-foreground/30 border-t-foreground/70 rounded-full" />
+                     <SpinnerIcon className="w-4 h-4 animate-spin" />
                   ) : (
                     <ArrowDownIcon className="w-4 h-4" />
                   )}

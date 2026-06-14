@@ -49,7 +49,7 @@ export function OtherSessionList({ excludeSlug }: { excludeSlug?: string }) {
         <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold sm:text-left text-center">Other Session</h2>
         <p className="xs:text-p/5 text-sm/4 sm:max-w-140 font-medium sm:text-left text-center text-pretty">Temukan sesi lain yang bisa menemanimu hari ini.</p>
       </div>
-      <div className="grid lg:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-3.5 w-full">
+      <div className="grid lg:grid-cols-3 3md:grid-cols-2 grid-cols-1 gap-3.5 w-full">
         {loading
           ? Array.from({ length: 6 }).map((_, i) => <SessionCardSkeleton key={i} />)
           : filtered.map((session) => (

@@ -45,7 +45,7 @@ export function SessionList({ excludeSlug }: { excludeSlug?: string }) {
       </div>
 
       <div className="
-        grid 2lg:grid-cols-4 2md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-3.5 
+        grid 2lg:grid-cols-4 3md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-3.5 
         w-full
       ">
         {loading

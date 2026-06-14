@@ -34,7 +34,6 @@ export function ProtectedNavbar() {
     const getUser = async () => {
       const supabase = createClient();
 
-      // Fast path: login page stores name in sessionStorage on redirect
       const cached = sessionStorage.getItem("user_full_name");
       if (cached) {
         setUserName(cached);
@@ -62,68 +61,67 @@ export function ProtectedNavbar() {
   };
 
   return (
+    // id="navbar-app" is used by globals.css to hide during exercise fullscreen
     <nav
-      id="navbar-app" 
-      className="w-full flex justify-between items-center bg-white sm:rounded-b-5xl xs:p-6 p-4 rounded-b-xl border border-foreground border-t-0
-      ">
-      <Link
-        href={'/homepage'}
-        className="text-app-name hover:font-bold font-semibold"
-      >
-        DMAI
-      </Link>
-
-      <div className="flex gap-3 items-center">
-        <p
-          className="text-md font-medium text-foreground transition-opacity duration-500 sm:block hidden"
-          style={{ opacity: greetingVisible && userName ? 1 : 0 }}
+      id="navbar-app"
+      className="fixed top-0 left-0 right-0 z-40 flex justify-center md:px-16 px-6 lg:max-w-7xl mx-auto"
+    >
+      <div className="w-full flex justify-between items-center bg-white md:rounded-b-5xl rounded-b-xl xs:p-6 p-4 border border-foreground border-t-0">
+        <Link
+          href={'/homepage'}
+          className="text-app-name hover:font-bold font-semibold"
         >
-          {greeting}, <span>{userName}</span>!
-        </p>
+          DMAI
+        </Link>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant={'ghost'} className="rounded-sm px-2 py-1 [&_svg]:size-5 hover:bg-background transition-all hover:border hover:border-foreground">
-              <ListIcon />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="sm:w-44 w-fit bg-background">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="sm:hidden block">
-                <p
-                  className="sm:text-p/5 xs:text-sm/4 font-medium text-muted-foreground transition-opacity duration-500 "
-                  style={{ opacity: greetingVisible && userName ? 1 : 0 }}
+        <div className="flex gap-3 items-center">
+          <p
+            className="text-md font-medium text-foreground transition-opacity duration-500 sm:block hidden"
+            style={{ opacity: greetingVisible && userName ? 1 : 0 }}
+          >
+            {greeting}, <span>{userName}</span>!
+          </p>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant={'ghost'} className="rounded-sm px-2 py-1 [&_svg]:size-5 hover:bg-background transition-all hover:border hover:border-foreground">
+                <ListIcon />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="sm:w-44 w-fit bg-background">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="sm:hidden block">
+                  <p
+                    className="sm:text-p/5 xs:text-sm/4 font-medium text-muted-foreground transition-opacity duration-500"
+                    style={{ opacity: greetingVisible && userName ? 1 : 0 }}
+                  >
+                    {greeting}, <span>{userName}</span>!
+                  </p>
+                </DropdownMenuLabel>
+                <DropdownMenuItem asChild className="[&_svg]:size-4">
+                  <Link href="/homepage" className="flex gap-2 items-center cursor-pointer">
+                    <HouseIcon />
+                    Homepage
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="[&_svg]:size-4">
+                  <Link href="/history" className="flex gap-2 items-center cursor-pointer">
+                    <ClockCounterClockwiseIcon />
+                    Riwayat Sesi
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={logout}
+                  className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md text-destructive hover:bg-destructive/70 hover:cursor-pointer hover:text-background"
                 >
-                  {greeting}, <span>{userName}</span>!
-                </p>
-              </DropdownMenuLabel>
-              <DropdownMenuItem asChild
-                className="[&_svg]:size-4"
-              >
-                <Link href="/homepage" className="flex gap-2 items-center cursor-pointer">
-                  <HouseIcon />
-                  Homepage
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="[&_svg]:size-4"
-              >
-                <Link href="/history" className="flex gap-2 items-center cursor-pointer">
-                  <ClockCounterClockwiseIcon />
-                  Riwayat Sesi
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={logout}
-                className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md text-destructive hover:bg-destructive/70 hover:cursor-pointer hover:text-background"
-              >
-                <SignOutIcon />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                  <SignOutIcon />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </nav>
   );
