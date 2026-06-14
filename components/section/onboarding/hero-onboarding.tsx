@@ -28,7 +28,7 @@ export function HeroOnboarding() {
           animation: 'hero-fadein-up 700ms ease-out 600ms both',
         }}
       >
-        <div className="md:w-102 sm:h-74 w-full xs:h-60 h-44">
+        <div className="md:w-102 md:h-74 sm:h-74 w-full xs:h-60 h-44">
           <Image
             src={'/tropicaline/compress/happy.png'}
             alt="Being Happy 2 (Tropicaline Illustrations)"

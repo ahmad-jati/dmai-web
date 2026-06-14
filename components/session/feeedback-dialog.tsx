@@ -127,7 +127,7 @@ export function FeedbackDialog({
           <Button
             onClick={handleSubmit}
             disabled={!selectedMood || saving}
-            className="flex-1 bg-celeste text-foreground hover:bg-celeste/80 disabled:opacity-90"
+            className="flex-1 disabled:text-foreground bg-background hover:bg-celeste "
           >
             {saving ? (
               <span className="flex items-center gap-2">
