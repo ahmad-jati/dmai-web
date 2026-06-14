@@ -12,11 +12,11 @@ function SessionCardSkeleton() {
   return (
     <div className="flex flex-col gap-0 bg-background rounded-lg border border-foreground/20 w-full overflow-hidden animate-pulse">
       {/* image placeholder */}
-      <div className="w-full 2md:h-40 md:h-40 2xs:h-30 h-20 bg-foreground/8" />
+      <div className="w-full h-20 3md:h-40 2md:h-40 md:h-40 bg-foreground/8" />
       <div className="flex flex-col gap-2 p-3">
-        <div className="2xs:h-3.5 h-3 bg-foreground/10 rounded w-3/4" />
-        <div className="2xs:h-3 h-2.5 bg-foreground/8 rounded w-full" />
-        <div className="2xs:h-2.5 h-2 bg-foreground/6 rounded w-1/2 mt-0.5" />
+        <div className="h-3 3md:h-3.5 2md:h-3.5 bg-foreground/10 rounded w-3/4" />
+        <div className="h-2.5 3md:h-3 2md:h-3 bg-foreground/8 rounded w-full" />
+        <div className="h-2 3md:h-2.5 2md:h-2.5 bg-foreground/6 rounded w-1/2 mt-0.5" />
       </div>
     </div>
   )

@@ -157,6 +157,13 @@
 }
 
 @theme inline {
+  /* Custom breakpoints */
+  --screen-xs: 420px;
+  --screen-2xs: 520px;
+  --screen-2md: 876px;
+  --screen-3md: 942px;
+  --screen-2lg: 1110px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
