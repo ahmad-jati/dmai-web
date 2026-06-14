@@ -14,7 +14,6 @@ export function HeroHomepage() {
           width={2000}
           height={2000}
           priority
-          unoptimized
           className="w-full h-full object-contain"
         />
       </div>

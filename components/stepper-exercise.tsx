@@ -7,6 +7,7 @@ import {
   RepeatIcon, SpeakerSlashIcon, SpeakerHighIcon,
   PauseIcon, PlayIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon,
   RepeatOnceIcon, MusicNotesIcon, CaretDownIcon,
+  HouseSimpleIcon,
 } from "@phosphor-icons/react"
 import type { SessionInstruction } from "@/lib/data-detail-session"
 import { createClient } from "@/lib/supabase/client"
@@ -15,6 +16,7 @@ import { useBGMPlayer } from "@/lib/hooks/useBGMPlayer"
 import { useNarrationPlayback } from "@/lib/hooks/useNarrationPlayback"
 import { useExerciseFullscreen } from "@/lib/hooks/useExerciseFullscreen"
 import { Spinner } from "./ui/spinner"
+import { Arrow } from "@radix-ui/react-dropdown-menu"
 
 type Track = {
   id: string
@@ -327,7 +329,7 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
   if (!isReady) {
     return (
       // Fullscreen also on desktop — no Section wrapper, fixed inset-0
-      <div className="fixed inset-0 z-50 flex items-stretch justify-stretch p-4 bg-celeste">
+      <div className="fixed inset-0 z-50 flex items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
         <div className="flex-1 rounded-4xl overflow-hidden relative">
           <Image src={step.image} alt={step.title} fill unoptimized priority className="object-cover object-center" />
           <div className="absolute inset-0 bg-black/30 rounded-4xl" />
@@ -352,15 +354,14 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
 
         {/* Top bar: back button + BGM selector */}
         <div className="flex items-center gap-2 shrink-0">
-          {onBack && (
-            <button
-              onClick={onBack}
-              aria-label="Kembali ke halaman sesi"
-              className="flex items-center justify-center w-9 h-9 rounded-lg bg-background border border-muted-foreground text-foreground hover:bg-foreground/10 transition-colors shrink-0"
-            >
-              <ArrowLeftIcon weight="bold" className="w-4 h-4" />
-            </button>
-          )}
+          <Button
+            onClick={onBack}
+            aria-label="Kembali ke halaman sesi"
+            variant={'default'}
+            className="2xs:rounded-xl rounded-lg p-3 h-full border-muted-foreground"
+          >
+            <ArrowLeftIcon weight="bold" className="w-4 h-4" />
+          </Button>
 
           <button
             ref={bgmButtonMobileRef}
@@ -394,8 +395,8 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
         </div>
 
         {/* Cover image — centered horizontally */}
-        <div className="flex justify-center shrink-0">
-          <div className="relative xs:max-w-40 w-full aspect-square 2xs:rounded-3xl rounded-xl overflow-hidden">
+        <div className="flex justify-center shrink-0 flex-1 sm:px-16 xs:px-0 2xs:min-h-[calc(56dvh-52px)]">
+          <div className="relative w-full h-full 2xs:rounded-3xl rounded-xl overflow-hidden">
             <Image
               key={step.image}
               src={step.image}
@@ -540,10 +541,10 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
           <div className="relative z-10 flex flex-col items-center justify-between h-full w-full py-8 px-6">
 
             {/* Top bar */}
-            <div className="flex flex-row-reverse items-center w-full gap-3">
+            <div className="flex flex-row-reverse justify-between items-center w-full bg-blue-100/20">
 
               {/* BGM pill */}
-              <div className="relative flex-1 flex justify-end">
+              <div className="flex justify-end flex-1 bg-amber-100/20">
                 <button
                   ref={bgmButtonRef}
                   onClick={() => openMusicTray(bgmButtonRef, false)}
@@ -571,7 +572,7 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
               </div>
 
               {/* Step dots */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-1 bg-amber-50/20">
                 {instructions.map((instr, i) => (
                   <button
                     key={i}
@@ -589,6 +590,13 @@ export function StepperExercise({ instructions, onDone, onBack }: Props) {
                     )} />
                   </button>
                 ))}
+              </div>
+
+              <div className="bg-amber-100/20  flex-1 ">
+                <Button variant="link" size="sm" className="[&_svg]:size-3.5 rounded-md gap-2 p-0 text-sm w-fit text-background">
+                  <ArrowLeftIcon className="w-4 h-4" />
+                  Kembali 
+                </Button>
               </div>
 
               {/* Back button — left side */}
