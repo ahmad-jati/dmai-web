@@ -95,7 +95,7 @@ function HistoryItemCard({ item }: { item: CompletionRecord }) {
           <span className="text-xs font-medium">{formatTime(item.completed_at)}</span>
         </div>
       </div>
-
+                                   
       <Button
         variant="outline"
         size="sm"
@@ -227,6 +227,7 @@ export function HistoryList() {
           width={2000}
           height={2000}
           priority
+          unoptimized
           className="w-full h-full object-contain"
         />
       </div>

@@ -1,12 +1,18 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
 
 export function SplashScreen() {
+  const pathname = usePathname()
   const [fading, setFading] = useState(false)
   const [gone, setGone] = useState(false)
 
+  const skip = pathname === '/not-found'
+
   useEffect(() => {
+    if (skip) return
+
     document.body.style.overflow = 'hidden'
 
     const fadeTimer = setTimeout(() => setFading(true), 2400)
@@ -15,13 +21,13 @@ export function SplashScreen() {
       clearTimeout(fadeTimer)
       clearTimeout(removeTimer)
     }
-  }, [])
+  }, [skip])
 
   useEffect(() => {
     if (gone) document.body.style.overflow = ''
   }, [gone])
 
-  if (gone) return null
+  if (skip || gone) return null
 
   return (
     <div

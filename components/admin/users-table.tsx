@@ -144,7 +144,7 @@ function UserTableSection({
               <TableHead className="w-60">Nama</TableHead>
               <TableHead className="w-60">Email</TableHead>
               <TableHead className="w-30">Terdaftar</TableHead>
-              <TableHead className="text-center w-10">Aksi</TableHead>
+              {/* <TableHead className="text-center w-10">Aksi</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -165,7 +165,7 @@ function UserTableSection({
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{fmtDate(u.created_at)}</TableCell>
-                  <TableCell className="text-center">
+                  {/* <TableCell className="text-center">
                     <Button
                       variant="outline"
                       size="sm"
@@ -178,7 +178,7 @@ function UserTableSection({
                         : <MagicWandIcon className="w-3.5 h-3.5" />}
                       Reset Password
                     </Button>
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>
               ))
             )}
