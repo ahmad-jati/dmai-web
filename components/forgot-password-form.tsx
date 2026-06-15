@@ -75,7 +75,7 @@ export function ForgotPasswordForm({
             <div className="lg:flex-1 w-full lg:max-w-120 flex flex-col gap-3.5 items-start text-foreground">
               <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-center">Find your way back</h2>
               <p className="sm:text-p/5 text-sm/4 max-w-140 font-medium">
-                Masukkan email kamu, lalu kami akan bantu kirimkan tautan reset agar kamu bisa kembali mengakses akunmu.
+                Masukkan email kamu, lalu kami akan bantu kirimkan tautan reset password agar kamu bisa kembali mengakses akunmu.
               </p>
               <form onSubmit={handleForgotPassword} className="w-full">
                 <div className="flex flex-col gap-6">
@@ -84,7 +84,7 @@ export function ForgotPasswordForm({
                     <Input
                       id="email"
                       type="email"
-                      placeholder="m@example.com"
+                      placeholder="dmai@gmail.com"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -93,7 +93,7 @@ export function ForgotPasswordForm({
                   </div>
                   {error && <p className="text-sm text-red-500">{error}</p>}
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Sending..." : "Send reset email"}
+                    {isLoading ? "Kirim..." : "Kirim Email Reset Password"}
                   </Button>
                 </div>
               </form>
