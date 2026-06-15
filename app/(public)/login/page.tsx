@@ -19,6 +19,7 @@ export default function Page() {
               alt=""
               width={2000}
               height={2000}
+              unoptimized
               priority
               className="w-full h-full object-contain"
             />
@@ -32,6 +33,7 @@ export default function Page() {
               alt=""
               width={2000}
               height={2000}
+              unoptimized
               priority
               className="w-122 h-full object-contain"
             />

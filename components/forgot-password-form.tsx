@@ -63,6 +63,7 @@ export function ForgotPasswordForm({
                 alt=""
                 width={2000}
                 height={2000}
+                unoptimized
                 priority
                 className="w-full h-full object-contain"
               />
@@ -105,6 +106,7 @@ export function ForgotPasswordForm({
                 width={2000}
                 height={2000}
                 priority
+                unoptimized
                 className="w-full h-full object-contain"
               />
             </div>

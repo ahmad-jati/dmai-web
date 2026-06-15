@@ -34,6 +34,7 @@ export function HeroOnboarding() {
             alt="Being Happy 2 (Tropicaline Illustrations)"
             width={2000}
             height={2000}
+            unoptimized
             priority
             className="w-full h-full object-contain"
           />

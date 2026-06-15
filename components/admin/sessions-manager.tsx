@@ -734,7 +734,14 @@ function SessionDetailView({
             <Label>Gambar Cover</Label>
             <div className="w-full aspect-square rounded-sm overflow-hidden border border-border bg-muted">
               {coverPreview ? (
-                <Image src={coverPreview} alt="cover" width={320} height={320} className="w-full h-full object-cover bg-muted-foreground/10" unoptimized />
+                <Image 
+                  src={coverPreview} 
+                  alt="cover" 
+                  width={320} 
+                  height={320} 
+                  className="w-full h-full object-cover bg-muted-foreground/10" 
+                  unoptimized
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">Belum ada gambar</div>
               )}
@@ -810,7 +817,14 @@ function SessionDetailView({
                     </TableCell>
                     <TableCell>
                       {step.image_url ? (
-                        <Image src={step.image_url} alt={step.title ?? `Step ${step.step_number}`} width={48} height={48} className="w-12 h-12 object-cover border border-border rounded-sm bg-muted-foreground/10" unoptimized />
+                        <Image 
+                          src={step.image_url} 
+                          alt={step.title ?? `Step ${step.step_number}`} 
+                          width={48} 
+                          height={48} 
+                          className="w-12 h-12 object-cover border border-border rounded-sm bg-muted-foreground/10" 
+                          unoptimized 
+                        />
                       ) : (
                         <div className="w-12 h-12 bg-muted border border-border rounded-sm flex items-center justify-center text-xs text-muted-foreground">—</div>
                       )}
@@ -893,7 +907,14 @@ function SessionCard({ session, onClick }: { session: SessionRecord; onClick: ()
       <div className="flex items-start gap-3 w-full">
         <div className="w-14 h-14 rounded-sm overflow-hidden border border-border bg-muted shrink-0">
           {session.image_cover_url ? (
-            <Image src={session.image_cover_url} alt={session.session_name} width={48} height={48} className="w-full h-full object-cover bg-muted-foreground/10" unoptimized />
+            <Image 
+              src={session.image_cover_url} 
+              alt={session.session_name} 
+              width={48} 
+              height={48} 
+              className="w-full h-full object-cover bg-muted-foreground/10" 
+              unoptimized
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-2xs text-muted-foreground">—</div>
           )}
