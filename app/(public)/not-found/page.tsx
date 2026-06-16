@@ -18,15 +18,15 @@ export default function Page() {
             Halaman yang kamu cari tidak ditemukan
           </p>
 
-          <Button
-            variant={'default'}
-            className="[&_svg]:size-4 xs:text-p/5 text-xs/4 rounded-xl hover:bg-background/80 dark:bg-primary"
-          >
-            <Link href={'/homepage' as Route} className="flex gap-2 items-center">
+          <Link href={'/homepage' as Route} className="flex gap-2 items-center">
+            <Button
+              variant={'default'}
+              className="[&_svg]:size-4 xs:text-p/5 text-xs/4 rounded-xl hover:bg-background/80 dark:bg-primary"
+            >
               <ArrowLeftIcon/>
               Kembali ke Homepage
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </div>
 
         <div className="xl:w-50 lg:w-56 lg:h-106 2md:w-50 2xs:w-60 w-50 h-fit xs:px-0 p-4">

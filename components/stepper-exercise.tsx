@@ -30,11 +30,12 @@ type Props = {
   instructions: SessionInstruction[]
   sessionName: string
   sessionSlug: string
+  sessionImageCover: string
   onDone: () => void
   onBack?: () => void
 }
 
-export function StepperExercise({ instructions, sessionName, sessionSlug, onDone, onBack }: Props) {
+export function StepperExercise({ instructions, sessionName, sessionSlug, sessionImageCover, onDone, onBack }: Props) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
@@ -352,18 +353,18 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
 
         {/* Session picture */}
         <div className="relative md:w-100 w-60 aspect-square 2xs:rounded-3xl rounded-xl overflow-hidden">
-            <Image
-              key={step.image}
-              src={step.image}
-              alt={step.title}
-              fill
-              unoptimized
-              priority
-              className="object-cover object-center w-full h-full"
-            />
-            <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
-            <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
-          </div>
+          <Image
+            key={step.image}
+            src={sessionImageCover}
+            alt={step.title}
+            fill
+            unoptimized
+            priority
+            className="object-cover object-center w-full h-full"
+          />
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
+        </div>
 
         {/* Loading indicator */}
         <div className="flex flex-col items-center gap-2 text-muted-foreground">

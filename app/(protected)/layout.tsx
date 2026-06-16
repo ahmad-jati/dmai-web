@@ -12,7 +12,7 @@ export default function ProtectedLayout({
       <ProtectedNavbar/>
       <div className="flex flex-col items-center md:px-16 px-6 gap-8 lg:max-w-7xl mx-auto w-full flex-1">
       <DummyPlaceholderNavbar/>
-        <div className="w-full flex-1 bg-amber-200">
+        <div className="w-full flex-">
           {children}
         </div>
         <Footer />

@@ -64,7 +64,7 @@ export function ProtectedNavbar() {
     // id="navbar-app" is used by globals.css to hide during exercise fullscreen
     <nav
       id="navbar-app"
-      className="fixed top-0 left-0 right-0 z-40 flex justify-center md:px-16 px-6 lg:max-w-7xl mx-auto bg-blue-100"
+      className="fixed top-0 left-0 right-0 z-40 flex justify-center md:px-16 px-6 lg:max-w-7xl mx-auto"
     >
       <div className="w-full flex justify-between items-center bg-white dark:bg-secondary dark:text-secondary-foreground text-foreground md:rounded-b-5xl rounded-b-xl xs:p-6 p-4 border border-foreground border-t-0">
         <Link
@@ -113,7 +113,7 @@ export function ProtectedNavbar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={logout}
-                  className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md hover:border-2 border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive! hover:dark:bg-destructive/20 shadow-none hover:cursor-pointer"
+                  className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md hover:border-2 border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive! hover:dark:bg-destructive/20 shadow-none hover:cursor-pointer"
                 >
                   <SignOutIcon />
                   Logout
