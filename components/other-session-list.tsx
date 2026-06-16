@@ -75,7 +75,7 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
               </p>
               <Button
                 variant={"default"}
-                className="md:[&_svg]:size-5 [&_svg]:size-6 font-foreground bg-none rounded-none border-none p-0 h-fit md:hidden block"
+                className="md:[&_svg]:size-5 [&_svg]:size-6 font-foreground bg-transparent rounded-none border-none p-0 h-fit md:hidden block"
               >
                 <ArrowUpRightIcon />
               </Button>

@@ -62,7 +62,7 @@ export async function SessionListServer({ excludeSlug }: Props) {
               </p>
               <Button
                 variant={"default"}
-                className="[&_svg]:size-6 font-foreground bg-none rounded-none border-none p-0 2md:hidden block"
+                className="[&_svg]:size-6 font-foreground bg-transparent rounded-none border-none p-0 2md:hidden block"
               >
                 <ArrowUpRightIcon />
               </Button>

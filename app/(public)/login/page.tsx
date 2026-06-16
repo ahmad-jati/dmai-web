@@ -26,8 +26,8 @@ export default function Page() {
           </div>
           <LoginForm />
         </Section>
-        <Section className="bg-white dark:bg-card p-4! w-full lg:block hidden">
-          <div className="min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:h-full w-full h-66 rounded-4xl dark:rounded-none bg-green dark:bg-card flex items-center justify-center p-2 dark:p-0">
+        <Section className="bg-white dark:bg-card p-4! w-full lg:block hidden flex-1">
+          <div className="h-full w-full rounded-4xl dark:rounded-none bg-green dark:bg-card flex items-center justify-center p-2 dark:p-0">
             <Image
               src={"/tropicaline/compress/happy.png"}
               alt=""
