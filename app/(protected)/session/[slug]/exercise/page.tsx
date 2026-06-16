@@ -119,16 +119,15 @@ export default function ExercisePage({ params }: Props) {
                 Ulangi Sesi Ini
               </Button>
 
-              <Button
-                variant="outline"
-                className="w-full flex items-center gap-2 bg-background dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground "
-                asChild
-              >
-                <Link href={"/homepage" as Route}>
+              <Link href={"/homepage" as Route}>
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center gap-2 bg-background dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground "
+                >
                   <HouseIcon className="w-4 h-4" weight="fill" />
                   Kembali ke Homepage
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             </div>
 
             {!feedbackOpen && (
@@ -163,6 +162,7 @@ export default function ExercisePage({ params }: Props) {
         instructions={session.instructions}
         sessionName={session.session_name}
         sessionSlug={session.slug}
+        sessionImageCover={session.image_cover}
         onDone={handleDone}
       />
     </div>
