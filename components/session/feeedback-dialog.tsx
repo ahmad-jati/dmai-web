@@ -70,7 +70,7 @@ export function FeedbackDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onSkip() }}>
       <DialogContent
-        className="sm:max-w-md xs:max-w-sm"
+        className="sm:max-w-md xs:max-w-sm dark:bg-background"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
@@ -90,8 +90,8 @@ export function FeedbackDialog({
               size={'sm'}
               className={`flex flex-col items-center md:gap-1.5 gap-0 flex-1 py-3 px-1 md:rounded-xl rounded-md border-2 transition-all h-full w-full
                 ${selectedMood === mood.value
-                  ? "border-muted-foreground/60 bg-muted-foreground/10 scale-105"
-                  : "border-border hover:border-muted-foreground/40 hover:bg-muted/30"
+                  ? "border-muted-foreground/60 bg-muted-foreground/10 dark:bg-foreground scale-105 text-foreground dark:text-background"
+                  : "border-border hover:border-muted-foreground/40 hover:bg-accent/70 hover:dark:bg-accent/70  dark:bg-accent/20 hover:dark:border-foreground/40 text-foreground"
                 }`}
             >
               <span className="md:text-2xl xs:text-lg text-sm">{mood.emoji}</span>
@@ -120,14 +120,14 @@ export function FeedbackDialog({
           <Button
             variant="ghost"
             onClick={onSkip}
-            className="flex-1 text-muted-foreground hover:text-foreground"
+            className="flex-1 text-muted-foreground hover:text-foreground hover:dark:bg-transparent"
           >
             Lewati
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!selectedMood || saving}
-            className="flex-1 disabled:text-foreground bg-background hover:bg-celeste "
+            className="flex-1 disabled:text-foreground bg-background dark:bg-primary hover:bg-celeste hover:dark:bg-primary/80"
           >
             {saving ? (
               <span className="flex items-center gap-2">

@@ -14,6 +14,7 @@ export function HeroHomepage() {
           width={2000}
           height={2000}
           priority
+          unoptimized
           className="w-full h-full object-contain"
         />
       </div>
@@ -27,7 +28,7 @@ export function HeroHomepage() {
 
       <Button
         variant={'default'}
-        className="flex gap-2 items-center [&_svg]:size-3.5 hover:bg-background/80"
+        className="flex gap-2 items-center [&_svg]:size-3.5 hover:bg-background/80 dark:bg-primary dark:border-none"
         onClick={() => {
           document.getElementById("session-list")?.scrollIntoView({ behavior: "smooth" });
         }}

@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "DMAI — Digital Mindful Autogenic Intervention",
   description: "A calm mindfulness platform for guided reflective training sessions.",
+  icons: {
+    icon: "/dmai.ico",
+  },
 };
 
 const urbanistSans = Urbanist({
@@ -25,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${urbanistSans.className} antialiased`}>
+      <body className={`${urbanistSans.className} antialiased flex flex-col h-full`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

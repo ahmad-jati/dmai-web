@@ -10,28 +10,30 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="w-full">
-      <div className="flex lg:flex-row flex-col-reverse gap-8">
-        <Section className="min-h-[calc(70svh-64px)] md:min-h-[calc(60dvh-52px)] lg:max-w-120 w-full bg-white flex lg:flex-row flex-col gap-8 justify-center items-center">
-          <div className="w-full xs:h-64 h-full bg-celeste sm:rounded-3xl rounded-lg lg:hidden flex items-center justify-center p-2">
+    <div className="flex h-full w-full">
+      <div className="flex lg:flex-row flex-col-reverse justify-between w-full gap-8">
+        <Section className="flex-1 w-full bg-white dark:bg-card flex flex-col gap-8 justify-center items-center">
+          <div className="w-fit xs:h-64 h-fit bg-celeste dark:bg-card sm:rounded-3xl dark:rounded-none rounded-lg lg:hidden flex items-center justify-center p-4">
             <Image
               src={"/tropicaline/compress/happy.png"}
               alt=""
               width={2000}
               height={2000}
+              unoptimized
               priority
               className="w-full h-full object-contain"
             />
           </div>
           <LoginForm />
         </Section>
-        <Section className="bg-white p-4! w-full lg:block hidden">
-          <div className="min-h-[calc(70svh-64px)] md:min-h-[calc(70dvh-52px)] lg:h-full w-full h-66 rounded-4xl bg-green flex items-center justify-center p-2">
+        <Section className="bg-white dark:bg-card p-4! lg:block hidden flex-1">
+          <div className="h-full w-fit rounded-4xl dark:rounded-none bg-celeste dark:bg-card flex items-center justify-center p-4 dark:p-0">
             <Image
               src={"/tropicaline/compress/happy.png"}
               alt=""
               width={2000}
               height={2000}
+              unoptimized
               priority
               className="w-122 h-full object-contain"
             />

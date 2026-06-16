@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <div className="flex flex-col gap-8 w-full">
-      <Section className="bg-lemon">
+      <Section className="bg-lemon dark:bg-card">
         <HeroHomepage />
       </Section>
-      <Section className="bg-lavender">
+      <Section className="bg-lavender dark:bg-card">
         <SessionList />
       </Section>
     </div>

@@ -20,7 +20,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
   return (
     <div className="flex flex-col gap-8 w-full">
-      <Section className="flex 2md:flex-row flex-col justify-between gap-8 bg-celeste min-h-[calc(64svh-64px)] md:min-h-[calc(42dvh-52px)]">
+      <Section className="flex 2md:flex-row flex-col justify-between gap-8 bg-celeste">
         <div className="flex flex-col 2md:items-start items-center 2md:justify-between 2md:gap-0 gap-4 lg:max-w-xl 2md:max-w-sm">
           
           <div className="2md:flex hidden items-center gap-1">
@@ -84,7 +84,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             ))}
 
             {/* Desktop meta */}
-            <div className="2md:flex hidden flex-col md:items-start items-center gap-1.5 text-muted-foreground">
+            <div className="2md:flex hidden flex-col md:items-start items-center gap-1.5 text-muted-foreground dark:text-popover-foreground">
               <div className="flex items-center gap-1">
                 <PersonSimpleTaiChiIcon className="w-5 h-5" weight="fill" />
                 <p className="font-medium xs:text-p/5 text-xs/3.5">{session.total_instruction} Instruksi</p>
@@ -98,15 +98,15 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             </div>
           </div>
 
-          <Button
-            variant={"default"}
-            className="flex gap-2 items-center [&_svg]:size-3"
-          >
-            <Link href={`/session/${slug}/exercise` as Route} className="flex items-center gap-2">
-              MULAI SESI
+          <Link href={`/session/${slug}/exercise` as Route} className="flex items-center gap-2">
+            <Button
+              variant={"default"}
+              className="flex gap-2 items-center [&_svg]:size-3 dark:bg-primary lg:text-base"
+            >
+              Mulai Sesi
               <PlayIcon className="w-5 h-5" weight="fill" />
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </div>
 
         {/* Desktop image */}

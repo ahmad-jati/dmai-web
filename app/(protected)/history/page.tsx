@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <div className="flex flex-col gap-8 w-full">
-      <Section className="bg-lavender flex gap-8 items-center md:min-h-[calc(60dvh-52px)]">
+      <Section className="bg-lavender flex gap-8 items-center">
         <HistoryList />
       </Section>
     </div>
