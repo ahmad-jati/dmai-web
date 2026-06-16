@@ -8,16 +8,16 @@ export default function PublicLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
+    <div className="flex flex-col flex-1">
       <SplashScreen />
 
-      <div className="flex flex-col items-center md:px-16 px-6 gap-8 lg:max-w-7xl mx-auto min-h-dvh">
-        <MainNavbar/>
-        <div className="flex-1 w-full">
+      <div className="flex flex-col items-center md:px-16 px-6 gap-8 lg:max-w-7xl mx-auto w-full flex-1">
+        <MainNavbar />
+        <div className="flex-1 w-full flex flex-col">
           {children}
         </div>
         <Footer />
       </div>
-    </>
+    </div>
   );
 }

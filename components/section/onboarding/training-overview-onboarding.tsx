@@ -28,7 +28,7 @@ export function TrainingOverviewOnboarding() {
   }, [])
 
   return (
-    <section className="bg-lemon flex flex-col xs:gap-8 gap-4 items-center">
+    <div className="flex flex-col xs:gap-8 gap-4 items-center">
       
       <div className="flex flex-col gap-3 sm:max-w-180 lg:px-6 sm:px-20 xl:hidden">
         <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-center">Discover 7 mindful sessions designed to support your journey. </h2>
@@ -42,6 +42,7 @@ export function TrainingOverviewOnboarding() {
             width={2000}
             height={2000}
             priority
+            unoptimized
             className="w-full h-full object-cover"
           />
         </div>
@@ -58,7 +59,7 @@ export function TrainingOverviewOnboarding() {
               : sessions.map((session) => (
                   <div
                     key={session.slug}
-                    className="flex flex-col justify-between items-end xs:gap-4 gap-1 bg-background p-3 md:rounded-lg rounded-md border border-foreground w-full"
+                    className="flex flex-col justify-between items-end xs:gap-4 gap-1 bg-background dark:bg-secondary dark:text-secondary-foreground text-foreground p-3 lg:rounded-lg md:rounded-lg rounded-md border border-foreground w-full group"
                   >
                     <div className="flex flex-col w-full justify-start gap-1">
                       <p className="xs:text-p/5 text-sm/4 font-bold">{session.session_name}</p>
@@ -80,6 +81,6 @@ export function TrainingOverviewOnboarding() {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }
