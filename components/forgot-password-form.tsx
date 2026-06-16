@@ -47,17 +47,17 @@ export function ForgotPasswordForm({
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full h-full">
+    <div className="flex h-full">
       {success ? (
-        <Section className="flex lg:flex-row flex-col-reverse lg:items-center justify-center items-end  lg:gap-8 gap-6 bg-white dark:bg-card h-full">
-            <div className="flex-1 flex flex-col gap-3.5 items-start text-foreground max-w-120">
+        <Section className="flex-1 flex lg:flex-row flex-col-reverse lg:items-center justify-center items-end lg:gap-8 gap-0 bg-white dark:bg-card">
+            <div className="lg:flex-1 w-full lg:w-120 flex flex-col gap-2 items-start text-foreground">
               <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-center text-pretty">Reset link is on its way</h2>
-              <p className="xs:text-p/5 text-sm/4 max-w-140 font-medium text-pretty">
+              <p className="xs:text-p/5 text-sm/4 lg:max-w-140 font-medium text-pretty">
                 Tautan reset password sudah kami kirimkan. Silakan buka email kamu dan ikuti langkah berikutnya untuk membuat password baru. Kamu bisa menutup tab ini.
               </p>
             </div>
 
-            <div className="lg:w-107 lg:h-96 w-70 h-40 ">
+            <div className="lg:w-107 md:w-100 sm:w-86 xs:w-70 w-full h-fit">
               <Image
                 src={'/tropicaline/compress/Email.png'}
                 alt=""
@@ -70,49 +70,50 @@ export function ForgotPasswordForm({
             </div>
           </Section>
       ) : (
-        <div className="w-full h-full">
-          <Section className="flex lg:flex-row flex-col-reverse lg:items-center justify-center items-end  lg:gap-8 gap-6 bg-white dark:bg-card w-full">
-            <div className="lg:flex-1 w-full lg:max-w-120 flex flex-col gap-3.5 items-start text-foreground">
-              <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-center">Find your way back</h2>
-              <p className="sm:text-p/5 text-sm/4 max-w-140 font-medium">
-                Masukkan email kamu, lalu kami akan bantu kirimkan tautan reset password agar kamu bisa kembali mengakses akunmu.
-              </p>
-              <form onSubmit={handleForgotPassword} className="w-full">
-                <div className="flex flex-col gap-6">
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="dmai@gmail.com"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="rounded-full px-3 text-sm"
-                    />
-                  </div>
-                  {error && <p className="text-sm text-red-500">{error}</p>}
-                  <Button type="submit" className="w-full dark:bg-primary" disabled={isLoading}>
-                    {isLoading ? "Kirim..." : "Kirim Email Reset Password"}
-                  </Button>
+        <Section className="flex-1 flex lg:flex-row flex-col-reverse lg:items-center justify-center items-end lg:gap-8 gap-0 bg-white dark:bg-card">
+          <div className="lg:flex-1 w-full lg:max-w-120 flex flex-col gap-2 items-start text-foreground">
+            <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-center">Find your way back</h2>
+            <p className="sm:text-p/5 text-sm/4 max-w-140 font-medium">
+              Masukkan email kamu, lalu kami akan bantu kirimkan tautan reset password agar kamu bisa kembali mengakses akunmu.
+            </p>
+            <form onSubmit={handleForgotPassword} className="w-full">
+              <div className="flex flex-col gap-6">
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="dmai@gmail.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="rounded-full px-3 text-sm"
+                  />
                 </div>
-              </form>
-            </div>
+                {error && <p className="text-sm text-red-500">{error}</p>}
+                <Button 
+                  type="submit" 
+                  className={`2xs:max-w-66 w-full bg-lemon dark:bg-primary flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5`} 
+                  disabled={isLoading}> 
+                  {isLoading ? "Kirim..." : "Kirim Email Reset Password"}
+                </Button>
+              </div>
+            </form>
+          </div>
 
-            <div className="lg:w-107 lg:h-96 w-70 h-40 ">
-              <Image
-                src={'/tropicaline/compress/Email.png'}
-                alt=""
-                width={2000}
-                height={2000}
-                priority
-                unoptimized
-                className="w-full h-full object-contain"
-              />
-            </div>
+          <div className="lg:w-107 md:w-100 sm:w-86 xs:w-70 w-full h-fit xs:px-0 px-6">
+            <Image
+              src={'/tropicaline/compress/Email.png'}
+              alt=""
+              width={2000}
+              height={2000}
+              priority
+              unoptimized
+              className="w-full h-full object-contain"
+            />
+          </div>
 
-          </Section>
-        </div>
+        </Section>
       )}
     </div>
   );

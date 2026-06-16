@@ -8,11 +8,11 @@ export default function ProtectedLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col justify-center items-center mx-auto min-h-dvh relative">
+    <div className="flex flex-col flex-1 relative">
       <ProtectedNavbar/>
-      <div className="flex flex-col items-center md:px-16 px-6 gap-8 lg:max-w-7xl mx-auto w-full flex-1 ">
+      <div className="flex flex-col items-center md:px-16 px-6 gap-8 lg:max-w-7xl mx-auto w-full flex-1">
       <DummyPlaceholderNavbar/>
-        <div className="flex-1 w-full">
+        <div className="w-full flex-1 bg-amber-200">
           {children}
         </div>
         <Footer />

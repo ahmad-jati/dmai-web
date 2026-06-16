@@ -74,12 +74,12 @@ export function UpdatePasswordForm({
   };
 
   return (
-    <div className="w-full">
-      <Section className="flex lg:flex-row flex-col-reverse lg:items-center justify-center items-end md:gap-8 gap-0 bg-white dark:bg-celeste min-h-[calc(74svh-64px)] md:min-h-[calc(82dvh-52px)] lg:px-20">
-        <div className="lg:flex-1 w-full lg:max-w-120 flex flex-col gap-3.5 items-start text-foreground md:px-0 px-2 md:mt-0 xs:-mt-10 -mt-4">
+    <div className="flex h-full">
+      <Section className="flex-1 flex lg:flex-row flex-col-reverse lg:items-center justify-center items-end lg:gap-8 gap-0 bg-white dark:bg-card">
+        <div className="lg:flex-1 w-full lg:w-120 flex flex-col gap-2 items-start text-foreground ">
           <PasswordIcon className="text-foreground md:w-10 md:h-10 w-16 h-16" />
           <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-pretty">Set your new password</h2>
-          <p className="xs:text-p/5 text-sm/4 font-medium text-pretty">
+          <p className="xs:text-p/5 text-sm/4 font-medium text-pretty -mt-1.5">
             Masukkan password baru yang ingin kamu gunakan untuk kembali mengakses akunmu.
           </p>
 
@@ -99,7 +99,7 @@ export function UpdatePasswordForm({
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Password Baru"
+                    placeholder="●●●●●●●●"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -109,7 +109,7 @@ export function UpdatePasswordForm({
                 </div>
                   <Button
                     type="submit"
-                    className={`max-w-66 w-full bg-lemon dark:bg-primary flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5`}
+                    className={`2xs:max-w-66 w-full bg-lemon dark:bg-primary flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5`}
                     disabled={isLoading}
                   >
                   {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin" />}
@@ -126,7 +126,7 @@ export function UpdatePasswordForm({
           )}
         </div>
 
-        <div className="lg:w-76 lg:h-106 md:w-76 w-60 h-full">
+        <div className="lg:w-76 lg:h-106 md:w-76 xs:w-60 xs:px-0 px-6 h-fit">
           <Image
             src={'/tropicaline/compress/Send.png'}
             alt=""
