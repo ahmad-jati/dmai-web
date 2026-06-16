@@ -155,7 +155,7 @@ export function SignUpForm({
               <div className="w-full flex justify-center">
                 <Button
                   type="submit"
-                  className="max-w-80 w-full bg-tangerine flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5"
+                  className="max-w-80 w-full bg-tangerine dark:bg-primary flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5"
                   disabled={isLoading}
                 >
                   {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin" />}
@@ -174,7 +174,7 @@ export function SignUpForm({
               Sudah punya akun?{" "}
               <Link
                 href="/login"
-                className="hover:underline underline-offset-4 font-bold text-tangerine"
+                className="hover:underline underline-offset-4 font-bold text-tangerine dark:text-primary"
               >
                 Masuk disini
               </Link>

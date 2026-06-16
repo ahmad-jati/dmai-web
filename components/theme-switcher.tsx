@@ -29,36 +29,36 @@ const ThemeSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size={"sm"}>
+        <Button variant="ghost" size={"sm"} className="text-foreground hover:bg-background hover:text-popover-foreground  dark:text-background hover:dark:bg-popover hover:dark:text-popover-foreground hover:border hover:border-foreground p-4">
           {theme === "light" ? (
             <div className="flex gap-2 items-center">
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">Theme: </p>
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Theme: </p>
               <SunIcon
                 key="light"
                 // size={ICON_SIZE}
-                className={"text-muted-foreground size-50"}
+                className={" size-50"}
                 />
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">Light</p>
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Light</p>
             </div>
           ) : theme === "dark" ? (
-            <div className="flex gap-2 items-center text-muted-foreground">
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">Theme: </p>
+            <div className="flex gap-2 items-center ">
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Theme: </p>
               <MoonIcon
                 key="dark"
                 size={ICON_SIZE}
-                className={"text-muted-foreground"}
+                className={""}
               />
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">Dark</p>
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Dark</p>
             </div>
           ) : (
-            <div className="flex gap-2 items-center text-muted-foreground">
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">Theme: </p>
+            <div className="flex gap-2 items-center ">
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Theme: </p>
               <LaptopIcon
                 key="system"
                 size={ICON_SIZE}
-                className={"text-muted-foreground"}
+                className={""}
                 />
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium text-muted-foreground">System</p>
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">System</p>
             </div>
           )}
         </Button>
@@ -69,15 +69,15 @@ const ThemeSwitcher = () => {
           onValueChange={(e) => setTheme(e)}
         >
           <DropdownMenuRadioItem className="flex gap-2" value="light">
-            <SunIcon size={ICON_SIZE} className="text-muted-foreground" />{" "}
+            <SunIcon size={ICON_SIZE} className="" />{" "}
             <span>Light</span>
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem className="flex gap-2" value="dark">
-            <MoonIcon size={ICON_SIZE} className="text-muted-foreground" />{" "}
+            <MoonIcon size={ICON_SIZE} className="" />{" "}
             <span>Dark</span>
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem className="flex gap-2" value="system">
-            <LaptopIcon size={ICON_SIZE} className="text-muted-foreground" />{" "}
+            <LaptopIcon size={ICON_SIZE} className="" />{" "}
             <span>System</span>
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>

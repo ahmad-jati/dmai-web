@@ -84,7 +84,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             ))}
 
             {/* Desktop meta */}
-            <div className="2md:flex hidden flex-col md:items-start items-center gap-1.5 text-muted-foreground">
+            <div className="2md:flex hidden flex-col md:items-start items-center gap-1.5 text-muted-foreground dark:text-popover-foreground">
               <div className="flex items-center gap-1">
                 <PersonSimpleTaiChiIcon className="w-5 h-5" weight="fill" />
                 <p className="font-medium xs:text-p/5 text-xs/3.5">{session.total_instruction} Instruksi</p>
@@ -98,15 +98,15 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             </div>
           </div>
 
-          <Button
-            variant={"default"}
-            className="flex gap-2 items-center [&_svg]:size-3"
-          >
-            <Link href={`/session/${slug}/exercise` as Route} className="flex items-center gap-2">
-              MULAI SESI
+          <Link href={`/session/${slug}/exercise` as Route} className="flex items-center gap-2">
+            <Button
+              variant={"default"}
+              className="flex gap-2 items-center [&_svg]:size-3 dark:bg-accent "
+            >
+              Mulai Sesi
               <PlayIcon className="w-5 h-5" weight="fill" />
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </div>
 
         {/* Desktop image */}

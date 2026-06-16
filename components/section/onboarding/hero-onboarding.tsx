@@ -47,15 +47,15 @@ export function HeroOnboarding() {
           </p>
         </div>
 
-        <Button 
-          variant={'default'}
-          className="[&_svg]:size-3.5 hover:bg-background/80"
-        >
-          <Link href={'/login' as Route} className="flex gap-2 items-center">
-            COBA SEKARANG
-            <ArrowRightIcon/>
-          </Link>
-        </Button>
+        <Link href={'/login' as Route} className="flex gap-2 items-center">
+          <Button 
+            variant={'default'}
+            className="[&_svg]:size-3.5 hover:bg-background/80 dark:bg-primary"
+            >
+              COBA SEKARANG
+              <ArrowRightIcon/>
+          </Button>
+        </Link>
       </div>
     </>
   )

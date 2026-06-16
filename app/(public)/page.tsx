@@ -5,11 +5,11 @@ import { Section } from "@/components/layout/section-wrapper";
 export default function Home() {
   return (
     <div className="flex flex-col gap-8 w-full">
-      <Section className="bg-celeste">
+      <Section className="bg-celeste dark:bg-card">
         <HeroOnboarding/>
       </Section>
       <Section
-        className="bg-lemon"
+        className="bg-lemon dark:bg-card"
       >
         <TrainingOverviewOnboarding/>
       </Section>

@@ -131,12 +131,12 @@ export function LoginForm({
             <div className="w-full flex justify-center">
               <Button
                 type="submit"
-                className={`max-w-80 w-full bg-green flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5`}
+                className={`max-w-80 w-full bg-green flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5 dark:bg-primary!`}
                 disabled={isLoading}
               >
-              {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin" />}
+              {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin dark:text-foreground" />}
               {isLoading ? (
-                <span className="text-center leading-tight px-1">
+                <span className="text-center dark:text-foreground leading-tight px-1">
                   Menghubungkan ke akunmu...
                 </span>
               ) : (
@@ -150,7 +150,7 @@ export function LoginForm({
             Belum punya akun?{" "}
             <Link
               href={'/sign-up'}
-              className="hover:underline underline-offset-3 font-bold text-green"
+              className="hover:underline underline-offset-3 font-bold text-green dark:text-primary"
             >
               Daftar disini
             </Link>

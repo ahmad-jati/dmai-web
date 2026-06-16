@@ -50,7 +50,7 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
           href={`/session/${session.slug}` as Route}
           className="
             group flex flex-col items-end 2xs:gap-4 gap-2
-            bg-background 2md:rounded-[20px] rounded-lg border border-foreground w-full overflow-hidden hover:shadow-md transition-shadow 
+            bg-background dark:bg-card 2md:rounded-[20px] rounded-lg border border-foreground w-full overflow-hidden hover:shadow-md transition-shadow 
             p-3
           "
         >
@@ -87,14 +87,14 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
 
             <div className="flex-1 flex items-center gap-3">
               <span className="flex items-center gap-1">
-                <PersonSimpleTaiChiIcon className="h-3 w-3 text-muted-foreground" weight="fill" />
-                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
+                <PersonSimpleTaiChiIcon className="h-3 w-3 text-muted-foreground dark:text-primary" weight="fill" />
+                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground dark:text-primary">
                   {session.total_instruction} Instruksi
                 </p>
               </span>
               <span className="flex items-center gap-1">
-                <TimerIcon className="h-3 w-3 text-muted-foreground" weight="fill" />
-                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
+                <TimerIcon className="h-3 w-3 text-muted-foreground dark:text-primary" weight="fill" />
+                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground dark:text-primary">
                   {session.duration}
                 </p>
               </span>

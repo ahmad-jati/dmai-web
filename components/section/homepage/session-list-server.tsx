@@ -57,7 +57,7 @@ export async function SessionListServer({ excludeSlug }: Props) {
 
           <div className="flex flex-col items-start gap-1.5 2md:px-1 w-full">
             <div className="flex items-center w-full gap-2">
-              <p className="text-p/5 max-w-140 font-semibold group-hover:underline underline-offset-2 2md:text-left text-left">
+              <p className="text-p/5 max-w-140 font-semibold group-hover:underline underline-offset-2 2md:text-left text-left text-foreground">
                 {session.session_name}
               </p>
               <Button
@@ -75,17 +75,17 @@ export async function SessionListServer({ excludeSlug }: Props) {
             <div className="flex-1 flex items-center gap-3">
               <span className="flex items-center gap-1">
                 <PersonSimpleTaiChiIcon
-                  className="h-3 w-3 text-muted-foreground"
+                  className="h-3 w-3 text-muted-foreground dark:text-primary"
                   weight="fill"
                 />
-                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
+                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground dark:text-primary">
                   {session.total_instruction} Instruksi
                 </p>
               </span>
 
               <span className="flex items-center gap-1">
-                <TimerIcon className="h-3 w-3" weight="fill" />
-                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
+                <TimerIcon className="h-3 w-3 text-muted-foreground dark:text-primary" weight="fill" />
+                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground dark:text-primary">
                   {session.duration}
                 </p>
               </span>
