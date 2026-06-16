@@ -1,7 +1,6 @@
 import { Footer } from "@/components/footer";
 import { MainNavbar } from "@/components/navbars/public-navbar";
 import { SplashScreen } from "@/components/splash-screen";
-import { DummyPlaceholderNavbar } from "@/components/navbars/dummy-placeholder-navbar";
 
 export default function PublicLayout({
   children,
