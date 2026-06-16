@@ -288,9 +288,9 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
         <div className="fixed inset-0 z-50" onClick={() => setShowMusicTray(false)} />
         <div
           style={style}
-          className="bg-background border border-muted-foreground 2md:rounded-2xl rounded-lg p-2.5 flex flex-col gap-0.5 animate-in slide-in-from-top-1 duration-150"
+          className="bg-background/90 dark:bg-foreground/90 text-foreground/80 dark:text-background/80 border border-muted-foreground 2md:rounded-2xl rounded-lg p-2.5 flex flex-col gap-0.5 w-full animate-in slide-in-from-top-1 duration-150"
         >
-          <span className="text-xs font-bold tracking-[0.18em] uppercase text-muted-foreground px-2 pb-1.5">
+          <span className="text-xs font-bold tracking-[0.18em] uppercase px-2 pb-1.5">
             Musik Latar
           </span>
 
@@ -301,42 +301,42 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
               className={cn(
                 'flex items-center gap-2.5 w-full px-2.5 py-2 2md:rounded-xl rounded-md text-left transition-all duration-150 ease-out',
                 index === currentTrackIndex && !isBGMStopped
-                  ? 'bg-muted-foreground/15 text-foreground'
-                  : 'text-foreground hover:bg-muted-foreground/15'
+                  ? 'bg-muted-foreground/40 text-foreground dark:text-background'
+                  : 'text-foreground hover:bg-muted-foreground/40 dark:text-background'
               )}
             >
               <span className={cn(
                 'w-1.5 h-1.5 rounded-full shrink-0 transition-all',
-                index === currentTrackIndex && !isBGMStopped ? 'bg-muted-foreground' : 'bg-muted-foreground/25'
+                index === currentTrackIndex && !isBGMStopped ? 'bg-muted-foreground/40' : 'bg-muted-foreground/40'
               )} />
               <div className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold truncate">{track.title}</span>
+                <span className="text-xs font-semibold text-foreground dark:text-background">{track.title}</span>
                 {track.composer && (
-                  <span className="text-xs text-foreground">{track.composer}</span>
+                  <span className="text-xs text-foreground dark:text-background">{track.composer}</span>
                 )}
               </div>
             </button>
           ))}
 
-          <div className="mt-0.5 pt-1.5 border-t border-muted-foreground/25">
-            <button
-              onClick={() => { bgmStop(); setShowMusicTray(false) }}
-              className={cn(
-                'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl text-left transition-all duration-150 ease-out',
-                isBGMStopped
-                  ? 'bg-muted-foreground/15 text-foreground'
-                  : 'text-foreground hover:bg-muted-foreground/15'
-              )}
-            >
-              <span className={cn(
-                'w-1.5 h-1.5 rounded-full shrink-0',
-                isBGMStopped ? 'bg-muted-foreground' : 'bg-muted-foreground/25'
-              )} />
-              <div className="flex flex-col">
-                <span className="text-xs font-semibold">Tanpa Musik</span>
-              </div>
-            </button>
-          </div>
+          <div className="m-1 px-2 bg-muted-foreground/25 dark:bg-background/20 min-w-0 h-0.5"/>
+
+          <button
+            onClick={() => { bgmStop(); setShowMusicTray(false) }}
+            className={cn(
+              'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl text-left transition-all duration-150 ease-out',
+              isBGMStopped
+                ? 'bg-muted-foreground/40 text-foreground'
+                : 'text-foreground hover:bg-muted-foreground/40'
+            )}
+          >
+            <span className={cn(
+              'w-1.5 h-1.5 rounded-full shrink-0',
+              isBGMStopped ? 'bg-muted-foreground' : 'bg-muted-foreground/40'
+            )} />
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold text-foreground dark:text-background">Tanpa Musik</span>
+            </div>
+          </button>
         </div>
       </>
     )
@@ -366,8 +366,8 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
           </div>
 
         {/* Loading indicator */}
-        <div className="flex flex-col items-center gap-2 text-foreground">
-          <Spinner className="text-foreground"/>
+        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+          <Spinner className="text-muted-foreground"/>
           <p className="text-sm font-medium tracking-wide">Mempersiapkan sesi…</p>
         </div>
       </div>
@@ -467,7 +467,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
             size={'sm'}
             className={cn(
               '[&_svg]:size-5 p-2 text-xs xs:text-sm font-medium',
-              isLooping ? 'text-foreground hover:bg-foreground/10' : 'text-muted-foreground hover:bg-foreground/10'
+              isLooping ? 'text-foreground hover:bg-foreground/10 hover:dark:bg-background/10' : 'text-muted-foreground hover:bg-foreground/10 hover:dark:bg-background/10'
             )}
           >
             {isLooping ? <RepeatOnceIcon weight="fill" /> : <RepeatIcon weight="fill" />}
@@ -479,7 +479,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
               disabled={currentStep === 0}
               size={'sm'}
               variant={'default'}
-              className="[&_svg]:size-5 flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground  disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10 border-none 2sx:w-fit w-6"
+              className="[&_svg]:size-5 flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground  disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10 hover:dark:bg-background/10 border-none 2sx:w-fit w-6"
             >
               <ArrowLeftIcon weight="bold" />
               <span className="2xs:inline hidden">Sebelumnya</span>
@@ -521,7 +521,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
               onClick={goNextManual}
               variant={'default'}
               size={'sm'}
-              className="[&_svg]:size-5 flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent border-none hover:bg-foreground/10 2sx:w-fit w-6"
+              className="[&_svg]:size-5 flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent border-none hover:bg-foreground/10 hover:dark:bg-background/10 2sx:w-fit w-6"
             >
               <span className="2xs:inline hidden">Berikutnya</span>
               <ArrowRightIcon weight="bold" />
@@ -534,7 +534,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
             variant={'ghost'}
             className={cn(
               '[&_svg]:size-5 p-2 text-xs xs:text-sm font-medium',
-              isMuted ? 'text-foreground hover:bg-foreground/10' : 'text-muted-foreground hover:bg-foreground/10'
+              isMuted ? 'text-foreground hover:bg-foreground/10 hover:dark:bg-background/10' : 'text-muted-foreground hover:bg-foreground/10 hover:dark:bg-background/10'
             )}
           >
             {isMuted ? <SpeakerSlashIcon weight="fill" /> : <SpeakerHighIcon weight="fill" />}
@@ -585,7 +585,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
                   onClick={handleBack}
                   variant={'link'}
                   aria-label="Kembali ke halaman sesi"
-                  className="flex items-center justify-center text-background"
+                  className="flex items-center justify-center text-background dark:text-foreground"
                 >
                   <ArrowLeftIcon weight="bold" className="w-4 h-4" />
                   Kembali
@@ -604,10 +604,10 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
                     <span className={cn(
                       'block h-1 rounded-full transition-all duration-300',
                       i === currentStep
-                        ? 'w-8 bg-background/90'
+                        ? 'w-8 bg-background/90 dark:bg-foreground/90'
                         : i < currentStep
-                        ? 'w-4 bg-background/55 group-hover:bg-background/70'
-                        : 'w-4 bg-background/30 group-hover:bg-background/45'
+                        ? 'w-4 bg-background/55 dark:bg-foreground/55 group-hover:bg-background/70 group-hover:dark:bg-foreground/70'
+                        : 'w-4 bg-background/30  dark:bg-foreground/30 group-hover:bg-background/45 group-hover:dark:bg-foreground/45'
                     )} />
                   </button>
                 ))}
@@ -619,9 +619,9 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
                   ref={bgmButtonRef}
                   onClick={() => openMusicTray(bgmButtonRef, false)}
                   aria-label="Pilih musik latar"
-                  className="flex items-center gap-3 px-4 py-2 rounded-full
-                            bg-background/90 text-foreground/80
-                            hover:bg-muted-foreground/90 border border-foreground hover:cursor-pointer hover:text-white
+                  className="flex items-center gap-3 px-4 py-2 2md:rounded-2xl rounded-lg
+                            bg-background/90 dark:bg-foreground/90 text-foreground/80 dark:text-background/80
+                            hover:bg-popover/90 border border-foreground hover:cursor-pointer hover:text-white
                             transition-all duration-150 ease-out w-60"
                 >
                   <MusicNotesIcon
@@ -645,7 +645,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
 
             {/* Middle: ring + step info */}
             <div className="flex flex-1 flex-col justify-center items-center gap-4 text-center">
-              <span className="text-xs text-background/80 font-semibold tracking-[0.2em] uppercase">
+              <span className="text-xs text-background/80 dark:text-foreground/80 font-semibold tracking-[0.2em] uppercase">
                 Langkah {currentStep + 1} / {totalSteps}
               </span>
 
@@ -670,7 +670,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
                   onClick={() => setIsPlaying((p) => !p)}
                   aria-label={isPlaying ? 'Jeda latihan' : 'Lanjutkan latihan'}
                   className="relative z-10 w-17.5 h-17.5 rounded-full flex items-center justify-center
-                            bg-background text-muted-foreground
+                            bg-background dark:bg-foreground text-muted-foreground dark:text-background
                             transition-all duration-200 ease-out
                             hover:cursor-pointer hover:scale-105 active:scale-95 active:bg-background/15"
                 >
@@ -691,9 +691,9 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
               {/* Fixed-height step title + description so controls stay anchored */}
               <div className="flex flex-col gap-1 text-center pt-1 shrink-0 max-w-xl sm:max-w-lg h-40 overflow-y-auto justify-start">
                 <div className="flex flex-col gap-2 items-center xs:px-6">
-                  <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-background text-center">{step.title}</p>
+                  <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-background dark:text-foreground text-center">{step.title}</p>
                   {step.description && (
-                    <p className="xs:text-p/5 text-sm/4 text-background text-center">{step.description}</p>
+                    <p className="xs:text-p/5 text-sm/4 text-background dark:text-foreground text-center">{step.description}</p>
                   )}
                 </div>
               </div>
@@ -702,14 +702,14 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
 
             {/* Bottom: controls */}
             <div className="flex flex-col items-center gap-3.5 px-3">
-              <div className="flex items-center justify-center gap-2 bg-background rounded-full px-2 py-1.5 w-full">
+              <div className="flex items-center justify-center gap-2 bg-background/90 dark:bg-foreground/90 rounded-full px-2 py-1.5 w-full">
 
                 <Button
                   onClick={goPrev}
                   disabled={currentStep === 0}
                   size={'sm'}
                   variant={'ghost'}
-                  className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground disabled:bg-transparent disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10"
+                  className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground dark:text-background disabled:bg-transparent disabled:text-muted-foreground! disabled:cursor-not-allowed font-medium rounded-full bg-transparent disabled:hover:bg-transparent! disabled:hover:font-medium! hover:bg-foreground/10 hover:dark:bg-background/10"
                 >
                   <ArrowLeftIcon weight="bold" className="w-2 h-2" />
                   Sebelumnya
@@ -722,8 +722,8 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
                   className={cn(
                     '[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full bg-transparent',
                     isLooping
-                      ? 'text-muted-foreground border border-muted-foreground bg-foreground/10 font-bold hover:bg-foreground/10'
-                      : 'text-muted-foreground hover:bg-foreground/10'
+                      ? 'text-muted-foreground dark:text-background border border-muted-foreground bg-foreground/10 font-bold dark:bg-background/10'
+                      : 'text-muted-foreground dark:text-background hover:bg-foreground/10 hover:dark:bg-background/10 '
                   )}
                 >
                   {isLooping ? <RepeatOnceIcon weight="fill" /> : <RepeatIcon weight="fill" />}
@@ -737,8 +737,8 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
                   className={cn(
                     '[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full bg-transparent',
                     isMuted
-                      ? 'text-muted-foreground border border-muted-foreground bg-foreground/10 font-bold hover:bg-foreground/10'
-                      : 'text-muted-foreground hover:bg-foreground/10'
+                      ? 'text-muted-foreground dark:text-background border border-muted-foreground bg-foreground/10 font-bold dark:bg-background/10'
+                      : 'text-muted-foreground dark:text-background hover:bg-foreground/10 hover:dark:bg-background/10'
                   )}
                 >
                   {isMuted ? <SpeakerSlashIcon weight="fill" /> : <SpeakerHighIcon weight="fill" />}
@@ -750,7 +750,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
                     onClick={goNextManual}
                     variant={'ghost'}
                     size={'sm'}
-                    className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground disabled:bg-transparent disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10"
+                    className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground dark:text-background disabled:bg-transparent disabled:text-muted-foreground! disabled:cursor-not-allowed font-medium rounded-full bg-transparent disabled:hover:bg-transparent! disabled:hover:font-medium! hover:bg-foreground/10 hover:dark:bg-background/10"
                   >
                     Selesai
                     <CheckIcon weight="bold" />
@@ -760,7 +760,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
                     onClick={goNextManual}
                     variant={'ghost'}
                     size={'sm'}
-                    className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground disabled:bg-transparent disabled:text-muted-foreground disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-muted-foreground/10"
+                    className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground dark:text-background disabled:bg-transparent disabled:text-muted-foreground! disabled:cursor-not-allowed font-medium rounded-full bg-transparent disabled:hover:bg-transparent! disabled:hover:font-medium! hover:bg-foreground/10 hover:dark:bg-background/10"
                   >
                     Berikutnya
                     <ArrowRightIcon weight="bold" />

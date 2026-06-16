@@ -25,7 +25,7 @@ function ExerciseLoadingSkeleton() {
       <div className="fixed inset-0 z-50 flex items-stretch justify-stretch lg:px-28 2md:px-12 lg:py-14 py-8 px-8 bg-celeste">
         <div className="flex-1 md:rounded-4xl rounded-xl overflow-hidden relative">
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-            <Spinner />
+            <Spinner className="text-muted-foreground"/>
             <p className="text-sm text-muted-foreground">Mempersiapkan sesi...</p>
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function ExercisePage({ params }: Props) {
               <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>
             </div>
 
-            <div className="2xs:rounded-3xl rounded-xl border border-foreground bg-background p-2 sm:w-100 xs:h-68 w-full h-40">
+            <div className="2xs:rounded-3xl rounded-xl border border-foreground bg-background dark:border-none dark:p-0 p-2 sm:w-100 xs:h-68 w-full h-40">
               <Image
                 src={session.image_cover}
                 alt={''}
@@ -121,7 +121,7 @@ export default function ExercisePage({ params }: Props) {
 
               <Button
                 variant="outline"
-                className="w-full flex items-center gap-2 bg-background sm:[&_svg]:size-4 [&_svg]:size-3.5"
+                className="w-full flex items-center gap-2 bg-background dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground "
                 asChild
               >
                 <Link href={"/homepage" as Route}>

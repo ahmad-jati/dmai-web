@@ -37,7 +37,7 @@ export async function SessionListServer({ excludeSlug }: Props) {
           scroll={false}
           className="
             group flex flex-col 2md:items-start items-end 2md:gap-3 gap-0
-            bg-background 2md:rounded-[20px] rounded-lg border border-foreground w-full overflow-hidden hover:shadow-md transition-shadow 
+            bg-background dark:bg-secondary 2md:rounded-[20px] rounded-lg border border-foreground w-full overflow-hidden hover:shadow-md transition-shadow 
             p-3
           "
         >
@@ -57,12 +57,12 @@ export async function SessionListServer({ excludeSlug }: Props) {
 
           <div className="flex flex-col items-start gap-1.5 2md:px-1 w-full">
             <div className="flex items-center w-full gap-2">
-              <p className="text-p/5 max-w-140 font-semibold group-hover:underline underline-offset-2 2md:text-left text-left">
+              <p className="text-p/5 max-w-140 font-semibold group-hover:underline underline-offset-2 2md:text-left text-left text-foreground">
                 {session.session_name}
               </p>
               <Button
                 variant={"default"}
-                className="[&_svg]:size-6 font-foreground bg-none rounded-none border-none p-0 2md:hidden block"
+                className="[&_svg]:size-6 font-foreground bg-transparent rounded-none border-none p-0 2md:hidden block"
               >
                 <ArrowUpRightIcon />
               </Button>
@@ -84,7 +84,7 @@ export async function SessionListServer({ excludeSlug }: Props) {
               </span>
 
               <span className="flex items-center gap-1">
-                <TimerIcon className="h-3 w-3" weight="fill" />
+                <TimerIcon className="h-3 w-3 text-muted-foreground" weight="fill" />
                 <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
                   {session.duration}
                 </p>

@@ -99,7 +99,7 @@ function HistoryItemCard({ item }: { item: CompletionRecord }) {
       <Button
         variant="outline"
         size="sm"
-        className="shrink-0 h-fit! xs:text-xs text-2xs xs:px-2.5 px-2 py-1! xs:gap-1.5 gap-1 font-medium xs:[&_svg]:size-3.5 [&_svg]:size-3 rounded-sm! hover:bg-white"
+        className="shrink-0 h-fit! xs:text-xs text-2xs xs:px-2.5 px-2 py-1! xs:gap-1.5 gap-1 font-medium xs:[&_svg]:size-3.5 [&_svg]:size-3 rounded-sm! hover:bg-white hover:dark:bg-primary dark:bg-primary dark:text-background hover:dark:text-foreground"
         asChild
       >
         <Link href={`/session/${item.session_slug}`}>
@@ -270,7 +270,7 @@ export function HistoryList() {
                 <Button 
                   onClick={handleLoadOlder}
                   disabled={loadingOlder}
-                  className="max-w-80 w-full bg-white flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5"
+                  className="max-w-80 w-full bg-white dark:bg-primary dark:text-background hover:dark:text-foreground flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5"
                 >
                   {loadingOlder ? (
                      <SpinnerIcon className="w-4 h-4 animate-spin" />

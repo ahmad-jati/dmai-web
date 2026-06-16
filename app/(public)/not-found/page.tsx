@@ -9,8 +9,8 @@ import { Route } from "next";
 
 export default function Page() {
   return (
-    <div className="w-full">
-      <Section className="flex lg:flex-row-reverse flex-col-reverse lg:items-center justify-center items-end md:gap-8 gap-0 bg-white min-h-[calc(74svh-64px)] md:min-h-[calc(82dvh-52px)]">
+    <div className="w-full flex-1 min-h-0">
+      <Section className="flex lg:flex-row-reverse flex-col-reverse lg:items-center justify-center items-end md:gap-8 gap-0 bg-white dark:bg-card min-h-0 ">
         <div className="w-full lg:w-fit flex flex-col gap-2.5 items-start text-foreground md:px-0 px-2 2md:mt-0 ">
           <EyesIcon className="text-foreground w-10 h-10" weight="fill"/>
           <h2 className="sm:text-h2 text-xl font-semibold -mt-1.5">Oops!</h2>
