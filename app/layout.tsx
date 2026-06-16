@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${urbanistSans.className} antialiased`}>
+      <body className={`${urbanistSans.className} antialiased flex flex-col h-full`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

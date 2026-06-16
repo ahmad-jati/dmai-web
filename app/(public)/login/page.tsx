@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="w-full">
-      <div className="flex lg:flex-row flex-col-reverse gap-8">
-        <Section className="min-h-[calc(70svh-64px)] md:min-h-[calc(60dvh-52px)] dark:min-h-[calc(74svh-64px)] dark:md:min-h-[calc(82dvh-52px)] lg:max-w-120 w-full bg-white dark:bg-card flex lg:flex-row flex-col gap-8 justify-center items-center">
-          <div className="w-full xs:h-64 h-full bg-celeste dark:bg-amber-600/20 dark:hidden sm:rounded-3xl dark:rounded-none rounded-lg lg:hidden flex items-center justify-center p-2">
+    <div className="flex h-full w-full">
+      <div className="flex lg:flex-row flex-col-reverse justify-between w-full gap-8">
+        <Section className="flex-1 w-full bg-white dark:bg-card flex flex-col gap-8 justify-center items-center">
+          <div className="w-fit xs:h-64 h-fit bg-celeste dark:bg-card sm:rounded-3xl dark:rounded-none rounded-lg lg:hidden flex items-center justify-center p-4">
             <Image
               src={"/tropicaline/compress/happy.png"}
               alt=""
@@ -26,8 +26,8 @@ export default function Page() {
           </div>
           <LoginForm />
         </Section>
-        <Section className="bg-white dark:bg-card p-4! w-full lg:block hidden flex-1">
-          <div className="h-full w-full rounded-4xl dark:rounded-none bg-green dark:bg-card flex items-center justify-center p-2 dark:p-0">
+        <Section className="bg-white dark:bg-card p-4! lg:block hidden flex-1">
+          <div className="h-full w-fit rounded-4xl dark:rounded-none bg-celeste dark:bg-card flex items-center justify-center p-4 dark:p-0">
             <Image
               src={"/tropicaline/compress/happy.png"}
               alt=""
