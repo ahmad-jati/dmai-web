@@ -142,17 +142,17 @@
   --shadow-2xl: 0 24px 60px rgb(0 0 0 / 0.18);
 
   /* semantic colors */
-  --tangerine: oklch(32.62% 0.01631 86.888);
-  --baby-blue: oklch(32.62% 0.01631 86.888);
-  --blue: oklch(32.62% 0.01631 86.888);
+  --tangerine:  oklch(0.4448 0.0239 84.5498);
+  --baby-blue:  oklch(0.4448 0.0239 84.5498);
+  --blue:  oklch(0.4448 0.0239 84.5498);
 
-  --green: oklch(32.62% 0.01631 86.888);
-  --green-soft: oklch(32.62% 0.01631 86.888);
-  --celeste: oklch(32.62% 0.01631 86.888);
+  --green:  oklch(0.4448 0.0239 84.5498);
+  --green-soft:  oklch(0.4448 0.0239 84.5498);
+  --celeste:  oklch(0.4448 0.0239 84.5498);
 
-  --lavender:  oklch(32.62% 0.01631 86.888);
-  --pink:  oklch(32.62% 0.01631 86.888);
-  --lemon: oklch(32.62% 0.01631 86.888);
+  --lavender:   oklch(0.4448 0.0239 84.5498);
+  --pink:   oklch(0.4448 0.0239 84.5498);
+  --lemon:  oklch(0.4448 0.0239 84.5498);
 
   --red: hsla(0, 40%, 60%, 1);
 }

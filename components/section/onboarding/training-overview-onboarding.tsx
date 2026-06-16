@@ -59,7 +59,7 @@ export function TrainingOverviewOnboarding() {
               : sessions.map((session) => (
                   <div
                     key={session.slug}
-                    className="flex flex-col justify-between items-end xs:gap-4 gap-1 bg-background dark:bg-foreground dark:text-background text-foreground p-3 lg:rounded-lg md:rounded-lg rounded-md border border-foreground w-full group"
+                    className="flex flex-col justify-between items-end xs:gap-4 gap-1 bg-background dark:bg-secondary dark:text-secondary-foreground text-foreground p-3 lg:rounded-lg md:rounded-lg rounded-md border border-foreground w-full group"
                   >
                     <div className="flex flex-col w-full justify-start gap-1">
                       <p className="xs:text-p/5 text-sm/4 font-bold">{session.session_name}</p>

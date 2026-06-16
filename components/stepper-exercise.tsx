@@ -366,8 +366,8 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, onDone
           </div>
 
         {/* Loading indicator */}
-        <div className="flex flex-col items-center gap-2 text-foreground">
-          <Spinner className="text-foreground"/>
+        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+          <Spinner className="text-muted-foreground"/>
           <p className="text-sm font-medium tracking-wide">Mempersiapkan sesi…</p>
         </div>
       </div>

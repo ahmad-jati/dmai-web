@@ -29,7 +29,11 @@ const ThemeSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size={"sm"} className="text-foreground hover:bg-background hover:text-popover-foreground  dark:text-background hover:dark:bg-popover hover:dark:text-popover-foreground hover:border hover:border-foreground p-4">
+        <Button variant="ghost" size={"sm"} className="
+          text-foreground hover:bg-background hover:border hover:border-foreground 
+          dark:text-secondary-foreground  
+          p-4
+        ">
           {theme === "light" ? (
             <div className="flex gap-2 items-center">
               <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Theme: </p>

@@ -101,7 +101,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           <Link href={`/session/${slug}/exercise` as Route} className="flex items-center gap-2">
             <Button
               variant={"default"}
-              className="flex gap-2 items-center [&_svg]:size-3 dark:bg-accent "
+              className="flex gap-2 items-center [&_svg]:size-3 dark:bg-primary lg:text-base"
             >
               Mulai Sesi
               <PlayIcon className="w-5 h-5" weight="fill" />

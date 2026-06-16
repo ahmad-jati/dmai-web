@@ -66,7 +66,7 @@ export function ProtectedNavbar() {
       id="navbar-app"
       className="fixed top-0 left-0 right-0 z-40 flex justify-center md:px-16 px-6 lg:max-w-7xl mx-auto"
     >
-      <div className="w-full flex justify-between items-center bg-white dark:bg-foreground dark:text-background text-foreground md:rounded-b-5xl rounded-b-xl xs:p-6 p-4 border border-foreground border-t-0">
+      <div className="w-full flex justify-between items-center bg-white dark:bg-secondary dark:text-secondary-foreground text-foreground md:rounded-b-5xl rounded-b-xl xs:p-6 p-4 border border-foreground border-t-0">
         <Link
           href={'/homepage'}
           className="text-app-name hover:font-bold font-semibold"
@@ -76,7 +76,7 @@ export function ProtectedNavbar() {
 
         <div className="flex gap-3 items-center">
           <p
-            className="text-md font-medium text-foreground dark:text-background transition-opacity duration-500 sm:block hidden"
+            className="text-md font-medium text-foreground dark:text-secondary-foreground transition-opacity duration-500 sm:block hidden"
             style={{ opacity: greetingVisible && userName ? 1 : 0 }}
           >
             {greeting}, <span>{userName}</span>!
@@ -84,15 +84,15 @@ export function ProtectedNavbar() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant={'ghost'} className="rounded-sm px-2 py-1 [&_svg]:size-5 hover:bg-popover group transition-all hover:border hover:border-foreground">
-                <ListIcon className=" text-foreground dark:text-background group-hover:dark:text-foreground"/>
+              <Button variant={'ghost'} className="rounded-sm px-2 py-1 [&_svg]:size-5 hover:bg-background transition-all hover:border hover:border-foreground">
+                <ListIcon className=" text-foreground"/>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="sm:w-44 w-fit bg-background">
+            <DropdownMenuContent align="end" className="sm:w-44 w-fit ">
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="sm:hidden block">
                    <p
-                    className="sm:text-p/5 text-sm/4 font-medium text-foreground transition-opacity duration-500 max-w-44 line-clamp-2"
+                    className="sm:text-p/5 text-sm/4 font-medium text-foreground dark:text-secondary-foreground transition-opacity duration-500 max-w-44 line-clamp-2"
                     style={{ opacity: greetingVisible && userName ? 1 : 0 }}
                   >
                     {greeting}, <span>{userName}</span>!

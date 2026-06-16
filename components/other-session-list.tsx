@@ -87,14 +87,14 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
 
             <div className="flex-1 flex items-center gap-3">
               <span className="flex items-center gap-1">
-                <PersonSimpleTaiChiIcon className="h-3 w-3 text-muted-foreground dark:text-primary" weight="fill" />
-                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground dark:text-primary">
+                <PersonSimpleTaiChiIcon className="h-3 w-3 text-muted-foreground" weight="fill" />
+                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
                   {session.total_instruction} Instruksi
                 </p>
               </span>
               <span className="flex items-center gap-1">
-                <TimerIcon className="h-3 w-3 text-muted-foreground dark:text-primary" weight="fill" />
-                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground dark:text-primary">
+                <TimerIcon className="h-3 w-3 text-muted-foreground" weight="fill" />
+                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
                   {session.duration}
                 </p>
               </span>
