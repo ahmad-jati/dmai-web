@@ -2,18 +2,36 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function fetchAllSessions() {
   const supabase = await createClient()
-  const { data: sessions, error } = await supabase
+
+  const { data: sessions, error: sessionsError } = await supabase
     .from('sessions')
     .select(`
       id, slug, session_name, detail_short, detail_full,
       icon_url, total_instruction, duration, image_cover_url,
-      session_steps (
-        step_number, title, description, duration_seconds, image_url, audio_url
-      )
+      sort_order, week_number
     `)
     .order('sort_order', { ascending: true })
 
-  if (error || !sessions) return []
+  if (sessionsError || !sessions) {
+    console.error('fetchAllSessions error:', sessionsError)
+    return []
+  }
+
+  const sessionIds = sessions.map((s) => s.id)
+
+  const { data: steps, error: stepsError } = await supabase
+    .from('session_steps')
+    .select(`
+      id, session_id, step_number, title, description,
+      duration_seconds, image_url, audio_url, step_type, step_config
+    `)
+    .in('session_id', sessionIds)
+    .order('step_number', { ascending: true })
+
+  if (stepsError) {
+    console.error('fetchAllSessions steps error:', stepsError)
+    return []
+  }
 
   return sessions.map((s) => ({
     id: s.id,
@@ -25,54 +43,76 @@ export async function fetchAllSessions() {
     total_instruction: s.total_instruction ?? 0,
     duration: s.duration ?? '',
     image_cover: s.image_cover_url ?? '',
-    instructions: [...(s.session_steps ?? [])]
-      .sort((a, b) => a.step_number - b.step_number)
+    week_number: s.week_number ?? null,
+    instructions: (steps ?? [])
+      .filter((step) => step.session_id === s.id)
       .map((step) => ({
+        id: step.id,
         step: step.step_number,
         title: step.title,
         description: step.description ?? '',
         duration_seconds: step.duration_seconds,
         image: step.image_url ?? '',
         audio: step.audio_url ?? '',
+        step_type: step.step_type,
+        step_config: step.step_config ?? {},
       })),
   }))
 }
 
 export async function fetchSessionBySlug(slug: string) {
   const supabase = await createClient()
-  const { data: s, error } = await supabase
+
+  const { data: session, error: sessionError } = await supabase
     .from('sessions')
     .select(`
       id, slug, session_name, detail_short, detail_full,
       icon_url, total_instruction, duration, image_cover_url,
-      session_steps (
-        step_number, title, description, duration_seconds, image_url, audio_url
-      )
+      week_number, sort_order
     `)
     .eq('slug', slug)
     .single()
 
-  if (error || !s) return null
+  if (sessionError || !session) {
+    console.error('fetchSessionBySlug session error:', sessionError)
+    return null
+  }
+
+  const { data: steps, error: stepsError } = await supabase
+    .from('session_steps')
+    .select(`
+      id, session_id, step_number, title, description,
+      duration_seconds, image_url, audio_url, step_type, step_config
+    `)
+    .eq('session_id', session.id)
+    .order('step_number', { ascending: true })
+
+  if (stepsError) {
+    console.error('fetchSessionBySlug steps error:', stepsError)
+    return null
+  }
 
   return {
-    id: s.id,
-    slug: s.slug,
-    session_name: s.session_name,
-    detail_short: s.detail_short ?? '',
-    detail_full: s.detail_full ?? [],
-    icon: s.icon_url ?? '',
-    total_instruction: s.total_instruction ?? 0,
-    duration: s.duration ?? '',
-    image_cover: s.image_cover_url ?? '',
-    instructions: [...(s.session_steps ?? [])]
-      .sort((a, b) => a.step_number - b.step_number)
-      .map((step) => ({
-        step: step.step_number,
-        title: step.title,
-        description: step.description ?? '',
-        duration_seconds: step.duration_seconds,
-        image: step.image_url ?? '',
-        audio: step.audio_url ?? '',
-      })),
+    id: session.id,
+    slug: session.slug,
+    session_name: session.session_name,
+    detail_short: session.detail_short ?? '',
+    detail_full: session.detail_full ?? [],
+    icon: session.icon_url ?? '',
+    total_instruction: session.total_instruction ?? 0,
+    duration: session.duration ?? '',
+    image_cover: session.image_cover_url ?? '',
+    week_number: session.week_number ?? null,
+    instructions: (steps ?? []).map((step) => ({
+      id: step.id,
+      step: step.step_number,
+      title: step.title,
+      description: step.description ?? '',
+      duration_seconds: step.duration_seconds,
+      image: step.image_url ?? '',
+      audio: step.audio_url ?? '',
+      step_type: step.step_type,
+      step_config: step.step_config ?? {},
+    })),
   }
 }

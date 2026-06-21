@@ -42,6 +42,8 @@ export function ProtectedNavbar() {
       }
 
       const { data: { user } } = await supabase.auth.getUser();
+
+      console.log(user)
       const name = user?.user_metadata?.full_name ?? null;
       setUserName(name);
       if (name) sessionStorage.setItem("user_full_name", name);
