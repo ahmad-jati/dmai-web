@@ -69,7 +69,7 @@ export async function fetchSessionBySlug(slug: string) {
     .select(`
       id, slug, session_name, detail_short, detail_full,
       icon_url, total_instruction, duration, image_cover_url,
-      week_number, sort_order
+      week_number, sort_order, is_locked 
     `)
     .eq('slug', slug)
     .single()
