@@ -9,6 +9,9 @@ type Props = {
 }
 
 export function StepNarration({ title, description, image }: Props) {
+
+  
+
   return (
     // desktop: full bg image handled by shell, this is just the text overlay content
     // mobile: image shown inline

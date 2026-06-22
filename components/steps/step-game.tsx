@@ -1,15 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { PlayIcon } from '@phosphor-icons/react'
+import { PlayIcon, ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
 
 type Props = {
   onNext: () => void
+  onPrev?: () => void
 }
 
-const GAME_URL = 'https://dinogameclone.netlify.app/'
-
-export function StepGame({ onNext }: Props) {
+export function StepGame({ onNext, onPrev }: Props) {
   const [started, setStarted] = useState(false)
 
   return (
@@ -19,36 +18,37 @@ export function StepGame({ onNext }: Props) {
         <p className="text-sm text-muted-foreground">Latih fokusmu sebelum melanjutkan sesi.</p>
       </div>
 
-      <div className="w-full max-w-2xl rounded-2xl overflow-hidden border border-foreground/10 shadow-lg bg-muted relative"
+      <div className="w-full max-w-2xl rounded-2xl overflow-hidden border border-border shadow-sm bg-muted relative"
         style={{ height: '380px' }}>
         {!started ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-muted">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
             <div className="text-5xl">🦕</div>
-            <button
-              onClick={() => setStarted(true)}
-              className="flex items-center gap-2 px-6 py-3 rounded-full bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-all"
-            >
+            <button onClick={() => setStarted(true)}
+              className="flex items-center gap-2 px-6 py-3 rounded-full bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-all">
               <PlayIcon weight="fill" className="w-4 h-4" />
               Mulai Game
             </button>
             <p className="text-xs text-muted-foreground">Tekan spasi untuk melompat</p>
           </div>
         ) : (
-          <iframe
-            src={GAME_URL}
-            title="Mini Game Fokus"
-            className="w-full h-full"
-            allow="autoplay"
-          />
+          <iframe src="https://dinogameclone.netlify.app/" title="Mini Game Fokus" className="w-full h-full" allow="autoplay" />
         )}
       </div>
 
-      <button
-        onClick={onNext}
-        className="px-8 py-3 rounded-full bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-all"
-      >
-        Lanjutkan →
-      </button>
+      <div className="flex items-center gap-3">
+        {onPrev && (
+          <button onClick={onPrev}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all">
+            <ArrowLeftIcon weight="bold" className="w-4 h-4" />
+            Kembali
+          </button>
+        )}
+        <button onClick={onNext}
+          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-all">
+          Lanjutkan
+          <ArrowRightIcon weight="bold" className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   )
 }

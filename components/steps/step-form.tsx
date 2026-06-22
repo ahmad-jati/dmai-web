@@ -2,11 +2,16 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
+
+// field types from DB — covers both old and new naming
+export type FormFieldType = 'emoji_scale' | 'slider' | 'textarea' | 'text_input' | 'checkbox_group'
 
 export type FormField = {
-  id: string
+  _key?: string
+  id?: string
   label: string
-  type: 'emoji_scale' | 'slider' | 'textarea' | 'checkbox_group'
+  type: FormFieldType
   min?: number
   max?: number
   options?: string[]
@@ -15,6 +20,8 @@ export type FormField = {
 type Props = {
   fields: FormField[]
   onNext: (responses: Record<string, unknown>) => void
+  onPrev?: () => void
+  showPrev?: boolean
 }
 
 const EMOJIS = [
@@ -40,13 +47,13 @@ function EmojiScale({ field, value, onChange }: {
             type="button"
             onClick={() => onChange(i + 1)}
             className={cn(
-              'flex flex-col items-center gap-1 flex-1 py-3 rounded-xl border transition-all',
+              'flex flex-col items-center gap-1.5 flex-1 py-3 rounded-xl border transition-all',
               value === i + 1
-                ? 'border-foreground bg-foreground/5'
-                : 'border-border hover:border-foreground/40 hover:bg-muted/50'
+                ? 'border-foreground bg-foreground/5 shadow-sm'
+                : 'border-border hover:border-foreground/30 hover:bg-muted/50'
             )}
           >
-            <span className={cn('text-2xl transition-transform', value === i + 1 ? 'scale-125' : '')}>
+            <span className={cn('text-2xl transition-transform duration-150', value === i + 1 ? 'scale-125' : '')}>
               {e.emoji}
             </span>
             <span className="text-xs text-muted-foreground hidden sm:block">{e.label}</span>
@@ -71,23 +78,21 @@ function SliderField({ field, value, onChange }: {
     <div className="flex flex-col gap-3">
       <div className="flex justify-between items-center">
         <label className="text-sm font-medium text-foreground">{field.label}</label>
-        <span className="text-sm font-bold tabular-nums bg-muted px-2 py-0.5 rounded-md min-w-8 text-center">
+        <span className="text-sm font-bold tabular-nums bg-muted px-2.5 py-0.5 rounded-lg min-w-10 text-center">
           {current}
         </span>
       </div>
-      <div className="relative">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          value={current}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full h-2 rounded-full appearance-none cursor-pointer bg-muted accent-foreground"
-          style={{
-            background: `linear-gradient(to right, hsl(var(--foreground)) ${pct}%, hsl(var(--muted)) ${pct}%)`
-          }}
-        />
-      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={current}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full h-2 rounded-full appearance-none cursor-pointer"
+        style={{
+          background: `linear-gradient(to right, hsl(var(--foreground)) ${pct}%, hsl(var(--muted)) ${pct}%)`
+        }}
+      />
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>{min}</span>
         <span>{max}</span>
@@ -96,7 +101,7 @@ function SliderField({ field, value, onChange }: {
   )
 }
 
-function TextareaField({ field, value, onChange }: {
+function TextInputField({ field, value, onChange }: {
   field: FormField
   value: string | undefined
   onChange: (v: string) => void
@@ -121,10 +126,10 @@ function CheckboxGroupField({ field, value, onChange }: {
   onChange: (v: string[]) => void
 }) {
   const selected = value ?? []
-  const toggle = (opt: string) => {
-    if (selected.includes(opt)) onChange(selected.filter((s) => s !== opt))
-    else onChange([...selected, opt])
-  }
+  const toggle = (opt: string) =>
+    selected.includes(opt)
+      ? onChange(selected.filter((s) => s !== opt))
+      : onChange([...selected, opt])
 
   return (
     <div className="flex flex-col gap-2">
@@ -139,7 +144,7 @@ function CheckboxGroupField({ field, value, onChange }: {
               'px-4 py-2 rounded-full text-sm font-medium border transition-all',
               selected.includes(opt)
                 ? 'bg-foreground text-background border-foreground'
-                : 'bg-background border-border text-foreground hover:border-foreground/60 hover:bg-muted/50'
+                : 'bg-background border-border text-foreground hover:border-foreground/50 hover:bg-muted/50'
             )}
           >
             {opt}
@@ -150,67 +155,87 @@ function CheckboxGroupField({ field, value, onChange }: {
   )
 }
 
-export function StepForm({ fields, onNext }: Props) {
+export function StepForm({ fields, onNext, onPrev, showPrev }: Props) {
   const [responses, setResponses] = useState<Record<string, unknown>>({})
 
-  const setField = (id: string, value: unknown) =>
-    setResponses((prev) => ({ ...prev, [id]: value }))
+  // Use _key or id as the response key
+  const getKey = (field: FormField) => field._key ?? field.id ?? field.label
 
-  // Only require non-textarea fields — textarea is optional feel
+  const setField = (field: FormField, value: unknown) =>
+    setResponses((prev) => ({ ...prev, [getKey(field)]: value }))
+
+  // text_input and textarea are optional, others required
   const allAnswered = fields.every((f) => {
-    const val = responses[f.id]
-    if (f.type === 'textarea') return true // optional
-    if (f.type === 'checkbox_group') return Array.isArray(val) && val.length > 0
-    return val !== undefined && val !== null
+    if (f.type === 'text_input' || f.type === 'textarea') return true
+    if (f.type === 'checkbox_group') {
+      const val = responses[getKey(f)]
+      return Array.isArray(val) && val.length > 0
+    }
+    return responses[getKey(f)] !== undefined && responses[getKey(f)] !== null
   })
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-lg mx-auto">
       {fields.map((field) => {
+        const key = getKey(field)
         if (field.type === 'emoji_scale') {
           return (
-            <EmojiScale key={field.id} field={field}
-              value={responses[field.id] as number | undefined}
-              onChange={(v) => setField(field.id, v)} />
+            <EmojiScale key={key} field={field}
+              value={responses[key] as number | undefined}
+              onChange={(v) => setField(field, v)} />
           )
         }
         if (field.type === 'slider') {
           return (
-            <SliderField key={field.id} field={field}
-              value={responses[field.id] as number | undefined}
-              onChange={(v) => setField(field.id, v)} />
+            <SliderField key={key} field={field}
+              value={responses[key] as number | undefined}
+              onChange={(v) => setField(field, v)} />
           )
         }
-        if (field.type === 'textarea') {
+        if (field.type === 'text_input' || field.type === 'textarea') {
           return (
-            <TextareaField key={field.id} field={field}
-              value={responses[field.id] as string | undefined}
-              onChange={(v) => setField(field.id, v)} />
+            <TextInputField key={key} field={field}
+              value={responses[key] as string | undefined}
+              onChange={(v) => setField(field, v)} />
           )
         }
         if (field.type === 'checkbox_group') {
           return (
-            <CheckboxGroupField key={field.id} field={field}
-              value={responses[field.id] as string[] | undefined}
-              onChange={(v) => setField(field.id, v)} />
+            <CheckboxGroupField key={key} field={field}
+              value={responses[key] as string[] | undefined}
+              onChange={(v) => setField(field, v)} />
           )
         }
         return null
       })}
 
-      <button
-        type="button"
-        onClick={() => onNext(responses)}
-        disabled={!allAnswered}
-        className={cn(
-          'w-full py-3 rounded-xl font-semibold text-sm transition-all mt-2',
-          allAnswered
-            ? 'bg-foreground text-background hover:bg-foreground/90'
-            : 'bg-muted text-muted-foreground cursor-not-allowed'
+      {/* Navigation buttons */}
+      <div className={cn('flex gap-3 mt-2', showPrev ? 'justify-between' : 'justify-end')}>
+        {showPrev && (
+          <button
+            type="button"
+            onClick={onPrev}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all"
+          >
+            <ArrowLeftIcon weight="bold" className="w-4 h-4" />
+            Kembali
+          </button>
         )}
-      >
-        Lanjutkan →
-      </button>
+        <button
+          type="button"
+          onClick={() => onNext(responses)}
+          disabled={!allAnswered}
+          className={cn(
+            'flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all',
+            allAnswered
+              ? 'bg-foreground text-background hover:bg-foreground/90'
+              : 'bg-muted text-muted-foreground cursor-not-allowed'
+          )}
+        >
+          Lanjutkan
+          <ArrowRightIcon weight="bold" className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   )
 }
