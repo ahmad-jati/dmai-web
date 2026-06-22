@@ -9,7 +9,6 @@ import { AdminSkeleton } from './sessions/admin-skeleton'
 import { SessionCard } from './sessions/session-card'
 import { SessionDetailView } from './sessions/session-detail-view'
 import { SessionRecord, SessionRaw } from './sessions/types'
-import { Route } from 'next'
 
 export function SessionsManager() {
   const [sessions, setSessions] = useState<SessionRecord[]>([])
@@ -69,6 +68,11 @@ export function SessionsManager() {
     setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, is_locked } : s)))
   }, [])
 
+  const handleSessionDeleted = useCallback((id: string) => {
+    setSessions((prev) => prev.filter((s) => s.id !== id))
+    setActiveSession(null)
+  }, [])
+
   if (loading) return <AdminSkeleton />
 
   if (activeSession) {
@@ -77,6 +81,7 @@ export function SessionsManager() {
         session={activeSession}
         onBack={() => setActiveSession(null)}
         onSessionUpdated={handleSessionUpdated}
+        onSessionDeleted={handleSessionDeleted}
       />
     )
   }
@@ -88,15 +93,16 @@ export function SessionsManager() {
           <h2 className="text-xl font-semibold">Kelola Sesi Terapi</h2>
           <p className="text-sm text-muted-foreground mt-0.5">{sessions.length} sesi tersedia</p>
         </div>
-        <Link href={"/admin/sessions/new" as Route}>
-          <Button
-            size="sm"
-            className="rounded-sm gap-1.5 [&_svg]:size-3.5 bg-background hover:bg-lemon text-foreground"
-          >
+        <Button
+          asChild
+          size="sm"
+          className="rounded-sm gap-1.5 [&_svg]:size-3.5 bg-background hover:bg-lemon text-foreground"
+        >
+          <Link href="/admin/sessions/new">
             <PlusIcon className="w-3.5 h-3.5" />
             Tambah Sesi
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-3">

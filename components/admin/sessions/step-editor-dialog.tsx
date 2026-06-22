@@ -109,7 +109,7 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="max-w-2xl max-h-[92vh] overflow-y-auto"
+        className="max-w-4xl max-h-[92vh] overflow-y-auto"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>

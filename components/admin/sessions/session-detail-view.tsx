@@ -18,6 +18,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
   PencilSimpleIcon,
   ArrowLeftIcon,
   FloppyDiskIcon,
@@ -25,6 +32,7 @@ import {
   PlusIcon,
   TrashIcon,
   ArrowUpRightIcon,
+  WarningCircleIcon,
 } from '@phosphor-icons/react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -33,6 +41,88 @@ import { StepEditorDialog } from './step-editor-dialog'
 import { AddStepDialog } from './add-step-dialog'
 import { DeleteStepDialog } from './delete-step-dialog'
 import { SessionRecord, SessionStep, SessionMeta, STEP_TYPE_LABELS, STEP_TYPE_COLORS } from './types'
+
+// ─── Delete Session Dialog ─────────────────────────────────────────────────────
+
+function DeleteSessionDialog({
+  session,
+  open,
+  onDeleted,
+  onClose,
+}: {
+  session: SessionRecord
+  open: boolean
+  onDeleted: () => void
+  onClose: () => void
+}) {
+  const [deleting, setDeleting] = useState(false)
+  const [confirm, setConfirm] = useState('')
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    const supabase = createClient()
+
+    // Delete all steps first (FK constraint)
+    await supabase.from('session_steps').delete().eq('session_id', session.id)
+    const { error } = await supabase.from('sessions').delete().eq('id', session.id)
+
+    if (error) {
+      toast.error('Gagal menghapus sesi', { description: error.message })
+      setDeleting(false)
+      return
+    }
+
+    toast.success('Sesi dihapus')
+    onDeleted()
+  }
+
+  const slugMatch = confirm === session.slug
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { onClose(); setConfirm('') } }}>
+      <DialogContent className="max-w-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-destructive">
+            <WarningCircleIcon weight="fill" className="w-5 h-5" />
+            Hapus Sesi?
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">
+            Sesi <span className="font-semibold text-foreground">{session.session_name}</span> dan
+            semua stepnya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
+          </p>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs">
+              Ketik <span className="font-mono font-semibold text-foreground">{session.slug}</span> untuk konfirmasi
+            </Label>
+            <Input
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder={session.slug}
+              className="text-sm font-mono"
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => { onClose(); setConfirm('') }} className="rounded-sm text-sm">
+            Batal
+          </Button>
+          <Button
+            onClick={handleDelete}
+            disabled={deleting || !slugMatch}
+            className="rounded-sm gap-2 text-sm [&_svg]:size-4 bg-destructive text-white hover:bg-destructive/90 disabled:opacity-40"
+          >
+            {deleting ? <Spinner className="shrink-0 text-white" /> : <TrashIcon className="w-4 h-4" />}
+            {deleting ? 'Menghapus...' : 'Ya, Hapus Sesi'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function sessionToMeta(session: SessionRecord): SessionMeta {
   return {
@@ -60,13 +150,21 @@ function metaChanged(original: SessionRecord, form: SessionMeta, coverFile: File
   return false
 }
 
+// ─── Main component ────────────────────────────────────────────────────────────
+
 interface SessionDetailViewProps {
   session: SessionRecord
   onBack: () => void
   onSessionUpdated: (updated: SessionRecord) => void
+  onSessionDeleted: (id: string) => void
 }
 
-export function SessionDetailView({ session, onBack, onSessionUpdated }: SessionDetailViewProps) {
+export function SessionDetailView({
+  session,
+  onBack,
+  onSessionUpdated,
+  onSessionDeleted,
+}: SessionDetailViewProps) {
   const [steps, setSteps] = useState<SessionStep[]>(session.steps)
 
   const [editingStep, setEditingStep] = useState<SessionStep | null>(null)
@@ -74,6 +172,7 @@ export function SessionDetailView({ session, onBack, onSessionUpdated }: Session
   const [addStepOpen, setAddStepOpen] = useState(false)
   const [deletingStep, setDeletingStep] = useState<SessionStep | null>(null)
   const [deleteStepOpen, setDeleteStepOpen] = useState(false)
+  const [deleteSessionOpen, setDeleteSessionOpen] = useState(false)
 
   const [form, setForm] = useState<SessionMeta>(() => sessionToMeta(session))
   const [coverFile, setCoverFile] = useState<File | null>(null)
@@ -328,6 +427,18 @@ export function SessionDetailView({ session, onBack, onSessionUpdated }: Session
             )}
             {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
           </Button>
+
+          {/* ── Delete Session ── */}
+          <div className="pt-2 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteSessionOpen(true)}
+              className="rounded-sm gap-2 [&_svg]:size-4 w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
+            >
+              <TrashIcon className="w-4 h-4" />
+              Hapus Sesi Ini
+            </Button>
+          </div>
         </div>
 
         {/* ── Steps Table ── */}
@@ -351,7 +462,6 @@ export function SessionDetailView({ session, onBack, onSessionUpdated }: Session
               <TableHeader>
                 <TableRow className="bg-muted/40">
                   <TableHead className="w-12 text-center">No</TableHead>
-                  <TableHead className="w-16">Gambar</TableHead>
                   <TableHead>Judul</TableHead>
                   <TableHead className="w-36">Tipe</TableHead>
                   <TableHead className="w-20 text-center">Durasi</TableHead>
@@ -363,22 +473,6 @@ export function SessionDetailView({ session, onBack, onSessionUpdated }: Session
                   <TableRow key={step.id}>
                     <TableCell className="text-center font-semibold text-sm text-muted-foreground">
                       {step.step_number}
-                    </TableCell>
-                    <TableCell>
-                      {step.image_url ? (
-                        <Image
-                          src={step.image_url}
-                          alt={step.title ?? `Step ${step.step_number}`}
-                          width={48}
-                          height={48}
-                          className="w-12 h-12 object-cover border border-border rounded-sm bg-muted-foreground/10"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="w-12 h-12 bg-muted border border-border rounded-sm flex items-center justify-center text-xs text-muted-foreground">
-                          —
-                        </div>
-                      )}
                     </TableCell>
                     <TableCell className="font-medium text-sm">{step.title}</TableCell>
                     <TableCell>
@@ -423,7 +517,7 @@ export function SessionDetailView({ session, onBack, onSessionUpdated }: Session
                 {steps.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={5}
                       className="text-center text-muted-foreground py-8 text-sm"
                     >
                       Belum ada step. Klik Tambah Step untuk memulai.
@@ -436,6 +530,7 @@ export function SessionDetailView({ session, onBack, onSessionUpdated }: Session
         </div>
       </div>
 
+      {/* ── Dialogs ── */}
       <StepEditorDialog
         step={editingStep}
         open={stepEditorOpen}
@@ -463,6 +558,16 @@ export function SessionDetailView({ session, onBack, onSessionUpdated }: Session
           setDeleteStepOpen(false)
           setDeletingStep(null)
         }}
+      />
+
+      <DeleteSessionDialog
+        session={session}
+        open={deleteSessionOpen}
+        onDeleted={() => {
+          onSessionDeleted(session.id)
+          onBack()
+        }}
+        onClose={() => setDeleteSessionOpen(false)}
       />
     </div>
   )

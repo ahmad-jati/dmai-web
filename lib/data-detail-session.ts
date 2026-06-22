@@ -73,6 +73,8 @@ export async function fetchSessionBySlug(slug: string) {
     .eq('slug', slug)
     .single()
 
+    console.log(session)
+
   if (sessionError || !session) {
     console.error('fetchSessionBySlug session error:', sessionError)
     return null
@@ -103,6 +105,7 @@ export async function fetchSessionBySlug(slug: string) {
     duration: session.duration ?? '',
     image_cover: session.image_cover_url ?? '',
     week_number: session.week_number ?? null,
+    is_locked: session.is_loocked ?? true,
     instructions: (steps ?? []).map((step) => ({
       id: step.id,
       step: step.step_number,
