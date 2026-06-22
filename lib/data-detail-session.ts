@@ -8,7 +8,7 @@ export async function fetchAllSessions() {
     .select(`
       id, slug, session_name, detail_short, detail_full,
       icon_url, total_instruction, duration, image_cover_url,
-      sort_order, week_number
+      sort_order, week_number, is_locked
     `)
     .order('sort_order', { ascending: true })
 
@@ -42,6 +42,7 @@ export async function fetchAllSessions() {
     icon: s.icon_url ?? '',
     total_instruction: s.total_instruction ?? 0,
     duration: s.duration ?? '',
+    is_locked: s.is_locked ?? true,
     image_cover: s.image_cover_url ?? '',
     week_number: s.week_number ?? null,
     instructions: (steps ?? [])
@@ -105,7 +106,7 @@ export async function fetchSessionBySlug(slug: string) {
     duration: session.duration ?? '',
     image_cover: session.image_cover_url ?? '',
     week_number: session.week_number ?? null,
-    is_locked: session.is_loocked ?? true,
+    is_locked: session.is_locked ?? true,
     instructions: (steps ?? []).map((step) => ({
       id: step.id,
       step: step.step_number,

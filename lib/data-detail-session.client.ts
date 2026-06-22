@@ -26,6 +26,7 @@ export type SessionData = {
   duration: string
   image_cover: string
   week_number: number | null
+  is_locked: boolean
   instructions: SessionInstruction[]
 }
 
@@ -57,6 +58,7 @@ function mapSession(s: any, steps: any[]): SessionData {
     duration: s.duration ?? '',
     image_cover: s.image_cover_url ?? '',
     week_number: s.week_number ?? null,
+    is_locked: s.is_locked ?? true,
     instructions: steps
       .filter((step) => step.session_id === s.id)
       .sort((a, b) => a.step_number - b.step_number)
@@ -74,7 +76,7 @@ export async function fetchAllSessions(): Promise<SessionData[]> {
     .select(`
       id, slug, session_name, detail_short, detail_full,
       icon_url, total_instruction, duration, image_cover_url,
-      week_number, sort_order
+      week_number, sort_order, is_locked
     `)
     .order('sort_order', { ascending: true })
 
@@ -112,7 +114,7 @@ export async function fetchSessionBySlug(slug: string): Promise<SessionData | nu
     .select(`
       id, slug, session_name, detail_short, detail_full,
       icon_url, total_instruction, duration, image_cover_url,
-      week_number, sort_order
+      week_number, sort_order, is_locked
     `)
     .eq('slug', slug)
     .single()
