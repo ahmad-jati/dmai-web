@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * step-type-form.tsx — Adaptive form per step_type
+ * Used by: StepBuilderCard, StepEditorDialog, AddStepDialog
+ */
+
 import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -296,13 +301,19 @@ function NarrationStepConfig({
   onChange: (patch: Record<string, unknown>) => void
   onTotalDurationChange: (totalSec: number) => void
 }) {
-  const subSteps: NarrationSubStep[] = (config.sub_steps as NarrationSubStep[]) ?? []
+  // Normalize: DB-loaded sub_steps won't have _key — add it here so React keys + update logic work
+  const rawSubSteps = (config.sub_steps as NarrationSubStep[]) ?? []
+  const subSteps: NarrationSubStep[] = rawSubSteps.map((s) =>
+    s._key ? s : { ...s, _key: newKey() }
+  )
 
   const totalDuration = subSteps.reduce((acc, s) => acc + (s.duration_seconds || 0), 0)
 
   const update = (updated: NarrationSubStep[]) => {
-    onChange({ sub_steps: updated })
-    onTotalDurationChange(updated.reduce((acc, s) => acc + (s.duration_seconds || 0), 0))
+    // Always persist _key inside step_config so subsequent reads stay stable
+    const withKeys = updated.map((s) => (s._key ? s : { ...s, _key: newKey() }))
+    onChange({ sub_steps: withKeys })
+    onTotalDurationChange(withKeys.reduce((acc, s) => acc + (s.duration_seconds || 0), 0))
   }
 
   const addSub = () =>
@@ -355,7 +366,7 @@ function NarrationStepConfig({
       <div className="flex flex-col gap-2">
         {subSteps.map((sub, i) => (
           <NarrationSubStepCard
-            key={sub._key}
+            key={sub._key ?? `sub-${i}`}
             sub={sub}
             index={i}
             total={subSteps.length}

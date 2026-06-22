@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,10 +10,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import { FloppyDiskIcon } from '@phosphor-icons/react'
-import { StepTypeForm, BodyPart } from './step-type-form'
+import { StepTypeForm, BodyPart, NarrationSubStep } from './step-type-form'
 import { SessionStep, STEP_TYPE_LABELS, STEP_TYPE_COLORS } from './types'
 
 interface StepEditorDialogProps {
@@ -27,28 +25,31 @@ interface StepEditorDialogProps {
 export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDialogProps) {
   const [form, setForm] = useState<SessionStep | null>(null)
   const [saving, setSaving] = useState(false)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string>('')
-  const [audioFile, setAudioFile] = useState<File | null>(null)
-
-  // Body parts — fetched once when dialog first opens
   const [bodyParts, setBodyParts] = useState<BodyPart[]>([])
   const [bodyPartsLoading, setBodyPartsLoading] = useState(false)
 
-  // Reset form whenever the target step changes
+  // Reset + normalize whenever the target step changes
   useEffect(() => {
-    if (step) {
-      setForm({ ...step })
-      setImageFile(null)
-      setAudioFile(null)
-      setImagePreview(step.image_url ?? '')
+    if (!step) return
+    const normalized = { ...step }
+    // DB-loaded sub_steps won't have _key — add it so React keys and update logic work
+    if (step.step_type === 'narration' && Array.isArray(step.step_config?.sub_steps)) {
+      normalized.step_config = {
+        ...step.step_config,
+        sub_steps: (step.step_config.sub_steps as Record<string, unknown>[]).map((s) =>
+          (s as NarrationSubStep)._key
+            ? s
+            : { ...s, _key: `db-${Math.random().toString(36).slice(2, 8)}` }
+        ),
+      }
     }
+    setForm(normalized)
   }, [step])
 
   // Fetch body_parts once on first open
   useEffect(() => {
     if (!open || bodyParts.length > 0) return
-    const fetch = async () => {
+    const load = async () => {
       setBodyPartsLoading(true)
       const supabase = createClient()
       const { data, error } = await supabase
@@ -58,7 +59,7 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
       if (!error && data) setBodyParts(data as BodyPart[])
       setBodyPartsLoading(false)
     }
-    fetch()
+    load()
   }, [open])
 
   const handleFormChange = useCallback((patch: Partial<SessionStep>) => {
@@ -68,39 +69,7 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
   const handleSave = async () => {
     if (!form) return
     setSaving(true)
-    const supabase = createClient()
-    let finalImageUrl = form.image_url
-    let finalAudioUrl = form.audio_url
-
-    if (imageFile) {
-      const ext = imageFile.name.split('.').pop()
-      const path = `steps/${form.id}/image.${ext}`
-      const { error: upErr } = await supabase.storage
-        .from('session-assets')
-        .upload(path, imageFile, { upsert: true })
-      if (upErr) {
-        toast.error('Gagal upload gambar', { description: upErr.message })
-      } else {
-        const { data: urlData } = supabase.storage.from('session-assets').getPublicUrl(path)
-        finalImageUrl = urlData.publicUrl
-      }
-    }
-
-    if (audioFile) {
-      const ext = audioFile.name.split('.').pop()
-      const path = `steps/${form.id}/audio.${ext}`
-      const { error: upErr } = await supabase.storage
-        .from('session-assets')
-        .upload(path, audioFile, { upsert: true })
-      if (upErr) {
-        toast.error('Gagal upload audio', { description: upErr.message })
-      } else {
-        const { data: urlData } = supabase.storage.from('session-assets').getPublicUrl(path)
-        finalAudioUrl = urlData.publicUrl
-      }
-    }
-
-    await onSave({ ...form, image_url: finalImageUrl, audio_url: finalAudioUrl })
+    await onSave(form)
     setSaving(false)
   }
 
@@ -109,7 +78,7 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="max-w-4xl max-h-[92vh] overflow-y-auto"
+        className="max-w-2xl max-h-[92vh] overflow-y-auto"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
@@ -128,14 +97,6 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
         <StepTypeForm
           form={form}
           setForm={handleFormChange}
-          imageFile={imageFile}
-          imagePreview={imagePreview}
-          audioFile={audioFile}
-          onImageChange={(file, preview) => {
-            setImageFile(file)
-            setImagePreview(preview)
-          }}
-          onAudioChange={(file) => setAudioFile(file)}
           bodyParts={bodyParts}
           bodyPartsLoading={bodyPartsLoading}
         />

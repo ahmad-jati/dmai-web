@@ -42,6 +42,32 @@ import { AddStepDialog } from './add-step-dialog'
 import { DeleteStepDialog } from './delete-step-dialog'
 import { SessionRecord, SessionStep, SessionMeta, STEP_TYPE_LABELS, STEP_TYPE_COLORS } from './types'
 
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Strip all File/Blob/runtime-only fields from step_config before sending to DB.
+ * Supabase stores step_config as jsonb — File objects become {} silently, causing
+ * phantom "success" toasts while nothing actually changes in the database.
+ */
+function sanitizeStepConfig(config: Record<string, unknown>): Record<string, unknown> {
+  const strip = (val: unknown): unknown => {
+    if (val instanceof File || val instanceof Blob) return undefined
+    if (Array.isArray(val)) return val.map(strip).filter((v) => v !== undefined)
+    if (val !== null && typeof val === 'object') {
+      const out: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
+        // Drop runtime-only keys
+        if (['audio_file', 'image_file', 'image_preview'].includes(k)) continue
+        const stripped = strip(v)
+        if (stripped !== undefined) out[k] = stripped
+      }
+      return out
+    }
+    return val
+  }
+  return strip(config) as Record<string, unknown>
+}
+
 // ─── Delete Session Dialog ─────────────────────────────────────────────────────
 
 function DeleteSessionDialog({
@@ -211,7 +237,7 @@ export function SessionDetailView({
     }
 
     const cleanedDetailFull = form.detail_full.filter((p) => p.trim() !== '')
-    const { error } = await supabase
+    const { data: savedSession, error } = await supabase
       .from('sessions')
       .update({
         session_name: form.session_name,
@@ -224,6 +250,8 @@ export function SessionDetailView({
         total_instruction: form.total_instruction ? Number(form.total_instruction) : null,
       })
       .eq('id', session.id)
+      .select()
+      .single()
 
     if (error) {
       toast.error('Gagal menyimpan', { description: error.message })
@@ -250,23 +278,88 @@ export function SessionDetailView({
 
   const handleSaveStep = useCallback(async (updated: SessionStep) => {
     const supabase = createClient()
-    const { error } = await supabase
+
+    // For narration steps: upload pending audio/image File objects inside sub_steps,
+    // then strip all non-serializable fields before writing to DB.
+    let finalConfig = sanitizeStepConfig(updated.step_config)
+
+    if (updated.step_type === 'narration' && Array.isArray(updated.step_config?.sub_steps)) {
+      const uploadedSubSteps = await Promise.all(
+        (updated.step_config.sub_steps as Record<string, unknown>[]).map(async (sub, i) => {
+          const s = sub as {
+            _key?: string
+            audio_file?: File
+            image_file?: File
+            audio_url?: string
+            image_url?: string
+            image_preview?: string
+            [k: string]: unknown
+          }
+          let audioUrl = s.audio_url ?? ''
+          let imageUrl = s.image_url ?? ''
+
+          if (s.audio_file instanceof File) {
+            const ext = s.audio_file.name.split('.').pop()
+            const path = `steps/${updated.id}/sub_${i}_audio.${ext}`
+            const { error } = await supabase.storage
+              .from('session-assets')
+              .upload(path, s.audio_file, { upsert: true })
+            if (!error) {
+              const { data } = supabase.storage.from('session-assets').getPublicUrl(path)
+              audioUrl = data.publicUrl
+            } else {
+              console.error('[upload sub audio]', error)
+            }
+          }
+
+          if (s.image_file instanceof File) {
+            const ext = s.image_file.name.split('.').pop()
+            const path = `steps/${updated.id}/sub_${i}_image.${ext}`
+            const { error } = await supabase.storage
+              .from('session-assets')
+              .upload(path, s.image_file, { upsert: true })
+            if (!error) {
+              const { data } = supabase.storage.from('session-assets').getPublicUrl(path)
+              imageUrl = data.publicUrl
+            } else {
+              console.error('[upload sub image]', error)
+            }
+          }
+
+          // Return only serializable fields
+          const { audio_file, image_file, image_preview, ...rest } = s
+          return { ...rest, audio_url: audioUrl, image_url: imageUrl }
+        })
+      )
+      finalConfig = { ...finalConfig, sub_steps: uploadedSubSteps }
+    }
+
+    const { data: saved, error } = await supabase
       .from('session_steps')
       .update({
         title: updated.title,
         description: updated.description,
         duration_seconds: updated.duration_seconds,
-        image_url: updated.image_url,
-        audio_url: updated.audio_url,
+        image_url: updated.image_url ?? '',
+        audio_url: updated.audio_url ?? '',
         step_type: updated.step_type,
-        step_config: updated.step_config,
+        step_config: finalConfig,
       })
       .eq('id', updated.id)
+      .select()
+      .single()
 
     if (error) {
-      toast.error('Gagal menyimpan', { description: error.message })
+      console.error('[handleSaveStep] update error:', error)
+      toast.error('Gagal menyimpan step', {
+        description: error.code === '42501'
+          ? 'Tidak ada izin. Pastikan RLS policy admin sudah diterapkan.'
+          : error.message,
+      })
     } else {
-      setSteps((prev) => prev.map((st) => (st.id === updated.id ? updated : st)))
+      setSteps((prev) => prev.map((st) =>
+        st.id === updated.id ? { ...updated, step_config: finalConfig } : st
+      ))
       toast.success('Tersimpan', { description: 'Step berhasil diperbarui.' })
       setStepEditorOpen(false)
       setEditingStep(null)

@@ -267,8 +267,9 @@ function StepBuilderCard({
   bodyParts: BodyPart[]
   bodyPartsLoading: boolean
 }) {
-  // Bridge DraftStep ↔ SessionStep shape that StepTypeForm expects
-  const asSessionStep = {
+  // Keep a local SessionStep-shaped state so StepTypeForm has stable, owned state.
+  // Sync back to parent DraftStep via onChange on every change.
+  const [localForm, setLocalForm] = useState({
     id: step._key,
     step_number: step.step_number,
     title: step.title,
@@ -276,18 +277,40 @@ function StepBuilderCard({
     duration_seconds: step.duration_seconds,
     step_type: step.step_type,
     step_config: step.step_config,
-    image_url: step.image_preview, // preview doubles as url for display
+    image_url: step.image_preview ?? '',
     audio_url: '',
+  })
+
+  // Sync incoming step prop → localForm when the step identity changes (e.g. type reset)
+  const prevKeyRef = useRef(step._key)
+  if (prevKeyRef.current !== step._key) {
+    prevKeyRef.current = step._key
+    setLocalForm({
+      id: step._key,
+      step_number: step.step_number,
+      title: step.title,
+      description: step.description,
+      duration_seconds: step.duration_seconds,
+      step_type: step.step_type,
+      step_config: step.step_config,
+      image_url: step.image_preview ?? '',
+      audio_url: '',
+    })
   }
 
-  const handleChange = (patch: Partial<typeof asSessionStep>) => {
+  const handleChange = (patch: Partial<typeof localForm>) => {
+    // When step_type changes, reset step_config
+    const next = patch.step_type !== undefined && patch.step_type !== localForm.step_type
+      ? { ...localForm, ...patch, step_config: {} }
+      : { ...localForm, ...patch }
+    setLocalForm(next)
     onChange({
       ...step,
-      ...(patch.title !== undefined && { title: patch.title }),
-      ...(patch.description !== undefined && { description: patch.description }),
-      ...(patch.duration_seconds !== undefined && { duration_seconds: patch.duration_seconds }),
-      ...(patch.step_type !== undefined && { step_type: patch.step_type, step_config: {} }),
-      ...(patch.step_config !== undefined && { step_config: patch.step_config }),
+      title: next.title,
+      description: next.description,
+      duration_seconds: next.duration_seconds,
+      step_type: next.step_type,
+      step_config: next.step_config,
     })
   }
 
@@ -298,8 +321,8 @@ function StepBuilderCard({
         <div className="w-6 h-6 rounded-full bg-foreground text-background text-xs font-bold flex items-center justify-center shrink-0">
           {step.step_number}
         </div>
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-sm border text-xs font-medium ${STEP_TYPE_COLORS[step.step_type]}`}>
-          {STEP_TYPE_LABELS[step.step_type]}
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-sm border text-xs font-medium ${STEP_TYPE_COLORS[localForm.step_type]}`}>
+          {STEP_TYPE_LABELS[localForm.step_type]}
         </span>
         <div className="flex-1" />
         {total > 1 && (
@@ -312,10 +335,10 @@ function StepBuilderCard({
         )}
       </div>
 
-      {/* Body — delegate all field rendering to StepTypeForm */}
+      {/* Body */}
       <div className="p-4">
         <StepTypeForm
-          form={asSessionStep as any}
+          form={localForm as any}
           setForm={handleChange as any}
           imageFile={step.image_file}
           imagePreview={step.image_preview}
@@ -463,7 +486,7 @@ function ReviewStep({
               } else if (step.step_type === 'body_map') {
                 const lbl = step.step_config.section_label as string
                 configSummary = lbl
-                  ? <p className="text-xs text-muted-foreground">&nbsp;{lbl}&nbsp;</p>
+                  ? <p className="text-xs text-muted-foreground">{lbl}</p>
                   : <p className="text-xs text-muted-foreground italic">Label belum diisi</p>
               } else if (step.step_type === 'external_embed') {
                 const url = step.step_config.embed_url as string

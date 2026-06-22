@@ -30,7 +30,7 @@ const emptyStep = (stepNumber: number): SessionStep => ({
   step_number: stepNumber,
   title: '',
   description: '',
-  duration_seconds: 60,
+  duration_seconds: 0,
   image_url: '',
   audio_url: '',
   step_type: 'narration' as StepType,
@@ -46,27 +46,18 @@ export function AddStepDialog({
 }: AddStepDialogProps) {
   const [form, setForm] = useState<SessionStep>(() => emptyStep(nextStepNumber))
   const [saving, setSaving] = useState(false)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string>('')
-  const [audioFile, setAudioFile] = useState<File | null>(null)
-
   const [bodyParts, setBodyParts] = useState<BodyPart[]>([])
   const [bodyPartsLoading, setBodyPartsLoading] = useState(false)
 
   // Reset on open
   useEffect(() => {
-    if (open) {
-      setForm(emptyStep(nextStepNumber))
-      setImageFile(null)
-      setAudioFile(null)
-      setImagePreview('')
-    }
+    if (open) setForm(emptyStep(nextStepNumber))
   }, [open, nextStepNumber])
 
   // Fetch body_parts once on first open
   useEffect(() => {
     if (!open || bodyParts.length > 0) return
-    const fetch = async () => {
+    const load = async () => {
       setBodyPartsLoading(true)
       const supabase = createClient()
       const { data, error } = await supabase
@@ -76,7 +67,7 @@ export function AddStepDialog({
       if (!error && data) setBodyParts(data as BodyPart[])
       setBodyPartsLoading(false)
     }
-    fetch()
+    load()
   }, [open])
 
   const handleFormChange = useCallback((patch: Partial<SessionStep>) => {
@@ -91,6 +82,11 @@ export function AddStepDialog({
     setSaving(true)
     const supabase = createClient()
 
+    // Strip File objects from step_config before inserting — they're not JSON-serializable
+    const safeConfig = JSON.parse(JSON.stringify(form.step_config, (_, v) =>
+      v instanceof File || v instanceof Blob ? undefined : v
+    ))
+
     const { data: inserted, error: insertErr } = await supabase
       .from('session_steps')
       .insert({
@@ -100,7 +96,7 @@ export function AddStepDialog({
         description: form.description,
         duration_seconds: form.duration_seconds,
         step_type: form.step_type,
-        step_config: form.step_config,
+        step_config: safeConfig,
         image_url: '',
         audio_url: '',
       })
@@ -113,47 +109,12 @@ export function AddStepDialog({
       return
     }
 
-    const newId = inserted.id
-    let finalImageUrl = ''
-    let finalAudioUrl = ''
-
-    if (imageFile) {
-      const ext = imageFile.name.split('.').pop()
-      const path = `steps/${newId}/image.${ext}`
-      const { error: upErr } = await supabase.storage
-        .from('session-assets')
-        .upload(path, imageFile, { upsert: true })
-      if (!upErr) {
-        const { data: d } = supabase.storage.from('session-assets').getPublicUrl(path)
-        finalImageUrl = d.publicUrl
-      }
-    }
-
-    if (audioFile) {
-      const ext = audioFile.name.split('.').pop()
-      const path = `steps/${newId}/audio.${ext}`
-      const { error: upErr } = await supabase.storage
-        .from('session-assets')
-        .upload(path, audioFile, { upsert: true })
-      if (!upErr) {
-        const { data: d } = supabase.storage.from('session-assets').getPublicUrl(path)
-        finalAudioUrl = d.publicUrl
-      }
-    }
-
-    if (finalImageUrl || finalAudioUrl) {
-      await supabase
-        .from('session_steps')
-        .update({ image_url: finalImageUrl, audio_url: finalAudioUrl })
-        .eq('id', newId)
-    }
-
     const newStep: SessionStep = {
       ...form,
-      id: newId,
+      id: inserted.id,
       step_number: nextStepNumber,
-      image_url: finalImageUrl,
-      audio_url: finalAudioUrl,
+      image_url: '',
+      audio_url: '',
     }
 
     toast.success('Step ditambahkan')
@@ -174,14 +135,6 @@ export function AddStepDialog({
         <StepTypeForm
           form={form}
           setForm={handleFormChange}
-          imageFile={imageFile}
-          imagePreview={imagePreview}
-          audioFile={audioFile}
-          onImageChange={(file, preview) => {
-            setImageFile(file)
-            setImagePreview(preview)
-          }}
-          onAudioChange={(file) => setAudioFile(file)}
           bodyParts={bodyParts}
           bodyPartsLoading={bodyPartsLoading}
         />
