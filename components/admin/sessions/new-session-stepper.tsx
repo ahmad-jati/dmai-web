@@ -338,13 +338,8 @@ function StepBuilderCard({
       {/* Body */}
       <div className="p-4">
         <StepTypeForm
-          form={localForm as any}
-          setForm={handleChange as any}
-          imageFile={step.image_file}
-          imagePreview={step.image_preview}
-          audioFile={step.audio_file}
-          onImageChange={(file, preview) => onChange({ ...step, image_file: file, image_preview: preview })}
-          onAudioChange={(file) => onChange({ ...step, audio_file: file })}
+          form={localForm}
+          setForm={handleChange}
           bodyParts={bodyParts}
           bodyPartsLoading={bodyPartsLoading}
         />
