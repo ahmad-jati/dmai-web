@@ -4,7 +4,12 @@ import { updateSession } from "@/lib/supabase/proxy";
 import { createServerClient } from "@supabase/ssr";
 import { hasEnvVars } from "@/lib/utils";
 
-const PROTECTED_ROUTES = ["/homepage"];
+const PROTECTED_ROUTES = [
+  "/homepage",
+  "/session",
+  "/history",
+  "/profile",
+];
 const ADMIN_ROUTES = ["/admin"];
 
 export async function proxy(request: NextRequest) {

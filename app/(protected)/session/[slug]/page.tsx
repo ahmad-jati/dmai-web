@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import SessionLocked from "@/components/session-locked"
 import { Section } from "@/components/layout/section-wrapper"
 import { Button } from "@/components/ui/button"
 import { OtherSessionList } from "@/components/other-session-list"
@@ -15,13 +16,15 @@ const BLUR_DATA_URL =
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const session = await fetchSessionBySlug(slug)
+  console.log(session)
 
   if (!session) notFound()
+  
 
   return (
-    <div className="flex flex-col gap-8 w-full">
-      <Section className="flex 2md:flex-row flex-col justify-between gap-8 bg-celeste">
-        <div className="flex flex-col 2md:items-start items-center 2md:justify-between 2md:gap-0 gap-4 lg:max-w-xl 2md:max-w-sm">
+    <div className="flex flex-col gap-8 w-full h-fit">
+      <Section className="flex 2md:flex-row flex-col justify-between items-center gap-8 bg-celeste h-fit">
+        <div className="flex flex-col 2md:items-start items-center 2md:justify-between gap-4 lg:max-w-xl 2md:max-w-sm h-fit">
           
           <div className="2md:flex hidden items-center gap-1">
             <Link

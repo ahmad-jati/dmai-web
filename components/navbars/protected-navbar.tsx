@@ -42,6 +42,8 @@ export function ProtectedNavbar() {
       }
 
       const { data: { user } } = await supabase.auth.getUser();
+
+      console.log(user)
       const name = user?.user_metadata?.full_name ?? null;
       setUserName(name);
       if (name) sessionStorage.setItem("user_full_name", name);
@@ -113,7 +115,7 @@ export function ProtectedNavbar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={logout}
-                  className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md hover:border-2 border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive! hover:dark:bg-destructive/20 shadow-none hover:cursor-pointer"
+                  className="[&_svg]:size-4 flex items-center gap-2 w-full rounded-md hover:border-2 border-destructive/20 text-destructive hover:bg-destructive/20! hover:text-destructive! hover:dark:bg-destructive/20 shadow-none hover:cursor-pointer"
                 >
                   <SignOutIcon />
                   Logout

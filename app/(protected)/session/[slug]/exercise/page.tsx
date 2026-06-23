@@ -14,6 +14,7 @@ import { Route } from "next"
 import { createClient } from "@/lib/supabase/client"
 import { Spinner } from "@/components/ui/spinner"
 import { FeedbackDialog } from "@/components/session/feeedback-dialog"
+import { toast } from 'sonner'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -35,19 +36,30 @@ function ExerciseLoadingSkeleton() {
 }
 
 
-
 export default function ExercisePage({ params }: Props) {
   const { slug } = use(params)
-
   const [session, setSession] = useState<SessionData | null | undefined>(undefined)
   const [isDone, setIsDone] = useState(false)
   const [key, setKey] = useState(0)
   const [userId, setUserId] = useState<string | null>(null)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [sessionId, setSessionId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchSessionBySlug(slug).then((data) => setSession(data ?? null))
+    fetchSessionBySlug(slug).then((data) => {
+     setSession(data ?? null)
+     if (data) setSessionId(data.id)
+   })
   }, [slug])
+
+  useEffect(() => {
+    if (!sessionId) return
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith('dmai_form_draft_') && key !== `dmai_form_draft_${sessionId}`) {
+          localStorage.removeItem(key)
+        }
+      }
+   }, [sessionId])
 
   useEffect(() => {
     const getUser = async () => {
@@ -63,21 +75,69 @@ export default function ExercisePage({ params }: Props) {
     setIsDone(false)
   }
 
-  const handleDone = async () => {
+  const handleDone = async (
+    _completionId: string,
+    _userId: string,
+    formResponses: Record<string, Record<string, unknown>>
+  ) => {
     const supabase = createClient()
     const { data: userData } = await supabase.auth.getUser()
     const user = userData?.user
-
-    if (user && session) {
-      await supabase.from("session_completions").insert({
+  
+    if (!user || !session) {
+      setIsDone(true)
+      setTimeout(() => setFeedbackOpen(true), 400)
+      return
+    }
+  
+    const { data: completion, error: completionError } = await supabase
+      .from('session_completions')
+      .insert({
         user_id: user.id,
+        session_id: session.id,
         session_slug: slug,
         session_name: session.session_name,
       })
+      .select('id')
+      .single()
+  
+    if (completionError || !completion) {
+      console.error('completion insert error:', completionError)
+      setIsDone(true)
+      setTimeout(() => setFeedbackOpen(true), 400)
+      return
     }
-
+  
+    const completionId = completion.id
+    const formEntries = Object.entries(formResponses)
+    if (formEntries.length > 0 && session.instructions) {
+      const rows = formEntries.map(([stepId, stepResponses]) => {
+        const stepInstruction = session.instructions.find((i: { id: string }) => i.id === stepId)
+        return {
+          completion_id: completionId,
+          user_id: user.id,
+          session_id: session.id,
+          step_id: stepId,
+          step_number: stepInstruction?.step ?? 0,
+          responses: stepResponses,
+        }
+      })
+  
+      const { error: formError } = await supabase.from('session_form_responses').insert(rows)
+      if (formError) {
+        console.error('form responses insert error:', formError)
+      } else {
+        // Clear localStorage draft on success
+        try { localStorage.removeItem(`dmai_form_draft_${session.id}`) } catch {}
+      }
+    }
+  
+    toast.success('Sesi selesai! 🎉', {
+      description: `Kamu telah menyelesaikan sesi ${session.session_name}.`,
+      duration: 4000,
+    })
+  
     setIsDone(true)
-    // Open feedback dialog after a brief delay so the done screen renders first
     setTimeout(() => setFeedbackOpen(true), 400)
   }
 
@@ -91,7 +151,7 @@ export default function ExercisePage({ params }: Props) {
     return (
       <>
         <div className="w-full">
-        <Section className="min-h-[calc(74svh-64px)] md:min-h-[calc(82dvh-52px)] bg-celeste flex flex-col items-center justify-center sm:gap-8 gap-6 sm:px-0 2xs:px-10 px-8">
+          <Section className="h-fit bg-celeste flex flex-col items-center justify-center sm:gap-8 gap-6 sm:px-0 2xs:px-10 px-8">
             <div className="flex flex-col items-center gap-2 text-center">
               <p className="xs:text-p/5 text-sm/4 font-medium">Kamu telah menyelesaikan sesi</p>
               <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>
@@ -159,7 +219,8 @@ export default function ExercisePage({ params }: Props) {
     <div className="w-full">
       <StepperExercise
         key={key}
-        instructions={session.instructions}
+        instructions={session.instructions} 
+        sessionId={sessionId ?? ''}
         sessionName={session.session_name}
         sessionSlug={session.slug}
         sessionImageCover={session.image_cover}
