@@ -38,11 +38,11 @@ export function SessionCard({ session, onClick, onLockToggled }: SessionCardProp
   }
 
   return (
-    <div className="relative flex flex-col gap-2.5 p-3.5 bg-white border border-border hover:border-muted-foreground/40 hover:shadow-sm transition-all text-left rounded-sm group w-full">
+    <div className="relative flex flex-col gap-2.5 p-3.5 bg-background border border-border hover:border-muted-foreground/40 hover:shadow-sm transition-all text-left rounded-sm group w-full hover:cursor-pointer">
       {/* Lock toggle — top-right corner, does NOT trigger card click */}
       <button
         onClick={handleLockToggle}
-        disabled={toggling}
+        disabled={toggling} 
         title={session.is_locked ? 'Klik untuk buka kunci' : 'Klik untuk kunci'}
         className={[
           'absolute top-2.5 right-2.5 z-10 flex items-center justify-center w-7 h-7 rounded-sm border transition-colors',
@@ -60,7 +60,7 @@ export function SessionCard({ session, onClick, onLockToggled }: SessionCardProp
       </button>
 
       {/* Main clickable area */}
-      <button onClick={onClick} className="flex flex-col gap-2.5 text-left w-full pr-8">
+      <button onClick={onClick} className="flex flex-col gap-2.5 text-left w-full pr-8 group-hover:cursor-pointer">
         <div className="flex items-start gap-3 w-full">
           <div className="w-14 h-14 rounded-sm overflow-hidden border border-border bg-muted shrink-0">
             {session.image_cover_url ? (

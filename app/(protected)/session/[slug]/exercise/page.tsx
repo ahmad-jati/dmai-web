@@ -23,7 +23,7 @@ type Props = {
 function ExerciseLoadingSkeleton() {
   return (
     <div className="w-full">
-      <div className="fixed inset-0 z-50 flex items-stretch justify-stretch lg:px-28 2md:px-12 lg:py-14 py-8 px-8 bg-celeste">
+      <div className="fixed inset-0 z-50 flex items-stretch justify-stretch lg:px-28 2md:px-12 lg:py-14 py-8 px-8 bg-background">
         <div className="flex-1 md:rounded-4xl rounded-xl overflow-hidden relative">
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             <Spinner className="text-muted-foreground"/>
@@ -54,9 +54,9 @@ export default function ExercisePage({ params }: Props) {
 
   useEffect(() => {
     if (!sessionId) return
-      for (const key of Object.keys(localStorage)) {
+      for (const key of Object.keys(sessionStorage)) {
         if (key.startsWith('dmai_form_draft_') && key !== `dmai_form_draft_${sessionId}`) {
-          localStorage.removeItem(key)
+          sessionStorage.removeItem(key)
         }
       }
    }, [sessionId])
@@ -83,8 +83,12 @@ export default function ExercisePage({ params }: Props) {
     const supabase = createClient()
     const { data: userData } = await supabase.auth.getUser()
     const user = userData?.user
+
+    console.log('formResponses:', formResponses)
+    console.log('instructions:', session?.instructions.map(i => ({ id: i.id, step_type: i.step_type })))
   
     if (!user || !session) {
+      toast.error('Gagal menyimpan sesi.', { duration: 4000 })
       setIsDone(true)
       setTimeout(() => setFeedbackOpen(true), 400)
       return
@@ -103,6 +107,7 @@ export default function ExercisePage({ params }: Props) {
   
     if (completionError || !completion) {
       console.error('completion insert error:', completionError)
+      toast.error('Gagal menyimpan sesi.', { duration: 4000 })
       setIsDone(true)
       setTimeout(() => setFeedbackOpen(true), 400)
       return
@@ -110,35 +115,83 @@ export default function ExercisePage({ params }: Props) {
   
     const completionId = completion.id
     const formEntries = Object.entries(formResponses)
+
     if (formEntries.length > 0 && session.instructions) {
-      const rows = formEntries.map(([stepId, stepResponses]) => {
-        const stepInstruction = session.instructions.find((i: { id: string }) => i.id === stepId)
-        return {
-          completion_id: completionId,
-          user_id: user.id,
-          session_id: session.id,
-          step_id: stepId,
-          step_number: stepInstruction?.step ?? 0,
-          responses: stepResponses,
+      const formRows: {
+        completion_id: string
+        user_id: string
+        session_id: string
+        step_id: string
+        step_number: number
+        responses: Record<string, unknown>
+      }[] = []
+
+      const bodyMapRows: {
+        completion_id: string
+        user_id: string
+        step_id: string
+        selected_parts: string[]
+        sensation: string | null
+        note: string
+      }[] = []
+
+      for (const [stepId, stepResponses] of formEntries) {
+        const stepInstruction = session.instructions.find((i: { id: string; step_type: string }) => i.id === stepId)
+        if (stepInstruction?.step_type === 'body_map') {
+          bodyMapRows.push({
+            completion_id: completionId,
+            user_id: user.id,
+            step_id: stepId,
+            selected_parts: (stepResponses.selected_parts as string[]) ?? [],
+            sensation: (stepResponses.sensation as string | null)?.toLowerCase() ?? null,
+            note: (stepResponses.note as string) ?? '',
+          })
+        } else {
+          formRows.push({
+            completion_id: completionId,
+            user_id: user.id,
+            session_id: session.id,
+            step_id: stepId,
+            step_number: stepInstruction?.step ?? 0,
+            responses: stepResponses,
+          })
         }
-      })
-  
-      const { error: formError } = await supabase.from('session_form_responses').insert(rows)
-      if (formError) {
-        console.error('form responses insert error:', formError)
-      } else {
-        // Clear localStorage draft on success
-        try { localStorage.removeItem(`dmai_form_draft_${session.id}`) } catch {}
       }
+
+      const promises: Promise<void>[] = []
+
+      if (formRows.length > 0) {
+        promises.push(
+          (async () => {
+            const { error } = await supabase.from('session_form_responses').insert(formRows)
+            if (error) console.error('form responses insert error:', error)
+          })()
+        )
+      }
+
+      if (bodyMapRows.length > 0) {
+        promises.push(
+          (async () => {
+            const { error } = await supabase.from('session_body_map_responses').insert(bodyMapRows)
+            if (error) console.error('body map responses insert error:', error)
+          })()
+        )
+      }
+
+      await Promise.all(promises)
+      try { sessionStorage.removeItem(`dmai_form_draft_${session.id}`) } catch {}
     }
   
+    // Toast dulu, baru setIsDone — supaya toast sempat muncul sebelum component berganti
     toast.success('Sesi selesai! 🎉', {
       description: `Kamu telah menyelesaikan sesi ${session.session_name}.`,
       duration: 4000,
     })
-  
-    setIsDone(true)
-    setTimeout(() => setFeedbackOpen(true), 400)
+
+    setTimeout(() => {
+      setIsDone(true)
+      setTimeout(() => setFeedbackOpen(true), 400)
+    }, 300)
   }
 
   // loading
@@ -151,7 +204,7 @@ export default function ExercisePage({ params }: Props) {
     return (
       <>
         <div className="w-full">
-          <Section className="h-fit bg-celeste flex flex-col items-center justify-center sm:gap-8 gap-6 sm:px-0 2xs:px-10 px-8">
+          <Section className="min-h-[calc(74svh-64px)] md:min-h-[calc(82dvh-52px)] bg-celeste flex flex-col items-center justify-center sm:gap-8 gap-6 sm:px-0 2xs:px-10 px-8">
             <div className="flex flex-col items-center gap-2 text-center">
               <p className="xs:text-p/5 text-sm/4 font-medium">Kamu telah menyelesaikan sesi</p>
               <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>
