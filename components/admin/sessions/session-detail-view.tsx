@@ -40,24 +40,40 @@ import { Route } from 'next'
 import { StepEditorDialog } from './step-editor-dialog'
 import { AddStepDialog } from './add-step-dialog'
 import { DeleteStepDialog } from './delete-step-dialog'
-import { SessionRecord, SessionStep, SessionMeta, STEP_TYPE_LABELS, STEP_TYPE_COLORS } from './types'
+import { SessionRecord, SessionStep, SessionMeta, STEP_TYPE_LABELS, STEP_TYPE_COLORS, NarrationSubStep } from './types'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
- * Strip all File/Blob/runtime-only fields from step_config before sending to DB.
- * Supabase stores step_config as jsonb — File objects become {} silently, causing
- * phantom "success" toasts while nothing actually changes in the database.
+ * Parse step_config safely — Supabase jsonb columns sometimes return as a JSON string.
+ * Always returns a plain object, never a string.
  */
-function sanitizeStepConfig(config: Record<string, unknown>): Record<string, unknown> {
+function parseStepConfig(raw: unknown): Record<string, unknown> {
+  if (!raw) return {}
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw) as Record<string, unknown>
+    } catch {
+      return {}
+    }
+  }
+  if (typeof raw === 'object') return raw as Record<string, unknown>
+  return {}
+}
+
+/**
+ * Strip all File/Blob/runtime-only fields from step_config before sending to DB.
+ * Also handles the case where step_config is a JSON string (Supabase jsonb quirk).
+ */
+function sanitizeStepConfig(config: unknown): Record<string, unknown> {
+  const obj = parseStepConfig(config)
   const strip = (val: unknown): unknown => {
     if (val instanceof File || val instanceof Blob) return undefined
     if (Array.isArray(val)) return val.map(strip).filter((v) => v !== undefined)
     if (val !== null && typeof val === 'object') {
       const out: Record<string, unknown> = {}
       for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
-        // Drop runtime-only keys
-        if (['audio_file', 'image_file', 'image_preview'].includes(k)) continue
+        if (['audio_file', 'image_file', 'image_preview', 'audio_preview'].includes(k)) continue
         const stripped = strip(v)
         if (stripped !== undefined) out[k] = stripped
       }
@@ -65,7 +81,7 @@ function sanitizeStepConfig(config: Record<string, unknown>): Record<string, unk
     }
     return val
   }
-  return strip(config) as Record<string, unknown>
+  return strip(obj) as Record<string, unknown>
 }
 
 // ─── Delete Session Dialog ─────────────────────────────────────────────────────
@@ -279,31 +295,24 @@ export function SessionDetailView({
   const handleSaveStep = useCallback(async (updated: SessionStep) => {
     const supabase = createClient()
 
-    // For narration steps: upload pending audio/image File objects inside sub_steps,
-    // then strip all non-serializable fields before writing to DB.
-    let finalConfig = sanitizeStepConfig(updated.step_config)
+    // Parse step_config — Supabase jsonb can come back as a string
+    const parsedConfig = parseStepConfig(updated.step_config)
 
-    if (updated.step_type === 'narration' && Array.isArray(updated.step_config?.sub_steps)) {
+    // Merge in any sub-steps already on the form (they live in the parsed config)
+    let finalConfig = sanitizeStepConfig(parsedConfig)
+
+    if (updated.step_type === 'narration' && Array.isArray(parsedConfig.sub_steps)) {
       const uploadedSubSteps = await Promise.all(
-        (updated.step_config.sub_steps as Record<string, unknown>[]).map(async (sub, i) => {
-          const s = sub as {
-            _key?: string
-            audio_file?: File
-            image_file?: File
-            audio_url?: string
-            image_url?: string
-            image_preview?: string
-            [k: string]: unknown
-          }
-          let audioUrl = s.audio_url ?? ''
-          let imageUrl = s.image_url ?? ''
+        (parsedConfig.sub_steps as NarrationSubStep[]).map(async (sub, i) => {
+          let audioUrl = sub.audio_url ?? ''
+          let imageUrl = sub.image_url ?? ''
 
-          if (s.audio_file instanceof File) {
-            const ext = s.audio_file.name.split('.').pop()
+          if (sub.audio_file instanceof File) {
+            const ext = sub.audio_file.name.split('.').pop()
             const path = `steps/${updated.id}/sub_${i}_audio.${ext}`
             const { error } = await supabase.storage
               .from('session-assets')
-              .upload(path, s.audio_file, { upsert: true })
+              .upload(path, sub.audio_file, { upsert: true })
             if (!error) {
               const { data } = supabase.storage.from('session-assets').getPublicUrl(path)
               audioUrl = data.publicUrl
@@ -312,12 +321,12 @@ export function SessionDetailView({
             }
           }
 
-          if (s.image_file instanceof File) {
-            const ext = s.image_file.name.split('.').pop()
+          if (sub.image_file instanceof File) {
+            const ext = sub.image_file.name.split('.').pop()
             const path = `steps/${updated.id}/sub_${i}_image.${ext}`
             const { error } = await supabase.storage
               .from('session-assets')
-              .upload(path, s.image_file, { upsert: true })
+              .upload(path, sub.image_file, { upsert: true })
             if (!error) {
               const { data } = supabase.storage.from('session-assets').getPublicUrl(path)
               imageUrl = data.publicUrl
@@ -326,15 +335,14 @@ export function SessionDetailView({
             }
           }
 
-          // Return only serializable fields
-          const { audio_file, image_file, image_preview, ...rest } = s
+          const { audio_file, image_file, image_preview, audio_preview, ...rest } = sub
           return { ...rest, audio_url: audioUrl, image_url: imageUrl }
         })
       )
       finalConfig = { ...finalConfig, sub_steps: uploadedSubSteps }
     }
 
-    const { data: saved, error } = await supabase
+    const { error } = await supabase
       .from('session_steps')
       .update({
         title: updated.title,

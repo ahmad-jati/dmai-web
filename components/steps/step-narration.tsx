@@ -10,8 +10,6 @@ type Props = {
 
 export function StepNarration({ title, description, image }: Props) {
 
-  
-
   return (
     // desktop: full bg image handled by shell, this is just the text overlay content
     // mobile: image shown inline
@@ -33,7 +31,7 @@ export function StepNarration({ title, description, image }: Props) {
       {/* Text content — shown on both, but styled differently via parent */}
       <div className="flex flex-col gap-2 items-center text-center px-2 2md:max-w-xl w-full">
         <p className="sm:text-2xl text-lg font-semibold 2md:text-background text-foreground leading-snug">
-          {title}
+          {title} Lorem ipsum dolor sit amet consectetur, adipisicing elit. At repellat culpa consequuntur, ut quo obcaecati! Enim aspernatur magni dolor et cupiditate? Saepe tempora iste porro distinctio sequi odio nulla corrupti.
         </p>
         {description && (
           <p className="text-sm/5 2md:text-background/80 text-muted-foreground text-center text-pretty">

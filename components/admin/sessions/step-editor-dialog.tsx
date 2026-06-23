@@ -12,13 +12,26 @@ import {
 } from '@/components/ui/dialog'
 import { Spinner } from '@/components/ui/spinner'
 import { FloppyDiskIcon } from '@phosphor-icons/react'
-import { StepTypeForm, BodyPart, NarrationSubStep } from './step-type-form'
-import { SessionStep, STEP_TYPE_LABELS, STEP_TYPE_COLORS } from './types'
+import { StepTypeForm } from './step-type-form'
+import { SessionStep, STEP_TYPE_LABELS, STEP_TYPE_COLORS, BodyPart, NarrationSubStep } from './types'
 
-interface StepEditorDialogProps {
+function parseConfig(raw: unknown): Record<string, unknown> {
+  if (!raw) return {}
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw) as Record<string, unknown>
+    } catch {
+      return {}
+    }
+  }
+  if (typeof raw === 'object') return raw as Record<string, unknown>
+  return {}
+}
+
+type StepEditorDialogProps = {
   step: SessionStep | null
   open: boolean
-  onSave: (updated: SessionStep) => Promise<void>
+  onSave: (step: SessionStep) => Promise<void> | void
   onClose: () => void
 }
 
@@ -31,19 +44,24 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
   // Reset + normalize whenever the target step changes
   useEffect(() => {
     if (!step) return
-    const normalized = { ...step }
-    // DB-loaded sub_steps won't have _key — add it so React keys and update logic work
-    if (step.step_type === 'narration' && Array.isArray(step.step_config?.sub_steps)) {
-      normalized.step_config = {
-        ...step.step_config,
-        sub_steps: (step.step_config.sub_steps as Record<string, unknown>[]).map((s) =>
-          (s as NarrationSubStep)._key
-            ? s
-            : { ...s, _key: `db-${Math.random().toString(36).slice(2, 8)}` }
+    // Always parse step_config — Supabase jsonb can return as a string "{}"
+    const parsedConfig = parseConfig(step.step_config)
+
+    // Normalize narration sub_steps: add _key if missing
+    let normalizedConfig: Record<string, unknown> = parsedConfig
+    if (step.step_type === 'narration') {
+      const rawSubs = Array.isArray(parsedConfig.sub_steps)
+        ? (parsedConfig.sub_steps as NarrationSubStep[])
+        : []
+      normalizedConfig = {
+        ...parsedConfig,
+        sub_steps: rawSubs.map((s) =>
+          s._key ? s : { ...s, _key: `db-${Math.random().toString(36).slice(2, 8)}` }
         ),
       }
     }
-    setForm(normalized)
+
+    setForm({ ...step, step_config: normalizedConfig })
   }, [step])
 
   // Fetch body_parts once on first open
@@ -56,7 +74,8 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
         .from('body_parts')
         .select('id, part_key, label_id, region, sort_order')
         .order('sort_order', { ascending: true })
-      if (!error && data) setBodyParts(data as BodyPart[])
+        .returns<BodyPart[]>()
+      if (!error && data) setBodyParts(data)
       setBodyPartsLoading(false)
     }
     load()
@@ -75,6 +94,11 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
 
   if (!form) return null
 
+  // Count sub-steps for narration badge
+  const subStepCount = form.step_type === 'narration'
+    ? (Array.isArray(form.step_config?.sub_steps) ? (form.step_config.sub_steps as unknown[]).length : 0)
+    : null
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
@@ -82,7 +106,7 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <DialogTitle>Edit Step {form.step_number}</DialogTitle>
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded-sm border text-xs font-medium ${
@@ -91,6 +115,11 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
             >
               {STEP_TYPE_LABELS[form.step_type ?? 'narration']}
             </span>
+            {subStepCount !== null && (
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-sm border border-border">
+                {subStepCount} sub-step{subStepCount !== 1 ? 's' : ''}
+              </span>
+            )}
           </div>
         </DialogHeader>
 

@@ -29,6 +29,7 @@ export function SessionsManager() {
                image_url, audio_url, step_type, step_config)`
           )
           .order('sort_order', { ascending: true })
+          .returns<SessionRaw[]>()
 
         if (error) {
           console.error('Failed to load sessions:', error)
@@ -36,7 +37,19 @@ export function SessionsManager() {
           return
         }
 
-        const mapped: SessionRecord[] = ((data ?? []) as SessionRaw[]).map((s) => ({
+        const parseConfig = (raw: unknown): Record<string, unknown> => {
+          if (!raw) return {}
+          if (typeof raw === 'string') {
+            try {
+              return JSON.parse(raw) as Record<string, unknown>
+            } catch {
+              return {}
+            }
+          }
+          return raw as Record<string, unknown>
+        }
+
+        const mapped: SessionRecord[] = (data ?? []).map((s) => ({
           id: s.id,
           slug: s.slug,
           session_name: s.session_name,
@@ -48,7 +61,10 @@ export function SessionsManager() {
           sort_order: s.sort_order ?? null,
           week_number: s.week_number ?? null,
           is_locked: s.is_locked ?? true,
-          steps: [...(s.session_steps ?? [])].sort((a, b) => a.step_number - b.step_number),
+          steps: [...(s.session_steps ?? [])].map((step) => ({
+            ...step,
+            step_config: parseConfig(step.step_config),
+          })).sort((a, b) => a.step_number - b.step_number),
         }))
 
         setSessions(mapped)

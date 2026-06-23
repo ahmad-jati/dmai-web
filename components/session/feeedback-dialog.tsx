@@ -90,8 +90,8 @@ export function FeedbackDialog({
               size={'sm'}
               className={`flex flex-col items-center md:gap-1.5 gap-0 flex-1 py-3 px-1 md:rounded-xl rounded-md border-2 transition-all h-full w-full
                 ${selectedMood === mood.value
-                  ? "border-muted-foreground/60 bg-muted-foreground/10 dark:bg-foreground scale-105 text-foreground dark:text-background"
-                  : "border-border hover:border-muted-foreground/40 hover:bg-accent/70 hover:dark:bg-accent/70  dark:bg-accent/20 hover:dark:border-foreground/40 text-foreground"
+                  ? "border-foreground bg-foreground/5 shadow-sm dark:bg-foreground text-foreground dark:text-background hover:bg-muted/50"
+                  : "border-border hover:border-muted-foreground/40 hover:bg-muted/50 hover:dark:bg-accent/70  dark:bg-accent/20 hover:dark:border-foreground/40 text-foreground"
                 }`}
             >
               <span className="md:text-2xl xs:text-lg text-sm">{mood.emoji}</span>

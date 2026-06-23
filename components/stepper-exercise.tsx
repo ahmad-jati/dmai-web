@@ -11,12 +11,12 @@ import {
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import { useBGMPlayer } from '@/lib/hooks/useBGMPlayer'
 import { useNarrationPlayback } from '@/lib/hooks/useNarrationPlayback'
 import { useExerciseFullscreen } from '@/lib/hooks/useExerciseFullscreen'
 import { Spinner } from '@/components/ui/spinner'
 
-import { StepNarration } from './steps/step-narration'
 import { StepVideo } from './steps/step-video'
 import { StepForm } from './steps/step-form'
 import { StepBodyMap } from './steps/step-body-map'
@@ -26,6 +26,8 @@ import { StepGame } from './steps/step-game'
 import type { StepType } from '@/components/admin/sessions/types'
 import type { SessionInstruction } from '@/lib/data-detail-session.client'
 
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
 type Track = {
   id: string
   title: string
@@ -34,12 +36,23 @@ type Track = {
   duration_seconds: number | null
 }
 
+type SubStep = {
+  _key: string
+  title: string
+  description: string
+  audio_url: string
+  image_url: string
+  image_preview: string
+  duration_seconds: number
+}
+
 type Props = {
   instructions: SessionInstruction[]
   sessionName: string
   sessionSlug: string
+  sessionId: string
   sessionImageCover: string
-  onDone: () => void
+  onDone: (completionId: string, userId: string, responses: Record<string, Record<string, unknown>>) => void
   onBack?: () => void
 }
 
@@ -49,7 +62,6 @@ function isNarrationStep(type: StepType) {
   return type === 'narration'
 }
 
-// Safely parse step_config — DB sometimes returns it as a JSON string
 function parseConfig(config: unknown): Record<string, unknown> {
   if (!config) return {}
   if (typeof config === 'string') {
@@ -57,6 +69,17 @@ function parseConfig(config: unknown): Record<string, unknown> {
   }
   if (typeof config === 'object') return config as Record<string, unknown>
   return {}
+}
+
+function getSubSteps(config: Record<string, unknown>): SubStep[] {
+  const raw = config.sub_steps
+  if (!Array.isArray(raw)) return []
+  return raw as SubStep[]
+}
+
+// Resolve image: prefer image_url (supabase), fall back to image_preview (blob/local)
+function resolveImage(sub: SubStep): string {
+  return sub.image_url || sub.image_preview || ''
 }
 
 const STEP_TYPE_LABEL: Record<StepType, string> = {
@@ -68,16 +91,17 @@ const STEP_TYPE_LABEL: Record<StepType, string> = {
   game: 'Mini Game',
 }
 
-// ─── Loading Screen ────────────────────────────────────────────────────────────
+// ─── Loading Screen ─────────────────────────────────────────────────────────────
 
 function LoadingScreen({ sessionName, sessionImageCover }: { sessionName: string; sessionImageCover: string }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
-      <p className="text-sm text-muted-foreground font-semibold">DMAI - Session</p>
-      <h1 className="md:text-3xl text-2xl text-center font-semibold">{sessionName}</h1>
-      <div className="relative md:w-80 w-56 aspect-square 2xs:rounded-3xl rounded-xl overflow-hidden">
-        <Image src={sessionImageCover} alt={sessionName} fill unoptimized priority className="object-cover object-center" />
+      <p className="text-p text-muted-foreground -mb-2 text-center font-semibold">DMAI - Session</p>
+      <h1 className="md:text-h1/8 text-2xl/7 text-center font-semibold">{sessionName}</h1>
+      <div className="relative md:w-100 w-60 aspect-square 2xs:rounded-3xl rounded-xl overflow-hidden">
+        <Image src={sessionImageCover} alt={sessionName} fill unoptimized priority className="object-cover object-center w-full h-full" />
         <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
       </div>
       <div className="flex flex-col items-center gap-2 text-muted-foreground">
         <Spinner className="text-muted-foreground" />
@@ -87,147 +111,9 @@ function LoadingScreen({ sessionName, sessionImageCover }: { sessionName: string
   )
 }
 
-// ─── Step Content Router ────────────────────────────────────────────────────────
+// ─── Main Component ─────────────────────────────────────────────────────────────
 
-function StepContent({
-  step,
-  onManualNext,
-  onManualPrev,
-  showPrev,
-  onFormResponse,
-}: {
-  step: SessionInstruction
-  onManualNext: () => void
-  onManualPrev: () => void
-  showPrev: boolean
-  onFormResponse: (stepId: string, responses: Record<string, unknown>) => void
-}) {
-  const config = parseConfig(step.step_config)
-
-  switch (step.step_type) {
-    case 'narration':
-      return <StepNarration title={step.title} description={step.description} image={step.image} />
-
-    case 'video':
-      return (
-        <StepVideo
-          youtubeUrl={(config.youtube_url as string) ?? ''}
-          onNext={onManualNext}
-          onPrev={showPrev ? onManualPrev : undefined}
-        />
-      )
-
-    case 'form': {
-      // Support both 'fields' and 'questions' key from DB
-      const fields = (config.fields ?? config.questions ?? []) as unknown[]
-      return (
-        <StepForm
-          fields={fields as never}
-          onNext={(responses) => {
-            onFormResponse(step.id, responses)
-            onManualNext()
-          }}
-          onPrev={showPrev ? onManualPrev : undefined}
-          showPrev={showPrev}
-        />
-      )
-    }
-
-    case 'body_map':
-      return (
-        <StepBodyMap
-          onNext={(response) => {
-            onFormResponse(step.id, response as Record<string, unknown>)
-            onManualNext()
-          }}
-          onPrev={showPrev ? onManualPrev : undefined}
-        />
-      )
-
-    case 'external_embed':
-      return (
-        <StepExternalEmbed
-          url={(config.url as string) ?? (config.embed_url as string) ?? ''}
-          label={(config.label as string) ?? 'Buka Aktivitas'}
-          onNext={onManualNext}
-          onPrev={showPrev ? onManualPrev : undefined}
-        />
-      )
-
-    case 'game':
-      return (
-        <StepGame
-          onNext={onManualNext}
-          onPrev={showPrev ? onManualPrev : undefined}
-        />
-      )
-
-    default:
-      return null
-  }
-}
-
-// ─── Narration Controls ─────────────────────────────────────────────────────────
-
-function NarrationControls({
-  isPlaying, isMuted, isLooping, elapsed, duration,
-  onPlayPause, onMuteToggle, onLoopToggle,
-  circumference, strokeDashoffset,
-}: {
-  isPlaying: boolean; isMuted: boolean; isLooping: boolean
-  elapsed: number; duration: number
-  onPlayPause: () => void; onMuteToggle: () => void; onLoopToggle: () => void
-  circumference: number; strokeDashoffset: number
-}) {
-  const currentSeconds = Math.min(elapsed, duration)
-  const displayMins = String(Math.floor(currentSeconds / 60)).padStart(2, '0')
-  const displaySecs = String(currentSeconds % 60).padStart(2, '0')
-  const totalMins = Math.floor(duration / 60)
-  const totalSecs = duration % 60
-  const totalTime = `${totalMins}:${totalSecs.toString().padStart(2, '0')}`
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative w-20 h-20 flex items-center justify-center">
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeOpacity="0.15" strokeWidth="3" />
-          <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeOpacity="0.7" strokeWidth="3"
-            strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
-            transform="rotate(-90 50 50)" style={{ transition: 'stroke-dashoffset 1s linear' }} />
-        </svg>
-        <button onClick={onPlayPause}
-          className="relative z-10 w-13 h-13 rounded-full flex items-center justify-center bg-background text-foreground shadow-sm hover:scale-105 active:scale-95 transition-all">
-          {isPlaying ? <PauseIcon weight="fill" className="w-5 h-5" /> : <PlayIcon weight="fill" className="w-5 h-5" />}
-        </button>
-      </div>
-
-      <p className="text-xs font-medium text-muted-foreground tabular-nums">
-        <span className="text-foreground">{displayMins}:{displaySecs}</span>
-        <span className="mx-1 opacity-40">/</span>
-        <span>{totalTime}</span>
-      </p>
-
-      <div className="flex items-center gap-1">
-        <Button onClick={onLoopToggle} variant="ghost" size="sm"
-          className={cn('[&_svg]:size-3.5 px-3 py-1.5 rounded-full text-xs gap-1.5',
-            isLooping ? 'bg-foreground/10 text-foreground font-semibold' : 'text-muted-foreground')}>
-          {isLooping ? <RepeatOnceIcon weight="fill" /> : <RepeatIcon weight="fill" />}
-          Ulangi
-        </Button>
-        <Button onClick={onMuteToggle} variant="ghost" size="sm"
-          className={cn('[&_svg]:size-3.5 px-3 py-1.5 rounded-full text-xs gap-1.5',
-            isMuted ? 'bg-foreground/10 text-foreground font-semibold' : 'text-muted-foreground')}>
-          {isMuted ? <SpeakerSlashIcon weight="fill" /> : <SpeakerHighIcon weight="fill" />}
-          {isMuted ? 'Tanpa Suara' : 'Dengan Suara'}
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-// ─── Main Component ────────────────────────────────────────────────────────────
-
-export function StepperExercise({ instructions, sessionName, sessionSlug, sessionImageCover, onDone, onBack }: Props) {
+export function StepperExercise({ instructions, sessionName, sessionSlug, sessionId, sessionImageCover, onDone, onBack }: Props) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
@@ -241,15 +127,26 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const [showMusicTray, setShowMusicTray] = useState(false)
   const [formResponses, setFormResponses] = useState<Record<string, Record<string, unknown>>>({})
 
+  // sessionStorage key for this session's draft responses
+  const sessionStorageKey = `dmai_form_draft_${sessionId}`
+
+  // Sub-step index — for narration steps with multiple sub_steps
+  const [currentSubStep, setCurrentSubStep] = useState(0)
+
   useExerciseFullscreen()
 
   const bgmButtonRef = useRef<HTMLButtonElement>(null)
+  const bgmButtonMobileRef = useRef<HTMLButtonElement>(null)
   const [trayRect, setTrayRect] = useState<DOMRect | null>(null)
+  const [trayMobile, setTrayMobile] = useState(false)
 
   const bgm = useBGMPlayer()
   const narration = useNarrationPlayback()
 
-  const { isBGMStopped, load: bgmLoad, play: bgmPlay, pause: bgmPause, resume: bgmResume, stop: bgmStop, switchTrack: bgmSwitchTrack } = bgm
+  const {
+    isBGMStopped, load: bgmLoad, play: bgmPlay, pause: bgmPause,
+    resume: bgmResume, stop: bgmStop, switchTrack: bgmSwitchTrack,
+  } = bgm
   const { playNarration, pauseNarration, resumeNarration, stopNarration, fadeMute } = narration
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -263,49 +160,184 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const isTimed = isNarrationStep(step.step_type)
   const isLastStep = currentStep === totalSteps - 1
   const showPrev = currentStep > 0
+
+  // Parse sub_steps for current narration step
+  const stepConfig = parseConfig(step.step_config)
+  const subSteps = isTimed ? getSubSteps(stepConfig) : []
+  const hasSubSteps = subSteps.length > 0
+  const activeSubStep = hasSubSteps ? subSteps[currentSubStep] : null
+
+  // Duration: use sub_step duration if available, else step.duration_seconds
+  const activeDuration = activeSubStep?.duration_seconds ?? step.duration_seconds
+
+  // Image: use sub_step image if available, else step.image (from instructions), else sessionImageCover
+  const activeImage = activeSubStep ? resolveImage(activeSubStep) : (step.image || sessionImageCover)
+
+  // Title/description for display: sub_step overrides step-level if available
+  const activeTitle = activeSubStep?.title || step.title
+  const activeDescription = activeSubStep?.description || step.description
+
   const circumference = 2 * Math.PI * 44
-  const progress = isTimed ? Math.min((elapsed / step.duration_seconds) * 100, 100) : 0
+  const progress = isTimed ? Math.min((elapsed / activeDuration) * 100, 100) : 0
   const strokeDashoffset = circumference * (1 - progress / 100)
   const currentTrack = tracks[currentTrackIndex]
 
+  // Load draft from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(sessionStorageKey)
+      if (saved) setFormResponses(JSON.parse(saved))
+    } catch {}
+  }, [sessionStorageKey])
+
+  // Persist to sessionStorage whenever formResponses changes
   const handleFormResponse = useCallback((stepId: string, responses: Record<string, unknown>) => {
-    setFormResponses((prev) => ({ ...prev, [stepId]: responses }))
-  }, [])
+    setFormResponses((prev) => {
+      const next = { ...prev, [stepId]: responses }
+      try { sessionStorage.setItem(sessionStorageKey, JSON.stringify(next)) } catch {}
+      return next
+    })
+  }, [sessionStorageKey])
+
+  // Persist all form responses to DB after session_completions insert
+  const persistFormResponses = useCallback(async (
+    completionId: string,
+    userId: string,
+    responses: Record<string, Record<string, unknown>>
+  ) => {
+    const supabase = createClient()
+    const entries = Object.entries(responses)
+    if (entries.length === 0) return
+
+    // Split entries by step type
+    const formRows: {
+      completion_id: string; user_id: string; session_id: string
+      step_id: string; step_number: number; responses: Record<string, unknown>
+    }[] = []
+    const bodyMapRows: {
+      completion_id: string; user_id: string; step_id: string
+      selected_parts: string[]; sensation: string | null; note: string
+    }[] = []
+
+    for (const [stepId, stepResponses] of entries) {
+      const stepInstruction = instructions.find((i) => i.id === stepId)
+      if (stepInstruction?.step_type === 'body_map') {
+        bodyMapRows.push({
+          completion_id: completionId,
+          user_id: userId,
+          step_id: stepId,
+          selected_parts: (stepResponses.selected_parts as string[]) ?? [],
+          sensation: (stepResponses.sensation as string | null) ?? null,
+          note: (stepResponses.note as string) ?? '',
+        })
+      } else {
+        formRows.push({
+          completion_id: completionId,
+          user_id: userId,
+          session_id: sessionId,
+          step_id: stepId,
+          step_number: stepInstruction?.step ?? 0,
+          responses: stepResponses,
+        })
+      }
+    }
+
+    const promises: Promise<void>[] = []
+
+    if (formRows.length > 0) {
+      promises.push(
+        (async () => {
+          const { data, error } = await supabase
+            .from('session_form_responses')
+            .insert(formRows)
+
+          console.log(data)
+          if (error) {
+            console.error('[FormResponses] persist error:', error)
+          }
+        })()
+      )
+    }
+
+    if (bodyMapRows.length > 0) {
+      promises.push(
+        (async () => {
+          const { data, error } = await supabase
+            .from('session_body_map_responses')
+            .insert(bodyMapRows)
+
+            console.log(data)
+          if (error) {
+            console.error('[BodyMapResponses] persist error:', error)
+          }
+        })()
+      )
+    }
+
+await Promise.all(promises)
+
+    await Promise.all(promises)
+    try { sessionStorage.removeItem(sessionStorageKey) } catch {}
+  }, [instructions, sessionId, sessionStorageKey])
 
   const handleBack = () => {
     if (onBack) onBack()
     else router.push(`/session/${sessionSlug}`)
   }
 
+  // ── Navigation ──────────────────────────────────────────────────────────────
+
   const goNext = useCallback(() => {
     narrationStartedRef.current = false
+
+    // If narration with sub_steps and not on last sub_step, advance sub_step
+    if (isTimed && hasSubSteps && currentSubStep < subSteps.length - 1) {
+      setCurrentSubStep((s) => s + 1)
+      setElapsed(0)
+      return
+    }
+
+    // Otherwise advance main step
     if (currentStep < totalSteps - 1) {
       setCurrentStep((s) => s + 1)
+      setCurrentSubStep(0)
       setElapsed(0)
     } else {
       setIsPlaying(false)
       bgmStop()
-      setTimeout(() => onDone(), 600)
+      // Pass formResponses snapshot to onDone so exercise page can persist to DB
+      const responseSnapshot = formResponses
+      setTimeout(() => onDone('', '', responseSnapshot), 600)
     }
-  }, [currentStep, totalSteps, onDone, bgmStop])
+  }, [currentStep, totalSteps, onDone, bgmStop, isTimed, hasSubSteps, currentSubStep, subSteps.length, formResponses])
 
   const goPrev = useCallback(() => {
+    narrationStartedRef.current = false
+    setIsLooping(false)
+
+    // If narration with sub_steps and not on first sub_step, go back sub_step
+    if (isTimed && hasSubSteps && currentSubStep > 0) {
+      setCurrentSubStep((s) => s - 1)
+      setElapsed(0)
+      return
+    }
+
     if (currentStep > 0) {
-      setIsLooping(false)
-      narrationStartedRef.current = false
       setCurrentStep((s) => s - 1)
+      setCurrentSubStep(0)
       setElapsed(0)
     }
-  }, [currentStep])
+  }, [currentStep, isTimed, hasSubSteps, currentSubStep])
 
   const jumpToStep = (i: number) => {
     setIsLooping(false)
     narrationStartedRef.current = false
     setCurrentStep(i)
+    setCurrentSubStep(0)
     setElapsed(0)
   }
 
-  // 1. Fetch BGM
+  // ── 1. Fetch BGM ────────────────────────────────────────────────────────────
   useEffect(() => {
     const init = async () => {
       try {
@@ -327,20 +359,10 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     init()
   }, [bgmLoad])
 
-  // 2. Prefetch narration audio
-  useEffect(() => {
-    for (let i = 0; i <= 3 && currentStep + i < totalSteps; i++) {
-      const url = instructions[currentStep + i]?.audio
-      if (url) { const a = new Audio(); a.crossOrigin = 'anonymous'; a.src = url; a.preload = 'auto' }
-    }
-  }, [currentStep, totalSteps, instructions])
-
-  // 3. BGM — only play/resume on narration steps, pause on others
+  // ── 2. BGM: play on narration, pause on others ──────────────────────────────
   useEffect(() => {
     if (!isReady) return
-
     if (isTimed) {
-      // Narration step — play BGM
       if (!bgmStartedRef.current) {
         const tryPlay = async () => {
           try { await bgmPlay(); bgmStartedRef.current = true } catch {}
@@ -357,16 +379,14 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           document.removeEventListener('touchstart', onGesture)
         }
       } else {
-        // Already started before — just resume
         if (!isBGMStopped) bgmResume()
       }
     } else {
-      // Non-narration step — pause BGM
       bgmPause()
     }
   }, [isReady, isTimed, currentStep, bgmPlay, bgmPause, bgmResume, isBGMStopped])
 
-  // 4. Sync play/pause button (narration only)
+  // ── 3. Sync play/pause button ───────────────────────────────────────────────
   useEffect(() => {
     if (!isTimed || !bgmStartedRef.current) return
     if (isPlaying === prevIsPlayingRef.current) return
@@ -379,19 +399,25 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     }
   }, [isPlaying, isTimed, isBGMStopped, bgmPause, bgmResume, pauseNarration, resumeNarration])
 
-  // 5. Narration audio — only for narration steps
+  // ── 4. Narration audio ──────────────────────────────────────────────────────
+  // For sub_steps: play the active sub_step's audio_url
+  // For plain narration: play step.audio (legacy)
   useEffect(() => {
-    if (!isReady || !isTimed || !step.audio) return
+    if (!isReady || !isTimed) return
+
+    const audioUrl = activeSubStep?.audio_url || step.audio
+    if (!audioUrl) return
+
     narrationStartedRef.current = true
-    playNarration(step.audio, isMutedRef.current)
+    playNarration(audioUrl, isMutedRef.current)
     return () => stopNarration()
-  }, [currentStep, narrationKey, isReady, isTimed]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentStep, currentSubStep, narrationKey, isReady, isTimed]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isTimed) stopNarration()
   }, [currentStep, isTimed, stopNarration])
 
-  // 6. Mute fade
+  // ── 5. Mute fade ────────────────────────────────────────────────────────────
   const isMountedRef = useRef(false)
   useEffect(() => {
     if (!isMountedRef.current) { isMountedRef.current = true; return }
@@ -399,7 +425,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     fadeMute(isMuted)
   }, [isMuted]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 7. Timer — narration only
+  // ── 6. Timer ────────────────────────────────────────────────────────────────
   const handleTimerEnd = useCallback(() => {
     if (isLooping) { setElapsed(0); setNarrationKey((k) => k + 1) }
     else goNext()
@@ -413,186 +439,335 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   }, [isPlaying, isReady, isTimed])
 
   useEffect(() => {
-    if (isTimed && elapsed >= step.duration_seconds) handleTimerEnd()
-  }, [elapsed, step.duration_seconds, handleTimerEnd, isTimed])
+    if (isTimed && elapsed >= activeDuration) handleTimerEnd()
+  }, [elapsed, activeDuration, handleTimerEnd, isTimed])
 
   useEffect(() => {
     setElapsed(0); setIsPlaying(true); setNarrationKey(0)
     narrationStartedRef.current = false
-  }, [currentStep])
+  }, [currentStep, currentSubStep])
 
+  // ── Time helpers ─────────────────────────────────────────────────────────────
+  const currentSeconds = Math.min(elapsed, activeDuration)
+  const displayMins = String(Math.floor(currentSeconds / 60)).padStart(2, '0')
+  const displaySecs = String(currentSeconds % 60).padStart(2, '0')
+  const totalMins = Math.floor(activeDuration / 60)
+  const totalSecs = activeDuration % 60
+  const totalTime = `${totalMins}:${totalSecs.toString().padStart(2, '0')}`
+
+  // ── BGM display ──────────────────────────────────────────────────────────────
   const bgmLabel = isBGMStopped ? 'Tanpa Musik' : currentTrack?.title ?? 'Musik Latar'
   const bgmSublabel = (!isBGMStopped && currentTrack?.composer) ? currentTrack.composer : null
 
-  const openMusicTray = (ref: React.RefObject<HTMLButtonElement | null>) => {
-    if (ref.current) setTrayRect(ref.current.getBoundingClientRect())
+  const openMusicTray = (ref: React.RefObject<HTMLButtonElement | null>, isMobile: boolean) => {
+    if (ref.current) { setTrayRect(ref.current.getBoundingClientRect()); setTrayMobile(isMobile) }
     setShowMusicTray((v) => !v)
   }
 
   if (!isReady) return <LoadingScreen sessionName={sessionName} sessionImageCover={sessionImageCover} />
 
-  // Music tray
+  // ── Music Tray ───────────────────────────────────────────────────────────────
   const MusicTray = () => {
     if (!trayRect) return null
+    const style: React.CSSProperties = {
+      position: 'fixed',
+      top: trayRect.bottom + 8,
+      right: window.innerWidth - trayRect.right,
+      zIndex: 9999,
+      width: 240,
+    }
     return (
       <>
-        <div className="fixed inset-0 z-[60]" onClick={() => setShowMusicTray(false)} />
-        <div style={{ position: 'fixed', top: trayRect.bottom + 8, right: window.innerWidth - trayRect.right, zIndex: 61, width: 240 }}
-          className="bg-background border border-border rounded-2xl p-2.5 flex flex-col gap-0.5 shadow-lg animate-in slide-in-from-top-1 duration-150">
-          <span className="text-xs font-bold tracking-[0.18em] uppercase px-2 pb-1.5 text-muted-foreground">Musik Latar</span>
+        <div className="fixed inset-0 z-50" onClick={() => setShowMusicTray(false)} />
+        <div style={style}
+          className="bg-background/90 dark:bg-foreground/90 text-foreground/80 dark:text-background/80 border border-muted-foreground 2md:rounded-2xl rounded-lg p-2.5 flex flex-col gap-0.5 w-full animate-in slide-in-from-top-1 duration-150">
+          <span className="text-xs font-bold tracking-[0.18em] uppercase px-2 pb-1.5">Musik Latar</span>
           {tracks.map((track, index) => (
             <button key={track.id}
               onClick={() => { setCurrentTrackIndex(index); bgmSwitchTrack(track.audio_url); setShowMusicTray(false) }}
-              className={cn('flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl text-left transition-colors',
-                index === currentTrackIndex && !isBGMStopped ? 'bg-muted' : 'hover:bg-muted')}>
-              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-foreground/30" />
+              className={cn('flex items-center gap-2.5 w-full px-2.5 py-2 2md:rounded-xl rounded-md text-left transition-all duration-150 ease-out',
+                index === currentTrackIndex && !isBGMStopped ? 'bg-muted-foreground/40' : 'text-foreground hover:bg-muted-foreground/40')}>
+              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-muted-foreground/40" />
               <div className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold text-foreground truncate">{track.title}</span>
-                {track.composer && <span className="text-xs text-muted-foreground">{track.composer}</span>}
+                <span className="text-xs font-semibold text-foreground dark:text-background">{track.title}</span>
+                {track.composer && <span className="text-xs text-foreground dark:text-background">{track.composer}</span>}
               </div>
             </button>
           ))}
-          <div className="mx-2 my-1 h-px bg-border" />
+          <div className="m-1 px-2 bg-muted-foreground/25 dark:bg-background/20 min-w-0 h-0.5" />
           <button onClick={() => { bgmStop(); setShowMusicTray(false) }}
-            className={cn('flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl text-left transition-colors',
-              isBGMStopped ? 'bg-muted' : 'hover:bg-muted')}>
-            <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-foreground/30" />
-            <span className="text-xs font-semibold text-foreground">Tanpa Musik</span>
+            className={cn('flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl text-left transition-all duration-150 ease-out',
+              isBGMStopped ? 'bg-muted-foreground/40 text-foreground' : 'text-foreground hover:bg-muted-foreground/40')}>
+            <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-muted-foreground/40" />
+            <span className="text-xs font-semibold text-foreground dark:text-background">Tanpa Musik</span>
           </button>
         </div>
       </>
     )
   }
 
-  // ── Shared UI pieces ──────────────────────────────────────────────────────────
-
-  const TopBar = ({ dark = false }: { dark?: boolean }) => (
-    <div className={cn('flex items-center justify-between gap-3 w-full shrink-0', dark ? 'text-background' : 'text-foreground')}>
-      <Button onClick={handleBack} variant="ghost" size="sm"
-        className={cn('[&_svg]:size-4 gap-1.5 rounded-full px-3',
-          dark ? 'text-background/80 hover:bg-white/10 hover:text-background' : 'text-foreground hover:bg-foreground/10')}>
-        <ArrowLeftIcon weight="bold" /> Kembali
-      </Button>
-
-      <div className="flex flex-col items-center gap-0.5">
-        <span className={cn('text-xs font-semibold tracking-wide', dark ? 'text-background/60' : 'text-muted-foreground')}>
-          Langkah {currentStep + 1} / {totalSteps}
-        </span>
-        <span className={cn('text-xs font-bold', dark ? 'text-background/90' : 'text-foreground')}>
-          {STEP_TYPE_LABEL[step.step_type]}
-        </span>
-      </div>
-
-      {/* BGM button — only visible on narration steps */}
-      {isTimed ? (
-        <button ref={bgmButtonRef} onClick={() => openMusicTray(bgmButtonRef)}
-          className={cn('flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors',
-            dark
-              ? 'bg-white/10 border-white/20 text-background/80 hover:bg-white/20'
-              : 'bg-muted border-border text-foreground hover:bg-muted/80')}>
-          <MusicNotesIcon weight="fill" className={cn('w-3 h-3', isBGMStopped ? 'opacity-40' : '')} />
-          <span className="max-w-24 truncate">{bgmLabel}</span>
-          <CaretDownIcon weight="bold" className={cn('w-3 h-3 transition-transform', showMusicTray && 'rotate-180')} />
-        </button>
-      ) : (
-        <div className="w-24" />
-      )}
-    </div>
-  )
-
-  const StepDots = ({ dark = false }: { dark?: boolean }) => (
-    <div className="flex items-center gap-2 shrink-0">
-      {instructions.map((_, i) => (
-        <button key={i} onClick={() => jumpToStep(i)}
-          className={cn('block h-1 rounded-full transition-all duration-300 cursor-pointer',
-            dark
-              ? i === currentStep ? 'w-8 bg-background/90' : i < currentStep ? 'w-4 bg-background/50' : 'w-4 bg-background/25'
-              : i === currentStep ? 'w-8 bg-foreground/90' : i < currentStep ? 'w-4 bg-foreground/50' : 'w-4 bg-foreground/20'
-          )} />
-      ))}
-    </div>
-  )
-
-  // Narration bottom nav (prev/next for narration steps)
-  const NarrationNav = ({ dark = false }: { dark?: boolean }) => {
-    const baseBtn = cn('[&_svg]:size-4 gap-1.5 rounded-full px-4 py-2 text-sm font-medium',
-      dark
-        ? 'text-background/80 hover:bg-white/10 hover:text-background disabled:opacity-30'
-        : 'text-foreground hover:bg-foreground/10 disabled:opacity-30')
+  // ── Sub-step dots (for narration with multiple sub_steps) ────────────────────
+  const SubStepDots = ({ dark = false }: { dark?: boolean }) => {
+    if (!hasSubSteps || subSteps.length <= 1) return null
     return (
-      <div className="flex items-center justify-between w-full shrink-0">
-        <Button onClick={goPrev} disabled={currentStep === 0} variant="ghost" size="sm" className={baseBtn}>
-          <ArrowLeftIcon weight="bold" /> Sebelumnya
-        </Button>
-        {isLastStep ? (
-          <Button onClick={goNext} variant="ghost" size="sm" className={baseBtn}>
-            Selesai <CheckIcon weight="bold" />
-          </Button>
-        ) : (
-          <Button onClick={goNext} variant="ghost" size="sm" className={baseBtn}>
-            Berikutnya <ArrowRightIcon weight="bold" />
-          </Button>
-        )}
+      <div className="flex items-center gap-1.5">
+        {subSteps.map((_, i) => (
+          <span key={i} className={cn('block h-0.5 rounded-full transition-all duration-300',
+            dark
+              ? i === currentSubStep ? 'w-5 bg-background/80' : i < currentSubStep ? 'w-2.5 bg-background/40' : 'w-2.5 bg-background/20'
+              : i === currentSubStep ? 'w-5 bg-foreground/80' : i < currentSubStep ? 'w-2.5 bg-foreground/40' : 'w-2.5 bg-foreground/20'
+          )} />
+        ))}
       </div>
     )
   }
 
   // ════════════════════════════════════════════════════════
-  // NARRATION layout — full bleed bg image, dark overlay
+  // NARRATION LAYOUT — full bleed image, BGM active
   // ════════════════════════════════════════════════════════
   if (isTimed) {
     return (
       <>
-        {/* Mobile narration */}
-        <div className="2md:hidden fixed inset-0 z-55 flex flex-col bg-celeste p-4 gap-3 overflow-y-auto">
-          <TopBar dark={false} />
-          <StepDots dark={false} />
-          <div className="flex-1 flex flex-col min-h-0">
-            <StepNarration title={step.title} description={step.description} image={step.image} />
+        {/* ── MOBILE narration ── */}
+        <div className="2md:hidden fixed inset-0 z-55 flex 2xs:justify-start justify-center flex-col 2xs:gap-3 gap-6 bg-celeste p-6 overflow-y-auto">
+
+          {/* Top bar: back + BGM */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Button onClick={handleBack} variant="default"
+              className="2xs:rounded-xl xs:rounded-lg rounded-sm [&_svg]:size-4 px-1 py-1.5 xs:h-full h-fit border-muted-foreground">
+              <ArrowLeftIcon weight="bold" />
+            </Button>
+            <button ref={bgmButtonMobileRef} onClick={() => openMusicTray(bgmButtonMobileRef, true)}
+              className="flex items-center justify-between xs:gap-4 gap-2 flex-1 2xs:rounded-xl rounded-lg bg-background border border-muted-foreground p-3">
+              <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'text-foreground/40' : 'text-foreground')} />
+              <div className="flex flex-col items-start flex-1 gap-1 min-w-0 text-left overflow-hidden">
+                <span className="text-xs/3 font-semibold text-foreground">{bgmLabel}</span>
+                {bgmSublabel && <span className="text-xs/3 font-medium text-muted-foreground">{bgmSublabel}</span>}
+              </div>
+              <CaretDownIcon weight="bold" className={cn('w-3 h-3 shrink-0 text-foreground transition-transform duration-200', showMusicTray && trayMobile && 'rotate-180')} />
+            </button>
           </div>
-          <NarrationControls
-            isPlaying={isPlaying} isMuted={isMuted} isLooping={isLooping}
-            elapsed={elapsed} duration={step.duration_seconds}
-            onPlayPause={() => setIsPlaying((p) => !p)}
-            onMuteToggle={() => setIsMuted((m) => !m)}
-            onLoopToggle={() => setIsLooping((l) => !l)}
-            circumference={circumference} strokeDashoffset={strokeDashoffset}
-          />
-          <NarrationNav dark={false} />
-          <p className="text-xs text-muted-foreground/40 text-center font-semibold shrink-0">DMAI - {sessionName}</p>
+
+          {/* Cover image */}
+          <div className="flex justify-center items-center shrink-0 2xs:flex-1 sm:px-16 px-0 min-h-fit bg-amber-50 mt-2 2xs:rounded-3xl rounded-xl">
+            <div className="relative w-full 2xs:h-full h-56 2xs:rounded-3xl rounded-xl overflow-hidden">
+              {activeImage ? (
+                <Image src={activeImage} alt={activeTitle} fill unoptimized priority className="object-cover object-center w-full h-full" />
+              ) : (
+                <div className="w-full h-full bg-muted" />
+              )}
+              <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
+              <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
+            </div>
+          </div>
+
+          {/* Step label + title */}
+          <div className="flex flex-col gap-1 text-center pt-1 shrink-0 2xs:h-32 h-40 overflow-y-auto my-2">
+            <span className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">
+              Tahap {currentStep + 1} / {totalSteps}
+            </span>
+            {/* Step title (from step row) */}
+            <p className="text-xs font-bold text-muted-foreground/70">{step.title}</p>
+            <SubStepDots dark={false} />
+            <div className="flex flex-col gap-2 items-center xs:px-6">
+              <p className="sm:text-h2/7 text-lg/5.5 font-semibold text-foreground text-center">{activeTitle}</p>
+              {activeDescription && (
+                <p className="xs:text-p/4.5 text-p/4.5 text-muted-foreground text-center text-pretty">{activeDescription}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Playback controls */}
+          <div className="flex items-center 2xs:justify-between justify-center 2xs:gap-6 gap-3 w-full shrink-0">
+            <Button onClick={() => setIsLooping((l) => !l)} variant="ghost" size="sm"
+              className={cn('[&_svg]:size-5 p-2 text-xs xs:text-sm font-medium',
+                isLooping ? 'text-foreground hover:bg-foreground/10' : 'text-muted-foreground hover:bg-foreground/10')}>
+              {isLooping ? <RepeatOnceIcon weight="fill" /> : <RepeatIcon weight="fill" />}
+            </Button>
+
+            <div className="flex-1 flex flex-row 2xs:gap-13 gap-3 justify-center items-center">
+              <Button onClick={goPrev} disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
+                size="sm" variant="default"
+                className="[&_svg]:size-5 flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground rounded-full bg-transparent hover:bg-foreground/10 border-none disabled:cursor-not-allowed 2xs:w-fit w-6">
+                <ArrowLeftIcon weight="bold" />
+                <span className="2xs:inline hidden">Sebelumnya</span>
+              </Button>
+
+              {/* Progress ring */}
+              <div className="relative w-18 h-18 shrink-0 flex items-center justify-center">
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" aria-hidden="true">
+                  <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(94, 94, 94, 0.2)" strokeWidth="3" />
+                  <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(94, 94, 94)" strokeOpacity="0.75" strokeWidth="3"
+                    strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+                    transform="rotate(-90 50 50)" style={{ transition: 'stroke-dashoffset 1s linear' }} />
+                </svg>
+                <button onClick={() => setIsPlaying((p) => !p)}
+                  className="relative z-10 w-12 h-12 rounded-full flex items-center justify-center bg-background text-muted-foreground transition-all hover:cursor-pointer hover:scale-105 active:scale-95">
+                  {isPlaying ? <PauseIcon weight="fill" className="w-6 h-6" /> : <PlayIcon weight="fill" className="w-6 h-6" />}
+                </button>
+              </div>
+
+              <Button onClick={goNext} variant="default" size="sm"
+                className="[&_svg]:size-5 flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground rounded-full bg-transparent border-none hover:bg-foreground/10 2xs:w-fit w-6">
+                <span className="2xs:inline hidden">Berikutnya</span>
+                <ArrowRightIcon weight="bold" />
+              </Button>
+            </div>
+
+            <Button onClick={() => setIsMuted((m) => !m)} size="sm" variant="ghost"
+              className={cn('[&_svg]:size-5 p-2 text-xs xs:text-sm font-medium',
+                isMuted ? 'text-foreground hover:bg-foreground/10' : 'text-muted-foreground hover:bg-foreground/10')}>
+              {isMuted ? <SpeakerSlashIcon weight="fill" /> : <SpeakerHighIcon weight="fill" />}
+            </Button>
+          </div>
+
+          {/* Timer */}
+          <p className="xs:text-sm text-xs text-center font-medium text-muted-foreground/60 shrink-0">
+            <span className="text-foreground/80 font-medium">{displayMins}:{displaySecs}</span>
+            <span className="mx-1 text-muted-foreground/30">/</span>
+            <span>{totalTime}</span>
+          </p>
+
+          <p className="xs:text-p text-sm text-muted-foreground/40 text-center font-semibold">DMAI - {sessionName} Session</p>
         </div>
 
-        {/* Desktop narration */}
+        {/* ── DESKTOP narration ── */}
         <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
-          <div className="flex flex-col items-center w-full rounded-4xl relative overflow-hidden flex-1">
+          <div className="flex flex-col items-center w-full rounded-4xl relative overflow-y-auto flex-1">
+
+            {/* Background image */}
             <div className="absolute inset-0 z-0">
-              <Image src={step.image} alt={step.title} fill unoptimized priority className="object-cover object-center rounded-4xl" />
+              {activeImage ? (
+                <Image src={activeImage} alt={activeTitle} fill unoptimized priority className="object-cover object-center rounded-4xl" />
+              ) : (
+                <div className="absolute inset-0 bg-muted rounded-4xl" />
+              )}
               <div className="absolute inset-0 rounded-4xl bg-black/25" />
               <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
               <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/80 via-black/50 to-transparent rounded-b-4xl" />
             </div>
-            <div className="relative z-10 flex flex-col items-center justify-between h-full w-full py-8 px-8 gap-4">
-              <TopBar dark={true} />
-              <StepDots dark={true} />
-              <div className="flex flex-1 flex-col justify-center items-center w-full">
-                {/* Desktop narration only shows text — bg image is the visual */}
-                <div className="flex flex-col gap-2 items-center text-center max-w-xl">
-                  <p className="sm:text-2xl text-xl font-semibold text-background leading-snug">{step.title}</p>
-                  {step.description && (
-                    <p className="text-sm/5 text-background/80 text-center text-pretty">{step.description}</p>
-                  )}
+
+            <div className="relative z-10 flex flex-col items-center justify-between h-full w-full py-8 px-6">
+
+              {/* Top bar */}
+              <div className="flex items-center justify-between w-full gap-4">
+                <div className="flex-1 flex justify-start">
+                  <Button onClick={handleBack} variant="link"
+                    className="flex items-center justify-center text-background dark:text-foreground">
+                    <ArrowLeftIcon weight="bold" className="w-4 h-4" /> Kembali
+                  </Button>
+                </div>
+
+                {/* Step dots */}
+                <div className="flex flex-col items-center gap-3">
+                  <span className="text-xs text-background/80 font-semibold tracking-[0.2em] uppercase">
+                    Tahap {currentStep + 1} / {totalSteps} · {step.title && (
+                      <span className="text-xs text-background/60 font-semibold">{step.title}</span>
+                    )}
+                  </span>
+                  <div className='flex items-center gap-3'>
+                    {instructions.map((_, i) => (
+                      <button key={i} onClick={() => jumpToStep(i)}
+                        className="flex flex-col items-center gap-1 group transition-all duration-200 ease-out cursor-pointer">
+                        <span className={cn('block h-1 rounded-full transition-all duration-300',
+                          i === currentStep ? 'w-8 bg-background/90' : i < currentStep ? 'w-4 bg-background/55' : 'w-4 bg-background/30')} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* BGM pill */}
+                <div className="flex-1 flex justify-end">
+                  <button ref={bgmButtonRef} onClick={() => openMusicTray(bgmButtonRef, false)}
+                    className="flex items-center gap-3 px-4 py-2 2md:rounded-2xl rounded-lg bg-background/90 dark:bg-foreground/90 text-foreground/80 dark:text-background/80 hover:bg-popover/90 border border-foreground hover:cursor-pointer transition-all duration-150 ease-out w-60">
+                    <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
+                    <div className="flex flex-1 flex-col min-w-0 text-left">
+                      <span className="text-xs font-semibold leading-tight truncate max-w-42">{bgmLabel}</span>
+                      {bgmSublabel && <span className="text-xs leading-tight truncate max-w-42 font-medium">{bgmSublabel}</span>}
+                    </div>
+                    <CaretDownIcon weight="bold" className={cn('w-4 h-4 shrink-0 transition-transform duration-200', showMusicTray && !trayMobile && 'rotate-180')} />
+                  </button>
                 </div>
               </div>
-              <NarrationControls
-                isPlaying={isPlaying} isMuted={isMuted} isLooping={isLooping}
-                elapsed={elapsed} duration={step.duration_seconds}
-                onPlayPause={() => setIsPlaying((p) => !p)}
-                onMuteToggle={() => setIsMuted((m) => !m)}
-                onLoopToggle={() => setIsLooping((l) => !l)}
-                circumference={circumference} strokeDashoffset={strokeDashoffset}
-              />
-              <NarrationNav dark={true} />
-              <p className="text-xs text-white/30 font-semibold shrink-0">DMAI - {sessionName}</p>
+
+              {/* Middle */}
+              <div className="flex flex-1 flex-col justify-center items-center gap-4 text-center">
+                
+                {/* <SubStepDots dark={true} /> */}
+
+                <p className="xs:text-p/5 text-sm/4 tracking-wide font-medium -mt-2">
+                  <span className="text-white/90">{displayMins}:{displaySecs}</span>
+                  <span className="text-white/30 mx-1">/</span>
+                  <span className="text-white/50">{totalTime}</span>
+                </p>
+
+                {/* Progress ring */}
+                <div className="relative w-28 h-28 flex items-center justify-center">
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" aria-hidden="true">
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2.5" />
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="white" strokeOpacity="0.85" strokeWidth="2.5"
+                      strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+                      transform="rotate(-90 50 50)" style={{ transition: 'stroke-dashoffset 1s linear' }} />
+                  </svg>
+                  <button onClick={() => setIsPlaying((p) => !p)}
+                    className="relative z-10 w-17.5 h-17.5 rounded-full flex items-center justify-center bg-background dark:bg-foreground text-muted-foreground dark:text-background transition-all hover:cursor-pointer hover:scale-105 active:scale-95">
+                    {isPlaying ? <PauseIcon weight="fill" className="w-7 h-7" /> : <PlayIcon weight="fill" className="w-7 h-7" />}
+                  </button>
+                </div>
+
+                <span className="text-xs text-background/80 font-semibold tracking-[0.2em] uppercase">
+                  Langkah {currentSubStep + 1 } / {subSteps.length} 
+                </span>
+
+                {/* Sub-step title + description */}
+                <div className="flex flex-col gap-1 text-center pt-1 shrink-0 max-w-xl sm:max-w-lg h-auto max-h-30 min-h-12  overflow-y-auto justify-start">
+                  <div className="flex flex-col gap-2 items-center xs:px-6">
+                    <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-background dark:text-foreground text-center">{activeTitle}</p>
+                    {activeDescription && (
+                      <p className="xs:text-p/5 text-sm/4 text-background dark:text-foreground text-center">{activeDescription}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom controls */}
+              <div className="flex flex-col items-center gap-3.5 px-3">
+                <div className="flex items-center justify-center gap-2 bg-background/90 dark:bg-foreground/90 rounded-full px-2 py-1.5 w-full">
+                  <Button onClick={goPrev} disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
+                    size="sm" variant="ghost"
+                    className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground dark:text-background disabled:opacity-30 disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10 hover:dark:bg-background/10">
+                    <ArrowLeftIcon weight="bold" /> Sebelumnya
+                  </Button>
+
+                  <Button onClick={() => setIsLooping((l) => !l)} variant="ghost" size="sm"
+                    className={cn('[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full bg-transparent',
+                      isLooping ? 'text-muted-foreground dark:text-background border border-muted-foreground bg-foreground/10' : 'text-muted-foreground dark:text-background hover:bg-foreground/10 hover:dark:bg-background/10')}>
+                    {isLooping ? <RepeatOnceIcon weight="fill" /> : <RepeatIcon weight="fill" />}
+                    Ulangi
+                  </Button>
+
+                  <Button onClick={() => setIsMuted((m) => !m)} size="sm" variant="ghost"
+                    className={cn('[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full bg-transparent',
+                      isMuted ? 'text-muted-foreground dark:text-background border border-muted-foreground bg-foreground/10' : 'text-muted-foreground dark:text-background hover:bg-foreground/10 hover:dark:bg-background/10')}>
+                    {isMuted ? <SpeakerSlashIcon weight="fill" /> : <SpeakerHighIcon weight="fill" />}
+                    {isMuted ? 'Tanpa Instruksi Suara' : 'Dengan Instruksi Suara'}
+                  </Button>
+
+                  {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
+                    <Button onClick={goNext} variant="ghost" size="sm"
+                      className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground dark:text-background font-medium rounded-full bg-transparent hover:bg-foreground/10 hover:dark:bg-background/10">
+                      Selesai <CheckIcon weight="bold" />
+                    </Button>
+                  ) : (
+                    <Button onClick={goNext} variant="ghost" size="sm"
+                      className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground dark:text-background font-medium rounded-full bg-transparent hover:bg-foreground/10 hover:dark:bg-background/10">
+                      Berikutnya <ArrowRightIcon weight="bold" />
+                    </Button>
+                  )}
+                </div>
+                <p className="lg:text-p text-sm text-white/40 text-center font-semibold">DMAI - {sessionName} Session</p>
+              </div>
+
             </div>
           </div>
         </div>
@@ -603,42 +778,144 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   }
 
   // ════════════════════════════════════════════════════════
-  // NON-NARRATION layout — clean white shell, BGM silent
+  // NON-NARRATION LAYOUT — clean shell, BGM paused
   // ════════════════════════════════════════════════════════
+
+  const NonNarrationContent = () => {
+    const config = parseConfig(step.step_config)
+    switch (step.step_type) {
+      case 'video':
+        return (
+          <StepVideo
+            youtubeUrl={(config.youtube_url as string) ?? ''}
+            onNext={goNext}
+            onPrev={showPrev ? goPrev : undefined}
+          />
+        )
+      case 'form': {
+        const fields = (config.fields ?? config.questions ?? []) as unknown[]
+        return (
+          <StepForm
+            fields={fields as never}
+            onNext={(responses) => { handleFormResponse(step.id, responses); goNext() }}
+            onPrev={showPrev ? goPrev : undefined}
+            showPrev={showPrev}
+            initialValues={formResponses[step.id]}
+          />
+        )
+      }
+      case 'body_map':
+        return (
+          <StepBodyMap
+            onNext={(response) => { handleFormResponse(step.id, response as Record<string, unknown>); goNext() }}
+            onPrev={showPrev ? goPrev : undefined}
+            initialValues={formResponses[step.id] as { selected_parts: string[]; sensation: string | null; note: string } | undefined}
+          />
+        )
+      case 'external_embed':
+        return (
+          <StepExternalEmbed
+            url={(config.url as string) ?? (config.embed_url as string) ?? ''}
+            label={(config.label as string) ?? 'Buka Aktivitas'}
+            onNext={goNext}
+            onPrev={showPrev ? goPrev : undefined}
+          />
+        )
+      case 'game':
+        return <StepGame onNext={goNext} onPrev={showPrev ? goPrev : undefined} />
+      default:
+        return null
+    }
+  }
+
+  // Step dots for non-narration
+  const StepDots = () => (
+    <div className="sm:flex hidden items-center gap-3 shrink-0">
+      {instructions.map((_, i) => (
+        <button key={i} onClick={() => jumpToStep(i)}
+          className={cn('block h-1 rounded-full transition-all duration-300 cursor-pointer',
+            i === currentStep ? 'w-8 bg-foreground/90' : i < currentStep ? 'w-4 bg-foreground/50' : 'w-4 bg-foreground/20')} />
+      ))}
+    </div>
+  )
+
   return (
     <>
-      {/* Mobile non-narration */}
-      <div className="2md:hidden fixed inset-0 z-55 flex flex-col bg-background p-4 gap-4 overflow-y-auto">
-        <TopBar dark={false} />
-        <StepDots dark={false} />
-        <div className="flex-1 flex flex-col justify-center py-2">
-          <StepContent
-            step={step}
-            onManualNext={goNext}
-            onManualPrev={goPrev}
-            showPrev={showPrev}
-            onFormResponse={handleFormResponse}
-          />
+      {/* MOBILE non-narration */}
+      <div className="2md:hidden fixed inset-0 z-55 flex flex-col bg-background p-4 gap-3 overflow-y-auto">
+        {/* Top bar */}
+        <div className="flex items-center justify-between gap-3 shrink-0">
+          <Button onClick={handleBack} variant="ghost" size="sm"
+            className="[&_svg]:size-4 gap-1.5 rounded-full px-3 text-foreground hover:bg-foreground/10">
+            <ArrowLeftIcon weight="bold" /> Kembali
+          </Button>
+          <StepDots />
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="text-xs font-semibold tracking-wide text-muted-foreground">
+              Tahap {currentStep + 1} / {totalSteps}
+            </span>
+            <span className="text-xs font-bold text-foreground">{STEP_TYPE_LABEL[step.step_type]}</span>
+          </div>
+          {/* <div className="w-20" /> */}
         </div>
-        <p className="text-xs text-muted-foreground/40 text-center font-semibold shrink-0">DMAI - {sessionName}</p>
+
+
+        {/* Step title */}
+        {step.title && (
+          <p className="text-base font-semibold text-foreground text-center shrink-0">{step.title}</p>
+        )}
+        {step.description && (
+          <p className="text-sm text-muted-foreground text-center shrink-0">{step.description}</p>
+        )}
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col justify-center py-2">
+          <NonNarrationContent />
+        </div>
+
+        <p className="text-xs text-muted-foreground/40 text-center font-semibold shrink-0">DMAI - {sessionName} Session</p>
       </div>
 
-      {/* Desktop non-narration */}
-      <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-muted/30">
-        <div className="flex flex-col items-center w-full rounded-4xl bg-background border border-border overflow-hidden flex-1">
-          <div className="flex flex-col items-center justify-between h-full w-full py-8 px-8 gap-4">
-            <TopBar dark={false} />
-            <StepDots dark={false} />
-            <div className="flex-1 w-full flex items-center justify-center overflow-y-auto py-4">
-              <StepContent
-                step={step}
-                onManualNext={goNext}
-                onManualPrev={goPrev}
-                showPrev={showPrev}
-                onFormResponse={handleFormResponse}
-              />
+      {/* DESKTOP non-narration */}
+      <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-muted/30 overflow-y-auto">
+        <div className="flex flex-col items-center w-full rounded-4xl bg-background border border-border overflow-y-auto h-fit flex-1">
+          <div className="flex flex-col items-center justify-between h-full w-full py-8 px-8 gap-6">
+            {/* Top bar */}
+            <div className="flex items-center justify-between w-full gap-4 shrink-0">
+              <Button 
+                onClick={handleBack} 
+                variant="ghost" 
+                size="sm"
+                className="[&_svg]:size-4 gap-1.5 rounded-full px-3 text-foreground hover:bg-foreground/10"
+              >
+                <ArrowLeftIcon weight="bold" /> 
+                Kembali
+              </Button>
+              <div className="flex flex-col items-center justify-center gap-2.5 w-full">
+                <span className="text-xs font-semibold tracking-wide text-muted-foreground">
+                  Tahap {currentStep + 1} / {totalSteps} · {STEP_TYPE_LABEL[step.step_type]}
+                </span>
+                <StepDots />
+              </div>
+              <div className="w-24" />
             </div>
-            <p className="text-xs text-muted-foreground/40 font-semibold shrink-0">DMAI - {sessionName}</p>
+
+            {/* Step title */}
+            {step.title && (
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-foreground text-center max-w-2xl">{step.title}</p>
+                {step.description && (
+                  <p className="sm:text-p/5 xs:text-sm/4 text-xs/3.5text-muted-foreground text-center max-w-lg">{step.description} </p>
+                )}
+              </div>
+            )}
+   
+            {/* Content */}
+            <div className="flex-1 w-full flex items-center justify-center overflow-y-auto">
+              <NonNarrationContent />
+            </div>
+
+            <p className="text-sm text-muted-foreground/40 font-semibold shrink-0">DMAI - {sessionName} Session</p>
           </div>
         </div>
       </div>

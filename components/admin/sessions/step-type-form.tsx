@@ -1,11 +1,7 @@
 'use client'
 
-/**
- * step-type-form.tsx — Adaptive form per step_type
- * Used by: StepBuilderCard, StepEditorDialog, AddStepDialog
- */
-
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,44 +28,32 @@ import {
   MusicNotesIcon,
 } from '@phosphor-icons/react'
 import Image from 'next/image'
-import { SessionStep, StepType, STEP_TYPE_LABELS, STEP_TYPE_COLORS } from './types'
+import {
+  SessionStep,
+  StepType,
+  STEP_TYPE_LABELS,
+  STEP_TYPE_COLORS,
+  FormQuestion,
+  FormQuestionType,
+  NarrationSubStep,
+  BodyPart,
+  NarrationStepConfigData,
+  FormStepConfigData,
+  VideoStepConfigData,
+  BodyMapStepConfigData,
+  ExternalEmbedStepConfigData,
+} from './types'
 
-// ─── Sub-types ─────────────────────────────────────────────────────────────────
-
-export type FormQuestion = {
-  _key: string
-  label: string
-  type: 'emoji_scale' | 'slider' | 'text_input' | 'textarea'
-}
-
-/** A single sub-step inside a narration step */
-export type NarrationSubStep = {
-  _key: string
-  title: string           // nama step suara
-  description: string     // deskripsi audio
-  duration_seconds: number // otomatis dari audio
-  audio_file?: File | null // runtime only, not persisted in step_config
-  audio_url: string        // persisted URL
-  image_file?: File | null // runtime only
-  image_url: string        // persisted URL
-  image_preview?: string   // runtime only
-}
-
-export type BodyPart = {
-  id: string
-  part_key: string
-  label_id: string
-  region: string
-  sort_order: number | null
-}
+// Re-exported so existing imports of these from this file keep working.
+export type { FormQuestion, NarrationSubStep, BodyPart }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-export function newKey() {
+export function newKey(): string {
   return `k-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
 }
 
-function formatDurSec(sec: number) {
+function formatDurSec(sec: number): string {
   const m = Math.floor(sec / 60)
   const s = sec % 60
   if (m === 0) return `${s}d`
@@ -77,11 +61,7 @@ function formatDurSec(sec: number) {
   return `${m}m ${s}d`
 }
 
-const FORM_QUESTION_TYPES: {
-  value: FormQuestion['type']
-  label: string
-  icon: React.ReactNode
-}[] = [
+const FORM_QUESTION_TYPES: { value: FormQuestionType; label: string; icon: ReactNode }[] = [
   { value: 'emoji_scale', label: 'Skala Emoji', icon: <SmileyIcon className="w-3.5 h-3.5" /> },
   { value: 'slider', label: 'Slider (1–100)', icon: <SlidersIcon className="w-3.5 h-3.5" /> },
   { value: 'text_input', label: 'Input Teks', icon: <TextTIcon className="w-3.5 h-3.5" /> },
@@ -90,26 +70,25 @@ const FORM_QUESTION_TYPES: {
 
 // ─── Duration input (string-based so it can be cleared) ────────────────────────
 
+type DurationInputProps = {
+  value: number
+  onChange: (value: number) => void
+  label?: string
+  readOnly?: boolean
+  hint?: string
+}
+
 function DurationInput({
   value,
   onChange,
   label = 'Durasi (detik)',
   readOnly = false,
   hint,
-}: {
-  value: number
-  onChange: (v: number) => void
-  label?: string
-  readOnly?: boolean
-  hint?: string
-}) {
+}: DurationInputProps) {
   const [raw, setRaw] = useState(value === 0 ? '' : String(value))
-
-  // Sync if value changes externally (e.g. auto-computed from audio)
   const lastExternal = useRef(value)
   if (value !== lastExternal.current) {
     lastExternal.current = value
-    // Only overwrite display if the user isn't mid-edit (raw !== '' or value changed meaningfully)
     if (value !== Number(raw || '0')) {
       setRaw(value === 0 ? '' : String(value))
     }
@@ -145,33 +124,31 @@ function DurationInput({
 
 // ─── Narration sub-step config ─────────────────────────────────────────────────
 
-function NarrationSubStepCard({
-  sub,
-  index,
-  total,
-  onChange,
-  onRemove,
-}: {
+type NarrationSubStepCardProps = {
   sub: NarrationSubStep
   index: number
   total: number
   onChange: (updated: NarrationSubStep) => void
   onRemove: () => void
-}) {
+}
+
+function NarrationSubStepCard({ sub, index, total, onChange, onRemove }: NarrationSubStepCardProps) {
   const audioRef = useRef<HTMLInputElement>(null!)
   const imageRef = useRef<HTMLInputElement>(null!)
 
   const handleAudio = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    // Auto-read duration from audio file
-    const url = URL.createObjectURL(file)
-    const audio = new window.Audio(url)
+    // Read duration from the file metadata, but store only the File object.
+    // The blob URL is used only for local playback preview — never stored in DB.
+    const blobUrl = URL.createObjectURL(file)
+    const audio = new window.Audio(blobUrl)
     audio.addEventListener('loadedmetadata', () => {
       onChange({
         ...sub,
         audio_file: file,
-        audio_url: url,
+        audio_url: '',          // cleared — real URL written on save to Supabase Storage
+        audio_preview: blobUrl, // runtime-only preview URL
         duration_seconds: Math.round(audio.duration),
       })
     })
@@ -180,7 +157,12 @@ function NarrationSubStepCard({
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    onChange({ ...sub, image_file: file, image_preview: URL.createObjectURL(file) })
+    onChange({
+      ...sub,
+      image_file: file,
+      image_url: '',                          // cleared — real URL written on save
+      image_preview: URL.createObjectURL(file), // runtime-only preview
+    })
   }
 
   return (
@@ -237,11 +219,12 @@ function NarrationSubStepCard({
           <Label className="text-xs flex items-center gap-1">
             <SpeakerHighIcon className="w-3.5 h-3.5" /> Audio Panduan
           </Label>
-          {(sub.audio_url && !sub.audio_file) && (
-            <audio controls src={sub.audio_url} className="w-full h-8" />
+          {/* Show playback: prefer local preview blob, fallback to stored URL */}
+          {(sub.audio_preview || sub.audio_url) && (
+            <audio controls src={sub.audio_preview || sub.audio_url} className="w-full h-8" />
           )}
           {sub.audio_file && (
-            <p className="text-xs text-muted-foreground truncate">{(sub.audio_file as File).name}</p>
+            <p className="text-xs text-muted-foreground truncate">{sub.audio_file.name}</p>
           )}
           {sub.duration_seconds > 0 && (
             <p className="text-xs text-blue-600">Durasi: {formatDurSec(sub.duration_seconds)}</p>
@@ -263,6 +246,7 @@ function NarrationSubStepCard({
           <Label className="text-xs flex items-center gap-1">
             <ImageIcon className="w-3.5 h-3.5" /> Gambar
           </Label>
+          {/* Show preview: prefer local preview blob, fallback to stored URL */}
           {(sub.image_preview || sub.image_url) ? (
             <Image
               src={sub.image_preview || sub.image_url}
@@ -292,32 +276,49 @@ function NarrationSubStepCard({
   )
 }
 
-function NarrationStepConfig({
-  config,
-  onChange,
-  onTotalDurationChange,
-}: {
-  config: Record<string, unknown>
-  onChange: (patch: Record<string, unknown>) => void
-  onTotalDurationChange: (totalSec: number) => void
-}) {
-  // Normalize: DB-loaded sub_steps won't have _key — add it here so React keys + update logic work
-  const rawSubSteps = (config.sub_steps as NarrationSubStep[]) ?? []
-  const subSteps: NarrationSubStep[] = rawSubSteps.map((s) =>
-    s._key ? s : { ...s, _key: newKey() }
-  )
+type NarrationStepConfigProps = {
+  config: NarrationStepConfigData
+  onChange: (patch: Partial<NarrationStepConfigData>) => void
+  onTotalDurationChange: (total: number) => void
+}
+
+function NarrationStepConfig({ config, onChange, onTotalDurationChange }: NarrationStepConfigProps) {
+  const parseSubSteps = (cfg: NarrationStepConfigData | string | null | undefined): NarrationSubStep[] => {
+    const obj: NarrationStepConfigData =
+      typeof cfg === 'string'
+        ? (() => {
+            try {
+              return JSON.parse(cfg) as NarrationStepConfigData
+            } catch {
+              return {}
+            }
+          })()
+        : (cfg ?? {})
+    const raw = Array.isArray(obj.sub_steps) ? obj.sub_steps : []
+    return raw.map((s) => (s._key ? s : { ...s, _key: newKey() }))
+  }
+
+  // Own the sub-steps locally so UI state is never lost between re-renders.
+  const [subSteps, setSubSteps] = useState<NarrationSubStep[]>(() => parseSubSteps(config))
+
+  // Sync when config reference changes externally (dialog opened with a different step)
+  const prevConfigRef = useRef(config)
+  useEffect(() => {
+    if (prevConfigRef.current === config) return
+    prevConfigRef.current = config
+    setSubSteps(parseSubSteps(config))
+  }, [config])
 
   const totalDuration = subSteps.reduce((acc, s) => acc + (s.duration_seconds || 0), 0)
 
-  const update = (updated: NarrationSubStep[]) => {
-    // Always persist _key inside step_config so subsequent reads stay stable
-    const withKeys = updated.map((s) => (s._key ? s : { ...s, _key: newKey() }))
-    onChange({ sub_steps: withKeys })
-    onTotalDurationChange(withKeys.reduce((acc, s) => acc + (s.duration_seconds || 0), 0))
+  const commit = (updated: NarrationSubStep[]) => {
+    setSubSteps(updated)
+    onChange({ sub_steps: updated })
+    onTotalDurationChange(updated.reduce((acc, s) => acc + (s.duration_seconds || 0), 0))
   }
 
   const addSub = () =>
-    update([
+    commit([
       ...subSteps,
       {
         _key: newKey(),
@@ -329,10 +330,10 @@ function NarrationStepConfig({
       },
     ])
 
-  const removeSub = (key: string) => update(subSteps.filter((s) => s._key !== key))
+  const removeSub = (key: string) => commit(subSteps.filter((s) => s._key !== key))
 
   const updateSub = (key: string, updated: NarrationSubStep) =>
-    update(subSteps.map((s) => (s._key === key ? updated : s)))
+    commit(subSteps.map((s) => (s._key === key ? updated : s)))
 
   return (
     <div className="flex flex-col gap-3 pt-3 border-t border-border">
@@ -381,21 +382,17 @@ function NarrationStepConfig({
 
 // ─── Form step config ──────────────────────────────────────────────────────────
 
-function FormStepConfig({
-  config,
-  onChange,
-}: {
-  config: Record<string, unknown>
-  onChange: (patch: Record<string, unknown>) => void
-}) {
-  const questions: FormQuestion[] = (config.questions as FormQuestion[]) ?? []
+type FormStepConfigProps = {
+  config: FormStepConfigData
+  onChange: (patch: Partial<FormStepConfigData>) => void
+}
+
+function FormStepConfig({ config, onChange }: FormStepConfigProps) {
+  const questions: FormQuestion[] = config.questions ?? []
 
   const addQ = () =>
     onChange({ questions: [...questions, { _key: newKey(), label: '', type: 'text_input' }] })
-
-  const removeQ = (key: string) =>
-    onChange({ questions: questions.filter((q) => q._key !== key) })
-
+  const removeQ = (key: string) => onChange({ questions: questions.filter((q) => q._key !== key) })
   const updateQ = (key: string, patch: Partial<FormQuestion>) =>
     onChange({ questions: questions.map((q) => (q._key === key ? { ...q, ...patch } : q)) })
 
@@ -472,13 +469,12 @@ function FormStepConfig({
 
 // ─── Video step config ─────────────────────────────────────────────────────────
 
-function VideoStepConfig({
-  config,
-  onChange,
-}: {
-  config: Record<string, unknown>
-  onChange: (patch: Record<string, unknown>) => void
-}) {
+type VideoStepConfigProps = {
+  config: VideoStepConfigData
+  onChange: (patch: Partial<VideoStepConfigData>) => void
+}
+
+function VideoStepConfig({ config, onChange }: VideoStepConfigProps) {
   return (
     <div className="flex flex-col gap-3 pt-3 border-t border-border">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -490,7 +486,7 @@ function VideoStepConfig({
           URL YouTube
         </Label>
         <Input
-          value={(config.youtube_url as string) ?? ''}
+          value={config.youtube_url ?? ''}
           onChange={(e) => onChange({ ...config, youtube_url: e.target.value })}
           placeholder="https://www.youtube.com/watch?v=..."
           className="text-sm"
@@ -502,7 +498,7 @@ function VideoStepConfig({
           <span className="text-muted-foreground font-normal text-xs">(opsional)</span>
         </Label>
         <Input
-          value={(config.credit as string) ?? ''}
+          value={config.credit ?? ''}
           onChange={(e) => onChange({ ...config, credit: e.target.value })}
           placeholder="e.g. Dr. Amelia Putri, Psikolog Klinis"
           className="text-sm"
@@ -514,17 +510,14 @@ function VideoStepConfig({
 
 // ─── Body map step config ──────────────────────────────────────────────────────
 
-function BodyMapStepConfig({
-  config,
-  onChange,
-  bodyParts,
-  bodyPartsLoading,
-}: {
-  config: Record<string, unknown>
-  onChange: (patch: Record<string, unknown>) => void
+type BodyMapStepConfigProps = {
+  config: BodyMapStepConfigData
+  onChange: (patch: Partial<BodyMapStepConfigData>) => void
   bodyParts: BodyPart[]
   bodyPartsLoading: boolean
-}) {
+}
+
+function BodyMapStepConfig({ config, onChange, bodyParts, bodyPartsLoading }: BodyMapStepConfigProps) {
   const grouped = bodyParts.reduce<Record<string, BodyPart[]>>((acc, p) => {
     if (!acc[p.region]) acc[p.region] = []
     acc[p.region].push(p)
@@ -541,7 +534,7 @@ function BodyMapStepConfig({
       <div className="flex flex-col gap-1.5">
         <Label>Label Pertanyaan</Label>
         <Input
-          value={(config.section_label as string) ?? ''}
+          value={config.section_label ?? ''}
           onChange={(e) => onChange({ ...config, section_label: e.target.value })}
           placeholder="e.g. Pilih bagian tubuh yang terasa lelah/tegang saat ini"
           className="text-sm"
@@ -589,13 +582,12 @@ function BodyMapStepConfig({
 
 // ─── External embed step config ────────────────────────────────────────────────
 
-function ExternalEmbedStepConfig({
-  config,
-  onChange,
-}: {
-  config: Record<string, unknown>
-  onChange: (patch: Record<string, unknown>) => void
-}) {
+type ExternalEmbedStepConfigProps = {
+  config: ExternalEmbedStepConfigData
+  onChange: (patch: Partial<ExternalEmbedStepConfigData>) => void
+}
+
+function ExternalEmbedStepConfig({ config, onChange }: ExternalEmbedStepConfigProps) {
   return (
     <div className="flex flex-col gap-3 pt-3 border-t border-border">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
@@ -605,7 +597,7 @@ function ExternalEmbedStepConfig({
       <div className="flex flex-col gap-1.5">
         <Label>URL Embed</Label>
         <Input
-          value={(config.embed_url as string) ?? ''}
+          value={config.embed_url ?? ''}
           onChange={(e) => onChange({ ...config, embed_url: e.target.value })}
           placeholder="https://app.mentimeter.com/..."
           className="text-sm"
@@ -614,7 +606,7 @@ function ExternalEmbedStepConfig({
       <div className="flex flex-col gap-1.5">
         <Label>Label / Instruksi</Label>
         <Input
-          value={(config.embed_label as string) ?? ''}
+          value={config.embed_label ?? ''}
           onChange={(e) => onChange({ ...config, embed_label: e.target.value })}
           placeholder="e.g. Buka Mentimeter dan tulis reaksi tubuhmu"
           className="text-sm"
@@ -626,15 +618,9 @@ function ExternalEmbedStepConfig({
 
 // ─── Main export: StepTypeForm ─────────────────────────────────────────────────
 
-export interface StepTypeFormProps {
+type StepTypeFormProps = {
   form: SessionStep
   setForm: (patch: Partial<SessionStep>) => void
-  /** unused — kept for API compat, narration now uses sub-steps instead */
-  imageFile?: File | null
-  imagePreview?: string
-  audioFile?: File | null
-  onImageChange?: (file: File, preview: string) => void
-  onAudioChange?: (file: File) => void
   bodyParts?: BodyPart[]
   bodyPartsLoading?: boolean
 }
@@ -645,7 +631,7 @@ export function StepTypeForm({
   bodyParts = [],
   bodyPartsLoading = false,
 }: StepTypeFormProps) {
-  const showDescription = !['video', 'external_embed', 'narration'].includes(form.step_type)
+  const showDescription = !(['video', 'external_embed', 'narration'] as StepType[]).includes(form.step_type)
 
   const updateConfig = (patch: Record<string, unknown>) =>
     setForm({ step_config: { ...form.step_config, ...patch } })
@@ -736,27 +722,27 @@ export function StepTypeForm({
       {/* ── Type-specific config ── */}
       {form.step_type === 'narration' && (
         <NarrationStepConfig
-          config={form.step_config}
+          config={form.step_config as NarrationStepConfigData}
           onChange={updateConfig}
           onTotalDurationChange={(total) => setForm({ duration_seconds: total })}
         />
       )}
       {form.step_type === 'form' && (
-        <FormStepConfig config={form.step_config} onChange={updateConfig} />
+        <FormStepConfig config={form.step_config as FormStepConfigData} onChange={updateConfig} />
       )}
       {form.step_type === 'video' && (
-        <VideoStepConfig config={form.step_config} onChange={updateConfig} />
+        <VideoStepConfig config={form.step_config as VideoStepConfigData} onChange={updateConfig} />
       )}
       {form.step_type === 'body_map' && (
         <BodyMapStepConfig
-          config={form.step_config}
+          config={form.step_config as BodyMapStepConfigData}
           onChange={updateConfig}
           bodyParts={bodyParts}
           bodyPartsLoading={bodyPartsLoading}
         />
       )}
       {form.step_type === 'external_embed' && (
-        <ExternalEmbedStepConfig config={form.step_config} onChange={updateConfig} />
+        <ExternalEmbedStepConfig config={form.step_config as ExternalEmbedStepConfigData} onChange={updateConfig} />
       )}
     </div>
   )

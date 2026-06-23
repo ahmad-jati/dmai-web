@@ -32,7 +32,7 @@ function groupSessionsByWeek(sessions: SessionData[]) {
     .sort(([weekA], [weekB]) => weekA - weekB)
     .map(([week_number, items]) => ({
       week_number,
-      items: [...items].sort((a, b) => a.sort_order - b.sort_order),
+      items: [...items].sort((a, b) => a.week_number - b.week_number),
     }));
 }
 
@@ -137,8 +137,9 @@ function SessionStepperLayout({ sessions }: { sessions: SessionData[] }) {
               const isLast = idx === items.length - 1;
 
               const cardContent = (
-                <>
-                  <div className="relative md:w-40 md:h-28 w-24 h-20 rounded-[14px] overflow-hidden flex-shrink-0">
+                <div className="relative w-full">
+                  <div className="w-full flex gap-4">
+                    <div className="relative md:w-40 md:h-28 w-24 h-20 rounded-[14px] overflow-hidden shrink-0">
                     <Image
                       src={session.image_cover}
                       alt={`session ${session.session_name}`}
@@ -152,12 +153,8 @@ function SessionStepperLayout({ sessions }: { sessions: SessionData[] }) {
                           : "group-hover:scale-105 transition-transform duration-300"
                       }`}
                     />
-                    {session.is_locked && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-                        <LockSimpleIcon className="h-6 w-6 text-foreground" weight="fill" />
-                      </div>
-                    )}
                   </div>
+                  
 
                   <div className="flex flex-col items-start gap-1.5 flex-1 min-w-0 py-1">
                     <div className="flex items-center gap-2 w-full">
@@ -170,9 +167,6 @@ function SessionStepperLayout({ sessions }: { sessions: SessionData[] }) {
                       >
                         {session.session_name}
                       </p>
-                      {session.is_locked && (
-                        <LockSimpleIcon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" weight="fill" />
-                      )}
                     </div>
 
                     <p className="text-pretty text-sm/4 font-medium line-clamp-2 text-muted-foreground">
@@ -194,13 +188,21 @@ function SessionStepperLayout({ sessions }: { sessions: SessionData[] }) {
                       </span>
                     </div>
                   </div>
-                </>
+                  </div>
+
+                  {session.is_locked && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <LockSimpleIcon className="h-6 w-6 text-foreground" weight="fill" />
+                        <p>Sesi ini akan terbuka pada minggu ke-{session.week_number}</p>
+                      </div>
+                    )}
+                </div>
               );
 
               return (
                 <div key={session.slug} className="flex gap-4 w-full">
                   {/* timeline / connector */}
-                  <div className="flex flex-col items-center">
+                  {/* <div className="flex flex-col items-center">
                     <div
                       className={`flex items-center justify-center w-8 h-8 rounded-full border-2 flex-shrink-0 ${
                         session.is_locked
@@ -217,7 +219,7 @@ function SessionStepperLayout({ sessions }: { sessions: SessionData[] }) {
                       )}
                     </div>
                     {!isLast && <div className="w-px flex-1 bg-foreground/15 my-1" />}
-                  </div>
+                  </div> */}
 
                   {/* card: locked = div (non-clickable, gelap), unlocked = Link */}
                   {session.is_locked ? (

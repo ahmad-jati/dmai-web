@@ -77,8 +77,9 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
                 }`}
               />
               {session.is_locked && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50">
                   <LockSimpleIcon className="h-6 w-6 text-foreground" weight="fill" />
+                  <p>Sesi ini akan terbuka pada minggu ke-{session.week_number}</p>
                 </div>
               )}
             </div>
@@ -94,16 +95,12 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
                 >
                   {session.session_name}
                 </p>
-                {session.is_locked ? (
-                  <LockSimpleIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" weight="fill" />
-                ) : (
-                  <Button
-                    variant={"default"}
-                    className="md:[&_svg]:size-5 [&_svg]:size-6 font-foreground bg-transparent rounded-none border-none p-0 h-fit md:hidden block"
-                  >
-                    <ArrowUpRightIcon />
-                  </Button>
-                )}
+                <Button
+                  variant={"default"}
+                  className="md:[&_svg]:size-5 [&_svg]:size-6 font-foreground bg-transparent rounded-none border-none p-0 h-fit md:hidden block"
+                >
+                  <ArrowUpRightIcon />
+                </Button>
               </div>
 
               <p className="2md:mt-0 text-pretty -mt-2 xs:text-p/5 text-sm/4 2md:max-w-140 font-medium text-muted-foreground 2md:text-left text-left">

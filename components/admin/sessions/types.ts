@@ -62,6 +62,62 @@ export type SessionMeta = {
   total_instruction: string
 }
 
+// ─── Step-config sub-shapes ─────────────────────────────────────────────────────
+// These describe what can live inside `SessionStep.step_config` for each step type.
+// step_config itself stays as `Record<string, unknown>` (it's a jsonb column), but
+// the form components narrow/cast to these when reading/writing it.
+
+export type FormQuestionType = 'emoji_scale' | 'slider' | 'text_input' | 'textarea'
+
+export type FormQuestion = {
+  _key: string
+  label: string
+  type: FormQuestionType
+}
+
+export type NarrationSubStep = {
+  _key: string
+  title: string
+  description: string
+  duration_seconds: number
+  audio_file?: File
+  audio_url: string
+  audio_preview?: string
+  image_file?: File
+  image_url: string
+  image_preview?: string
+}
+
+export type BodyPart = {
+  id: string
+  part_key: string
+  label_id: string
+  region: string
+  sort_order: number | null
+}
+
+export type NarrationStepConfigData = {
+  sub_steps?: NarrationSubStep[]
+}
+
+export type FormStepConfigData = {
+  questions?: FormQuestion[]
+}
+
+export type VideoStepConfigData = {
+  youtube_url?: string
+  credit?: string
+}
+
+export type BodyMapStepConfigData = {
+  section_label?: string
+}
+
+export type ExternalEmbedStepConfigData = {
+  embed_url?: string
+  embed_label?: string
+}
+
 export const STEP_TYPE_LABELS: Record<StepType, string> = {
   narration: 'Narasi / Panduan Suara',
   form: 'Form Input',

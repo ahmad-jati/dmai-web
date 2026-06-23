@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
+import { Button } from '@/components/ui/button'
 
-// field types from DB — covers both old and new naming
 export type FormFieldType = 'emoji_scale' | 'slider' | 'textarea' | 'text_input' | 'checkbox_group'
 
 export type FormField = {
@@ -22,6 +22,7 @@ type Props = {
   onNext: (responses: Record<string, unknown>) => void
   onPrev?: () => void
   showPrev?: boolean
+  initialValues?: Record<string, unknown>
 }
 
 const EMOJIS = [
@@ -33,27 +34,21 @@ const EMOJIS = [
 ]
 
 function EmojiScale({ field, value, onChange }: {
-  field: FormField
-  value: number | undefined
-  onChange: (v: number) => void
+  field: FormField; value: number | undefined; onChange: (v: number) => void
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <label className="text-sm font-medium text-foreground">{field.label}</label>
+      <label className="text-base sm:text-sm font-medium text-foreground flex gap-2">{field.label} <span className='text-destructive text-xl'>*</span></label>
       <div className="flex justify-between gap-2">
         {EMOJIS.map((e, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => onChange(i + 1)}
+          <button key={i} type="button" onClick={() => onChange(i + 1)}
             className={cn(
               'flex flex-col items-center gap-1.5 flex-1 py-3 rounded-xl border transition-all',
               value === i + 1
                 ? 'border-foreground bg-foreground/5 shadow-sm'
                 : 'border-border hover:border-foreground/30 hover:bg-muted/50'
-            )}
-          >
-            <span className={cn('text-2xl transition-transform duration-150', value === i + 1 ? 'scale-125' : '')}>
+            )}>
+            <span className={cn('text-xl transition-transform duration-150', value === i + 1 ? 'scale-115' : '')}>
               {e.emoji}
             </span>
             <span className="text-xs text-muted-foreground hidden sm:block">{e.label}</span>
@@ -65,33 +60,24 @@ function EmojiScale({ field, value, onChange }: {
 }
 
 function SliderField({ field, value, onChange }: {
-  field: FormField
-  value: number | undefined
-  onChange: (v: number) => void
+  field: FormField; value: number | undefined; onChange: (v: number) => void
 }) {
   const min = field.min ?? 1
   const max = field.max ?? 100
-  const current = value ?? Math.round((min + max) / 2)
-  const pct = ((current - min) / (max - min)) * 100
+  const current = value ?? 0
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex justify-between items-center">
-        <label className="text-sm font-medium text-foreground">{field.label}</label>
-        <span className="text-sm font-bold tabular-nums bg-muted px-2.5 py-0.5 rounded-lg min-w-10 text-center">
+        <label className="text-base sm:text-sm font-medium text-foreground flex gap-2">{field.label} <span className='text-destructive text-xl'>*</span></label>
+        <span className="text-sm font-bold tabular-nums bg-muted px-2.5 py-0.5 rounded-lg min-w-10 text-center"> 
           {current}
         </span>
       </div>
       <input
-        type="range"
-        min={min}
-        max={max}
-        value={current}
+        type="range" min={min} max={max} value={current}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-2 rounded-full appearance-none cursor-pointer"
-        style={{
-          background: `linear-gradient(to right, hsl(var(--foreground)) ${pct}%, hsl(var(--muted)) ${pct}%)`
-        }}
+        className="w-full h-2 rounded-full cursor-pointer"
       />
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>{min}</span>
@@ -102,18 +88,14 @@ function SliderField({ field, value, onChange }: {
 }
 
 function TextInputField({ field, value, onChange }: {
-  field: FormField
-  value: string | undefined
-  onChange: (v: string) => void
+  field: FormField; value: string | undefined; onChange: (v: string) => void
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-foreground">{field.label}</label>
+      <label className="text-base sm:text-sm font-medium text-foreground flex gap-2">{field.label} <span className='text-destructive text-xl'>*</span></label>
       <textarea
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value)}
-        rows={3}
-        placeholder="Tulis jawabanmu di sini..."
+        value={value ?? ''} onChange={(e) => onChange(e.target.value)}
+        rows={3} placeholder="Tulis jawabanmu di sini..."
         className="w-full rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-foreground/40 transition-colors"
       />
     </div>
@@ -121,32 +103,23 @@ function TextInputField({ field, value, onChange }: {
 }
 
 function CheckboxGroupField({ field, value, onChange }: {
-  field: FormField
-  value: string[] | undefined
-  onChange: (v: string[]) => void
+  field: FormField; value: string[] | undefined; onChange: (v: string[]) => void
 }) {
   const selected = value ?? []
   const toggle = (opt: string) =>
-    selected.includes(opt)
-      ? onChange(selected.filter((s) => s !== opt))
-      : onChange([...selected, opt])
-
+    selected.includes(opt) ? onChange(selected.filter((s) => s !== opt)) : onChange([...selected, opt])
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-foreground">{field.label}</label>
+      <label className="text-base sm:text-sm font-medium text-foreground flex gap-2">{field.label} <span className='text-destructive text-xl'>*</span></label>
       <div className="flex flex-wrap gap-2">
         {(field.options ?? []).map((opt) => (
-          <button
-            key={opt}
-            type="button"
-            onClick={() => toggle(opt)}
+          <button key={opt} type="button" onClick={() => toggle(opt)}
             className={cn(
               'px-4 py-2 rounded-full text-sm font-medium border transition-all',
               selected.includes(opt)
                 ? 'bg-foreground text-background border-foreground'
                 : 'bg-background border-border text-foreground hover:border-foreground/50 hover:bg-muted/50'
-            )}
-          >
+            )}>
             {opt}
           </button>
         ))}
@@ -155,16 +128,12 @@ function CheckboxGroupField({ field, value, onChange }: {
   )
 }
 
-export function StepForm({ fields, onNext, onPrev, showPrev }: Props) {
-  const [responses, setResponses] = useState<Record<string, unknown>>({})
-
-  // Use _key or id as the response key
+export function StepForm({ fields, onNext, onPrev, showPrev, initialValues }: Props) {
+  const [responses, setResponses] = useState<Record<string, unknown>>(initialValues ?? {})
   const getKey = (field: FormField) => field._key ?? field.id ?? field.label
-
   const setField = (field: FormField, value: unknown) =>
     setResponses((prev) => ({ ...prev, [getKey(field)]: value }))
 
-  // text_input and textarea are optional, others required
   const allAnswered = fields.every((f) => {
     if (f.type === 'text_input' || f.type === 'textarea') return true
     if (f.type === 'checkbox_group') {
@@ -178,63 +147,76 @@ export function StepForm({ fields, onNext, onPrev, showPrev }: Props) {
     <div className="flex flex-col gap-6 w-full max-w-lg mx-auto">
       {fields.map((field) => {
         const key = getKey(field)
+
         if (field.type === 'emoji_scale') {
           return (
-            <EmojiScale key={key} field={field}
+            <EmojiScale
+              key={key}
+              field={field}
               value={responses[key] as number | undefined}
-              onChange={(v) => setField(field, v)} />
+              onChange={(v) => setField(field, v)}
+            />
           )
         }
+
         if (field.type === 'slider') {
           return (
-            <SliderField key={key} field={field}
+            <SliderField
+              key={key}
+              field={field}
               value={responses[key] as number | undefined}
-              onChange={(v) => setField(field, v)} />
+              onChange={(v) => setField(field, v)}
+            />
           )
         }
+
         if (field.type === 'text_input' || field.type === 'textarea') {
           return (
-            <TextInputField key={key} field={field}
+            <TextInputField
+              key={key}
+              field={field}
               value={responses[key] as string | undefined}
-              onChange={(v) => setField(field, v)} />
+              onChange={(v) => setField(field, v)}
+            />
           )
         }
-        if (field.type === 'checkbox_group') {
-          return (
-            <CheckboxGroupField key={key} field={field}
-              value={responses[key] as string[] | undefined}
-              onChange={(v) => setField(field, v)} />
-          )
-        }
+
+        // if (field.type === 'checkbox_group') {
+        //   return (
+        //     <CheckboxGroupField
+        //       key={key}
+        //       field={field}
+        //       value={responses[key] as string[] | undefined}
+        //       onChange={(v) => setField(field, v)}
+        //     />
+        //   )
+        // }
+
         return null
       })}
 
-      {/* Navigation buttons */}
       <div className={cn('flex gap-3 mt-2', showPrev ? 'justify-between' : 'justify-end')}>
-        {showPrev && (
-          <button
-            type="button"
-            onClick={onPrev}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all"
+        {showPrev && onPrev && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onPrev} 
+            className="hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
             Kembali
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="button"
           onClick={() => onNext(responses)}
           disabled={!allAnswered}
-          className={cn(
-            'flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all',
-            allAnswered
-              ? 'bg-foreground text-background hover:bg-foreground/90'
-              : 'bg-muted text-muted-foreground cursor-not-allowed'
-          )}
+          variant={'ghost'}
+          className="bg-lemon hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg"
         >
-          Lanjutkan
+          Lanjut
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
     </div>
   )

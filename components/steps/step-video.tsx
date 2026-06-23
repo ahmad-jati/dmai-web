@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { PlayIcon, ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
+import { Button } from '../ui/button'
+import Image from 'next/image'
 
 type Props = {
   youtubeUrl: string
@@ -52,17 +54,17 @@ export function StepVideo({ youtubeUrl, onNext, onPrev }: Props) {
 
       <div className="flex items-center gap-3">
         {onPrev && (
-          <button onClick={onPrev}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-border text-foreground font-semibold text-sm hover:bg-muted/50 transition-all">
+          <Button onClick={onPrev}
+            className="hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg">
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
             Kembali
-          </button>
+          </Button>
         )}
-        <button onClick={onNext}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-all">
+        <Button onClick={onNext}
+          className="bg-lemon hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg">
           Lanjutkan
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
     </div>
   )
