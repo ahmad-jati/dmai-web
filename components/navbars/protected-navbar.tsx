@@ -11,7 +11,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
-import { ListIcon, HouseIcon, SignOutIcon, ClockCounterClockwiseIcon } from "@phosphor-icons/react";
+import { ListIcon, HouseIcon, SignOutIcon, ClockCounterClockwiseIcon, LaptopIcon } from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -106,10 +106,16 @@ export function ProtectedNavbar() {
                     Homepage
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="[&_svg]:size-4">
+                {/* <DropdownMenuItem className="[&_svg]:size-4">
                   <Link href="/history" className="flex gap-2 items-center cursor-pointer">
                     <ClockCounterClockwiseIcon />
                     Riwayat Sesi
+                  </Link>
+                </DropdownMenuItem> */}
+                <DropdownMenuItem className="[&_svg]:size-4">
+                  <Link href="/dashboard" className="flex gap-2 items-center cursor-pointer">
+                    <LaptopIcon />
+                    Dashboard
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

@@ -12,7 +12,7 @@ import {
   ArrowSquareOutIcon,
   ChatCenteredTextIcon,
   MusicNotesIcon,
-  UserListIcon,
+  ClipboardTextIcon,
 } from "@phosphor-icons/react"
 import { Route } from "next"
 import { Button } from "../ui/button"
@@ -34,7 +34,6 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
 
-      console.log(user)
       setAdminName(user?.user_metadata?.full_name ?? null)
       setAdminEmail(user?.email ?? null)
       setIsLoading(false)
@@ -73,22 +72,22 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
           active={pathname?.startsWith("/admin/sessions") ?? false}
         />
         <SidebarLink
-          href="/admin/music"
-          icon={<MusicNotesIcon className="w-4 h-4" />}
-          label="Musik Latar"
-          active={pathname?.startsWith("/admin/music") ?? false}
+          href="/admin/user-responses"
+          icon={<ClipboardTextIcon className="w-4 h-4" />}
+          label="Respons Sesi"
+          active={pathname?.startsWith("/admin/user-responses") ?? false}
         />
         <SidebarLink
           href="/admin/feedback"
           icon={<ChatCenteredTextIcon className="w-4 h-4" />}
-          label="Feedback"
+          label="Feedback Sesi"
           active={pathname?.startsWith("/admin/feedback") ?? false}
         />
         <SidebarLink
-          href="/admin/user-responses"
-          icon={<UserListIcon className="w-4 h-4" />}
-          label="User Responses"
-          active={pathname?.startsWith("/admin/user-responses") ?? false}
+          href="/admin/music"
+          icon={<MusicNotesIcon className="w-4 h-4" />}
+          label="Musik Latar"
+          active={pathname?.startsWith("/admin/music") ?? false}
         />
 
         <div className="pt-2 border-t border-border">
