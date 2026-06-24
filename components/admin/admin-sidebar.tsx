@@ -12,6 +12,7 @@ import {
   ArrowSquareOutIcon,
   ChatCenteredTextIcon,
   MusicNotesIcon,
+  UserListIcon,
 } from "@phosphor-icons/react"
 import { Route } from "next"
 import { Button } from "../ui/button"
@@ -82,6 +83,12 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
           icon={<ChatCenteredTextIcon className="w-4 h-4" />}
           label="Feedback"
           active={pathname?.startsWith("/admin/feedback") ?? false}
+        />
+        <SidebarLink
+          href="/admin/user-responses"
+          icon={<UserListIcon className="w-4 h-4" />}
+          label="User Responses"
+          active={pathname?.startsWith("/admin/user-responses") ?? false}
         />
 
         <div className="pt-2 border-t border-border">
