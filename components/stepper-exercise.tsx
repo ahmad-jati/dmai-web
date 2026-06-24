@@ -95,11 +95,18 @@ const STEP_TYPE_LABEL: Record<StepType, string> = {
 
 function LoadingScreen({ sessionName, sessionImageCover }: { sessionName: string; sessionImageCover: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 lg:px-28 px-12 lg:py-14 py-8 bg-background">
       <p className="text-p text-muted-foreground -mb-2 text-center font-semibold">DMAI - Session</p>
       <h1 className="md:text-h1/8 text-2xl/7 text-center font-semibold">{sessionName}</h1>
-      <div className="relative md:w-100 w-60 aspect-square 2xs:rounded-3xl rounded-xl overflow-hidden">
-        <Image src={sessionImageCover} alt={sessionName} fill unoptimized priority className="object-cover object-center w-full h-full" />
+      <div className="relative md:w-100 w-60 h-60 2xs:rounded-3xl rounded-xl overflow-hidden">
+        <Image 
+          src={sessionImageCover} 
+          alt={sessionName} 
+          fill 
+          unoptimized 
+          priority 
+          className="object-cover object-center w-full h-full" 
+        />
         <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
         <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
       </div>
@@ -161,19 +168,15 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const isLastStep = currentStep === totalSteps - 1
   const showPrev = currentStep > 0
 
-  // Parse sub_steps for current narration step
   const stepConfig = parseConfig(step.step_config)
   const subSteps = isTimed ? getSubSteps(stepConfig) : []
   const hasSubSteps = subSteps.length > 0
   const activeSubStep = hasSubSteps ? subSteps[currentSubStep] : null
 
-  // Duration: use sub_step duration if available, else step.duration_seconds
   const activeDuration = activeSubStep?.duration_seconds ?? step.duration_seconds
 
-  // Image: use sub_step image if available, else step.image (from instructions), else sessionImageCover
   const activeImage = activeSubStep ? resolveImage(activeSubStep) : (step.image || sessionImageCover)
 
-  // Title/description for display: sub_step overrides step-level if available
   const activeTitle = activeSubStep?.title || step.title
   const activeDescription = activeSubStep?.description || step.description
 
@@ -181,17 +184,21 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const progress = isTimed ? Math.min((elapsed / activeDuration) * 100, 100) : 0
   const strokeDashoffset = circumference * (1 - progress / 100)
   const currentTrack = tracks[currentTrackIndex]
+  const formResponsesRef = useRef<Record<string, Record<string, unknown>>>({})
 
-  // Load draft from sessionStorage on mount
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(sessionStorageKey)
-      if (saved) setFormResponses(JSON.parse(saved))
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setFormResponses(parsed)
+        formResponsesRef.current = parsed
+      }
     } catch {}
   }, [sessionStorageKey])
 
-  // Persist to sessionStorage whenever formResponses changes
   const handleFormResponse = useCallback((stepId: string, responses: Record<string, unknown>) => {
+    formResponsesRef.current = { ...formResponsesRef.current, [stepId]: responses }
     setFormResponses((prev) => {
       const next = { ...prev, [stepId]: responses }
       try { sessionStorage.setItem(sessionStorageKey, JSON.stringify(next)) } catch {}
@@ -199,7 +206,6 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     })
   }, [sessionStorageKey])
 
-  // Persist all form responses to DB after session_completions insert
   const persistFormResponses = useCallback(async (
     completionId: string,
     userId: string,
@@ -209,14 +215,22 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     const entries = Object.entries(responses)
     if (entries.length === 0) return
 
-    // Split entries by step type
     const formRows: {
-      completion_id: string; user_id: string; session_id: string
-      step_id: string; step_number: number; responses: Record<string, unknown>
+      completion_id: string; 
+      user_id: string; 
+      session_id: string
+      step_id: string; 
+      step_number: number; 
+      responses: Record<string, unknown>
     }[] = []
+    
     const bodyMapRows: {
-      completion_id: string; user_id: string; step_id: string
-      selected_parts: string[]; sensation: string | null; note: string
+      completion_id: string; 
+      user_id: string; 
+      step_id: string
+      selected_parts: string[]; 
+      sensation: string | null; 
+      note: string
     }[] = []
 
     for (const [stepId, stepResponses] of entries) {
@@ -227,7 +241,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           user_id: userId,
           step_id: stepId,
           selected_parts: (stepResponses.selected_parts as string[]) ?? [],
-          sensation: (stepResponses.sensation as string | null) ?? null,
+          sensation: (stepResponses.sensation as string | null)?.toLowerCase() ?? null,
           note: (stepResponses.note as string) ?? '',
         })
       } else {
@@ -290,14 +304,12 @@ await Promise.all(promises)
   const goNext = useCallback(() => {
     narrationStartedRef.current = false
 
-    // If narration with sub_steps and not on last sub_step, advance sub_step
     if (isTimed && hasSubSteps && currentSubStep < subSteps.length - 1) {
       setCurrentSubStep((s) => s + 1)
       setElapsed(0)
       return
     }
 
-    // Otherwise advance main step
     if (currentStep < totalSteps - 1) {
       setCurrentStep((s) => s + 1)
       setCurrentSubStep(0)
@@ -305,17 +317,15 @@ await Promise.all(promises)
     } else {
       setIsPlaying(false)
       bgmStop()
-      // Pass formResponses snapshot to onDone so exercise page can persist to DB
-      const responseSnapshot = formResponses
+      const responseSnapshot = formResponsesRef.current
       setTimeout(() => onDone('', '', responseSnapshot), 600)
     }
-  }, [currentStep, totalSteps, onDone, bgmStop, isTimed, hasSubSteps, currentSubStep, subSteps.length, formResponses])
+  }, [currentStep, totalSteps, onDone, bgmStop, isTimed, hasSubSteps, currentSubStep, subSteps.length])
 
   const goPrev = useCallback(() => {
     narrationStartedRef.current = false
     setIsLooping(false)
 
-    // If narration with sub_steps and not on first sub_step, go back sub_step
     if (isTimed && hasSubSteps && currentSubStep > 0) {
       setCurrentSubStep((s) => s - 1)
       setElapsed(0)
@@ -400,8 +410,6 @@ await Promise.all(promises)
   }, [isPlaying, isTimed, isBGMStopped, bgmPause, bgmResume, pauseNarration, resumeNarration])
 
   // ── 4. Narration audio ──────────────────────────────────────────────────────
-  // For sub_steps: play the active sub_step's audio_url
-  // For plain narration: play step.audio (legacy)
   useEffect(() => {
     if (!isReady || !isTimed) return
 
@@ -529,7 +537,7 @@ await Promise.all(promises)
     return (
       <>
         {/* ── MOBILE narration ── */}
-        <div className="2md:hidden fixed inset-0 z-55 flex 2xs:justify-start justify-center flex-col 2xs:gap-3 gap-6 bg-celeste p-6 overflow-y-auto">
+        <div className="2md:hidden fixed inset-0 z-55 flex 2xs:justify-start justify-center flex-col 2xs:gap-3 gap-6 bg-background p-6 overflow-y-auto">
 
           {/* Top bar: back + BGM */}
           <div className="flex items-center gap-3 shrink-0">
@@ -632,8 +640,8 @@ await Promise.all(promises)
         </div>
 
         {/* ── DESKTOP narration ── */}
-        <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-celeste">
-          <div className="flex flex-col items-center w-full rounded-4xl relative overflow-y-auto flex-1">
+        <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-transparent">
+          <div className="flex flex-col  items-center w-full rounded-4xl relative overflow-y-auto flex-1">
 
             {/* Background image */}
             <div className="absolute inset-0 z-0">

@@ -4,74 +4,27 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { BodyMapRegion } from '@/lib/body-map-region'
 
-const REGIONS = [
-  {
-    key: 'kepala', label: 'Kepala',
-    parts: [
-      { key: 'kepala_kanan', label: 'Kepala Kanan' },
-      { key: 'kepala_kiri', label: 'Kepala Kiri' },
-      { key: 'dahi', label: 'Dahi' },
-      { key: 'pelipis_kanan', label: 'Pelipis Kanan' },
-      { key: 'pelipis_kiri', label: 'Pelipis Kiri' },
-      { key: 'rahang_kanan', label: 'Rahang Kanan' },
-      { key: 'rahang_kiri', label: 'Rahang Kiri' },
-      { key: 'tengkuk', label: 'Tengkuk' },
-    ],
-  },
-  {
-    key: 'leher_bahu', label: 'Leher & Bahu',
-    parts: [
-      { key: 'leher', label: 'Leher' },
-      { key: 'bahu_kanan', label: 'Bahu Kanan' },
-      { key: 'bahu_kiri', label: 'Bahu Kiri' },
-    ],
-  },
-  {
-    key: 'dada_perut', label: 'Dada & Perut',
-    parts: [
-      { key: 'dada', label: 'Dada' },
-      { key: 'perut_atas', label: 'Perut Atas' },
-      { key: 'perut_bawah', label: 'Perut Bawah' },
-    ],
-  },
-  {
-    key: 'punggung', label: 'Punggung',
-    parts: [
-      { key: 'punggung_atas', label: 'Punggung Atas' },
-      { key: 'punggung_bawah', label: 'Punggung Bawah' },
-      { key: 'pinggang', label: 'Pinggang' },
-    ],
-  },
-  {
-    key: 'lengan', label: 'Lengan & Tangan',
-    parts: [
-      { key: 'lengan_atas_kanan', label: 'Lengan Atas Kanan' },
-      { key: 'lengan_atas_kiri', label: 'Lengan Atas Kiri' },
-      { key: 'siku_kanan', label: 'Siku Kanan' },
-      { key: 'siku_kiri', label: 'Siku Kiri' },
-      { key: 'lengan_bawah_kanan', label: 'Lengan Bawah Kanan' },
-      { key: 'lengan_bawah_kiri', label: 'Lengan Bawah Kiri' },
-      { key: 'pergelangan_kanan', label: 'Pergelangan Kanan' },
-      { key: 'pergelangan_kiri', label: 'Pergelangan Kiri' },
-    ],
-  },
-  {
-    key: 'kaki', label: 'Kaki',
-    parts: [
-      { key: 'paha_kanan', label: 'Paha Kanan' },
-      { key: 'paha_kiri', label: 'Paha Kiri' },
-      { key: 'lutut_kanan', label: 'Lutut Kanan' },
-      { key: 'lutut_kiri', label: 'Lutut Kiri' },
-      { key: 'betis_kanan', label: 'Betis Kanan' },
-      { key: 'betis_kiri', label: 'Betis Kiri' },
-      { key: 'pergelangan_kaki_kanan', label: 'Pergelangan Kaki Kanan' },
-      { key: 'pergelangan_kaki_kiri', label: 'Pergelangan Kaki Kiri' },
-      { key: 'telapak_kaki_kanan', label: 'Telapak Kaki Kanan' },
-      { key: 'telapak_kaki_kiri', label: 'Telapak Kaki Kiri' },
-    ],
-  },
-]
+// Group parts by region, preserve order
+const REGION_LABELS: Record<string, string> = {
+  kepala: 'Kepala',
+  leher_bahu: 'Leher & Bahu',
+  dada_perut: 'Dada & Perut',
+  punggung: 'Punggung',
+  lengan: 'Lengan & Tangan',
+  kaki: 'Kaki',
+}
+
+const REGION_ORDER = Object.keys(REGION_LABELS)
+
+const REGIONS = REGION_ORDER.map((regionKey) => ({
+  key: regionKey,
+  label: REGION_LABELS[regionKey],
+  parts: BodyMapRegion
+    .filter((p) => p.region === regionKey)
+    .map((p) => ({ key: p.id, label: p.label_id })),
+}))
 
 const SENSATIONS = ['Lelah', 'Sakit', 'Tegang', 'Kebas', 'Panas', 'Lainnya']
 
