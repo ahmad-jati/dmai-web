@@ -19,8 +19,10 @@ import type { CompletionRecord } from "./user-history"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-// Session ID yang punya body map step
-const BODY_MAP_SESSION_ID = "7257241d-b628-4cf9-9541-d3862537f931"
+const BODY_MAP_SESSION_IDS = new Set([
+  "5c1b9fcd-0a9e-4955-bc7e-3d22d1b6cfaf",
+  "acf14c9e-3e33-446d-88b1-9242c383dbc6",
+])
 
 const EMOJI_MAP: Record<number, { emoji: string; label: string }> = {
   1: { emoji: "😞", label: "Sangat buruk" },
@@ -225,7 +227,6 @@ function renderRawValue(value: string | number | string[]): React.ReactNode {
 }
 
 function FormResponseCard({ response }: { response: ResolvedFormResponse }) {
-  console.log(response)
   return (
     <div className="flex flex-col gap-3 bg-background rounded-xl border border-foreground/15 p-4">
       <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide">
@@ -324,7 +325,7 @@ export function SessionDetailModal({
   const [error, setError] = useState(false)
 
   const duration = calcDuration(completion.started_at, completion.completed_at)
-  const isBodyMapSession = completion.session_id === BODY_MAP_SESSION_ID
+  const isBodyMapSession = BODY_MAP_SESSION_IDS.has(completion.session_id)
 
   // Close on Escape
   useEffect(() => {
@@ -389,7 +390,7 @@ export function SessionDetailModal({
           const step = stepsById.get(row.step_id)
           const fields: FormField[] = step?.step_config?.questions ?? step?.step_config?.fields ?? []
           const stepTitle = step?.title
-            ? `${step.title}`
+            ? `Step ${step.step_number} — ${step.title}`
             : `Step ${formRows.indexOf(row) + 1}`
 
           return {
@@ -405,7 +406,7 @@ export function SessionDetailModal({
         const resolvedBodyMaps: ResolvedBodyMapResponse[] = bodyMapRows.map((row) => {
           const step = stepsById.get(row.step_id)
           const stepTitle = step?.title
-            ? `${step.title}`
+            ? `Step ${step.step_number} — ${step.title}`
             : "Body Map"
 
           return {
@@ -440,15 +441,15 @@ export function SessionDetailModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="relative bg-background dark:bg-secondary w-full max-w-lg max-h-[86vh] rounded-2xl border border-foreground/20 shadow-xl flex flex-col overflow-hidden">
+      <div className="relative bg-background dark:bg-secondary w-full max-w-lg max-h-[90vh] rounded-2xl border border-foreground/20 shadow-xl flex flex-col overflow-hidden">
 
         {/* Header */}
         <div className="flex items-start justify-between gap-3 p-5 border-b border-foreground/10 shrink-0">
           <div className="flex flex-col gap-0.5 min-w-0">
-            {/* <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Detail Sesi
-            </p> */}
-            <h3 className="font-semibold text-h2/5.5 text-foreground">
+            </p>
+            <h3 className="font-semibold text-base/5 text-foreground truncate">
               {completion.session_name}
             </h3>
           </div>
@@ -460,14 +461,22 @@ export function SessionDetailModal({
           </button>
         </div>
 
-        <div className="flex flex-col gap-3 px-2 border-b border-foreground/10 shrink-0 bg-foreground/2">
+        {/* Meta: mulai / selesai / durasi — reuse data dari props, 0 DB calls */}
+        <div className="flex flex-col gap-2 px-5 py-3 border-b border-foreground/10 shrink-0 bg-foreground/2">
+          {completion.started_at && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <ClockIcon className="w-3.5 h-3.5 shrink-0" />
+              <span className="text-xs font-medium">Mulai: {formatWITA(completion.started_at)}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <CheckCircleIcon className="w-3.5 h-3.5 shrink-0 text-green-500" />
+            <span className="text-xs font-medium">Selesai: {formatWITA(completion.completed_at)}</span>
+          </div>
           {duration !== "—" && (
-            <div className="flex items-start gap-2.5 p-3 text-sm text-foreground/90">
-              <TimerIcon className="w-4 h-4 shrink-0 text-foreground mt-0.5" />
-              <p className="leading-tight">
-                Kamu mengakses sesi ini selama <span className="font-bold text-foreground text-base mx-0.5">{duration}</span> 
-                dari <span className="font-medium whitespace-nowrap">{formatWITA(completion.started_at)}</span> sampai <span className="font-medium whitespace-nowrap">{formatWITA(completion.completed_at)}</span>.
-              </p>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <TimerIcon className="w-3.5 h-3.5 shrink-0" />
+              <span className="text-xs font-medium">Durasi: {duration}</span>
             </div>
           )}
         </div>
@@ -507,9 +516,9 @@ export function SessionDetailModal({
                   <div className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4 text-muted-foreground" />
                     <p className="text-sm font-semibold text-foreground">Body Map</p>
-                    {/* <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       ({data.bodyMapResponses.length} respons)
-                    </span> */}
+                    </span>
                   </div>
                   {data.bodyMapResponses.map((r) => (
                     <BodyMapCard key={r.id} response={r} />
@@ -523,9 +532,9 @@ export function SessionDetailModal({
                   <div className="flex items-center gap-2">
                     <ClipboardTextIcon className="w-4 h-4 text-muted-foreground" />
                     <p className="text-sm font-semibold text-foreground">Form</p>
-                    {/* <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       ({data.formResponses.length} respons)
-                    </span> */}
+                    </span>
                   </div>
                   {data.formResponses.map((r) => (
                     <FormResponseCard key={r.id} response={r} />
