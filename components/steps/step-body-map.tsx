@@ -6,7 +6,6 @@ import { ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { BodyMapRegion } from '@/lib/body-map-region'
 
-// Group parts by region, preserve order
 const REGION_LABELS: Record<string, string> = {
   kepala: 'Kepala',
   leher_bahu: 'Leher & Bahu',
@@ -28,24 +27,71 @@ const REGIONS = REGION_ORDER.map((regionKey) => ({
 
 const SENSATIONS = ['Lelah', 'Sakit', 'Tegang', 'Kebas', 'Panas', 'Lainnya']
 
-type BodyMapResponse = { selected_parts: string[]; sensation: string | null; note: string }
-type Props = { onNext: (response: BodyMapResponse) => void; onPrev?: () => void; initialValues?: BodyMapResponse }
+export type BodyMapResponse = {
+  selected_parts: string[]
+  sensation: string | null
+  note: string
+}
 
-export function StepBodyMap({ onNext, onPrev, initialValues }: Props) {
-  const [selected, setSelected] = useState<string[]>(initialValues?.selected_parts ?? [])
-  const [sensation, setSensation] = useState<string | null>(initialValues?.sensation ?? null)
-  const [note, setNote] = useState(initialValues?.note ?? '')
+type Props = {
+  onNext: (response: BodyMapResponse) => void
+  onPrev?: () => void
+  initialValues?: BodyMapResponse
+  storageKey?: string
+}
 
-  const toggle = (key: string) =>
-    setSelected((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key])
+function readDraftFromStorage(storageKey: string | undefined, fallback: BodyMapResponse): BodyMapResponse {
+  if (!storageKey) return fallback
+  try {
+    const raw = sessionStorage.getItem(storageKey)
+    if (raw) return JSON.parse(raw) as BodyMapResponse
+  } catch {}
+  return fallback
+}
+
+function saveDraftToStorage(storageKey: string | undefined, draft: BodyMapResponse) {
+  if (!storageKey) return
+  try {
+    sessionStorage.setItem(storageKey, JSON.stringify(draft))
+  } catch {}
+}
+
+export function StepBodyMap({ onNext, onPrev, initialValues, storageKey }: Props) {
+  const fallback: BodyMapResponse = {
+    selected_parts: initialValues?.selected_parts ?? [],
+    sensation: initialValues?.sensation ?? null,
+    note: initialValues?.note ?? '',
+  }
+
+  // Read directly from sessionStorage on first render so state persists
+  // even if the component remounts without initialValues being updated yet
+  const draft = readDraftFromStorage(storageKey, fallback)
+
+  const [selected, setSelected] = useState<string[]>(draft.selected_parts)
+  const [sensation, setSensation] = useState<string | null>(draft.sensation)
+  const [note, setNote] = useState<string>(draft.note)
+
+  const toggle = (key: string) => {
+    setSelected((prev) => {
+      const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+      saveDraftToStorage(storageKey, { selected_parts: next, sensation, note })
+      return next
+    })
+  }
+
+  const handleSensation = (s: string) => {
+    const next = s === sensation ? null : s
+    setSensation(next)
+    saveDraftToStorage(storageKey, { selected_parts: selected, sensation: next, note })
+  }
+
+  const handleNote = (value: string) => {
+    setNote(value)
+    saveDraftToStorage(storageKey, { selected_parts: selected, sensation, note: value })
+  }
 
   return (
     <div className="flex flex-col gap-5 w-full max-w-lg mx-auto">
-      {/* <div className="flex flex-col gap-1">
-        <p className="text-lg/3.5 sm:text-sm font-medium text-foreground">Bagian tubuh mana yang terasa tidak nyaman? Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quae enim obcaecati exercitationem aliquam aperiam alias, quam sequi, laborum quos vitae numquam esse itaque, dicta ut tenetur inventore consequatur beatae necessitatibus.</p>
-        <p className="text-xs font-medium text-muted-foreground">Pilih semua yang relevan. Boleh dikosongkan jika tidak ada.</p>
-      </div> */}
-
       <div className="flex flex-col gap-4">
         {REGIONS.map((region) => (
           <div key={region.key} className="flex flex-col gap-2">
@@ -81,7 +127,7 @@ export function StepBodyMap({ onNext, onPrev, initialValues }: Props) {
               <button
                 key={s}
                 type="button"
-                onClick={() => setSensation(s === sensation ? null : s)}
+                onClick={() => handleSensation(s)}
                 className={cn(
                   'px-3 py-1.5 rounded-full text-sm font-medium border transition-all',
                   sensation === s
@@ -103,7 +149,7 @@ export function StepBodyMap({ onNext, onPrev, initialValues }: Props) {
           </label>
           <textarea
             value={note}
-            onChange={(e) => setNote(e.target.value)}
+            onChange={(e) => handleNote(e.target.value)}
             rows={2}
             placeholder="Deskripsikan lebih lanjut jika perlu..."
             className="w-full rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-colors"

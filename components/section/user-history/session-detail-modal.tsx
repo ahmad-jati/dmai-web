@@ -390,8 +390,8 @@ export function SessionDetailModal({
           const step = stepsById.get(row.step_id)
           const fields: FormField[] = step?.step_config?.questions ?? step?.step_config?.fields ?? []
           const stepTitle = step?.title
-            ? `Step ${step.step_number} — ${step.title}`
-            : `Step ${formRows.indexOf(row) + 1}`
+            ? `${step.title}`
+            : `${formRows.indexOf(row) + 1}`
 
           return {
             id: row.id,
@@ -406,7 +406,7 @@ export function SessionDetailModal({
         const resolvedBodyMaps: ResolvedBodyMapResponse[] = bodyMapRows.map((row) => {
           const step = stepsById.get(row.step_id)
           const stepTitle = step?.title
-            ? `Step ${step.step_number} — ${step.title}`
+            ? `${step.title}`
             : "Body Map"
 
           return {
@@ -510,22 +510,6 @@ export function SessionDetailModal({
           {data && !hasNoData && (
             <div className="flex flex-col gap-6">
 
-              {/* Body Map — hanya sesi tertentu */}
-              {data.bodyMapResponses.length > 0 && (
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2">
-                    <UserIcon className="w-4 h-4 text-muted-foreground" />
-                    <p className="text-sm font-semibold text-foreground">Body Map</p>
-                    <span className="text-xs text-muted-foreground">
-                      ({data.bodyMapResponses.length} respons)
-                    </span>
-                  </div>
-                  {data.bodyMapResponses.map((r) => (
-                    <BodyMapCard key={r.id} response={r} />
-                  ))}
-                </div>
-              )}
-
               {/* Form */}
               {data.formResponses.length > 0 && (
                 <div className="flex flex-col gap-3">
@@ -538,6 +522,22 @@ export function SessionDetailModal({
                   </div>
                   {data.formResponses.map((r) => (
                     <FormResponseCard key={r.id} response={r} />
+                  ))}
+                </div>
+              )}
+
+              {/* Body Map — hanya sesi tertentu */}
+              {data.bodyMapResponses.length > 0 && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <UserIcon className="w-4 h-4 text-muted-foreground" />
+                    <p className="text-sm font-semibold text-foreground">Body Map</p>
+                    <span className="text-xs text-muted-foreground">
+                      ({data.bodyMapResponses.length} respons)
+                    </span>
+                  </div>
+                  {data.bodyMapResponses.map((r) => (
+                    <BodyMapCard key={r.id} response={r} />
                   ))}
                 </div>
               )}

@@ -529,17 +529,14 @@ export function SessionDetailView({
             {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
           </Button>
 
-          {/* ── Delete Session ── */}
-          <div className="pt-2 border-t border-border">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteSessionOpen(true)}
-              className="rounded-sm gap-2 [&_svg]:size-4 w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
-            >
-              <TrashIcon className="w-4 h-4" />
-              Hapus Sesi Ini
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => setDeleteSessionOpen(true)}
+            className="rounded-sm gap-2 [&_svg]:size-4 w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
+          >
+            <TrashIcon className="w-4 h-4" />
+            Hapus Sesi Ini
+          </Button>
         </div>
 
         {/* ── Steps Table ── */}

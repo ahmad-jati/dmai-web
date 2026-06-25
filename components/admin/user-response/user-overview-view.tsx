@@ -14,11 +14,76 @@ import {
   ArrowLeftIcon, EyeIcon, ClipboardTextIcon, CheckCircleIcon, CalendarCheckIcon,
 } from "@phosphor-icons/react"
 import { BodyMapRegion } from "@/lib/body-map-region"
-import { fmtLocalTime, fmtDuration, groupByDay, fmtDate } from "@/lib/session-helper"
+import { fmtLocalTime, fmtDuration, groupByDay, fmtDate, fmtClock } from "@/lib/session-helper"
 import type { SessionHistoryRecord, UserProfile, FormStep, BodyMapResponse } from "@/lib/session-helper"
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const bodyPartLabelMap = new Map(BodyMapRegion.map((r) => [r.id, r.label_id]))
+
+const EMOJI_MAP: Record<number, { emoji: string; label: string }> = {
+  1: { emoji: "😞", label: "Sangat buruk" },
+  2: { emoji: "😕", label: "Buruk" },
+  3: { emoji: "😐", label: "Netral" },
+  4: { emoji: "🙂", label: "Baik" },
+  5: { emoji: "😊", label: "Sangat baik" },
+}
+
+function renderAnswerValue(
+  value: string | number | string[] | null,
+  type?: string,
+): React.ReactNode {
+  if (value === null || value === undefined || value === "") {
+    return <span className="text-muted-foreground italic">Tidak diisi</span>
+  }
+
+  // Deteksi explicit dari type field, fallback auto-detect kalau type undefined
+  const num = Number(value)
+  const isNumeric = !Array.isArray(value) && !isNaN(num) && String(value).trim() !== ""
+  const isEmoji = type === "emoji_scale" || (!type && isNumeric && Number.isInteger(num) && num >= 1 && num <= 5)
+  const isSlider = type === "slider" || (!type && isNumeric && !isEmoji)
+
+  if (isEmoji) {
+    const entry = EMOJI_MAP[num]
+    if (entry) {
+      return (
+        <span className="inline-flex items-center gap-2 text-sm font-medium">
+          <span className="text-xl">{entry.emoji}</span>
+          <span className="text-foreground">{entry.label}</span>
+        </span>
+      )
+    }
+  }
+
+  if (isSlider) {
+    return (
+      <span className="text-sm font-semibold text-foreground">
+        {String(value)}
+        <span className="text-xs font-normal text-muted-foreground ml-1">/ 100</span>
+      </span>
+    )
+  }
+
+  if (Array.isArray(value)) {
+    return (
+      <div className="flex flex-wrap gap-1.5 mt-0.5">
+        {value.map((v) => (
+          <span
+            key={v}
+            className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-foreground/8 border border-foreground/15"
+          >
+            {v}
+          </span>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-foreground/4 rounded-lg px-3 py-2 text-sm text-foreground leading-relaxed">
+      {String(value)}
+    </div>
+  )
+}
 
 // ─── Skeleton ───────────────────────────────────────────────────────────────
 
@@ -67,6 +132,8 @@ function SessionDetailDialog({
 }) {
   if (!record) return null
 
+  const hasNoData = record.form_responses.length === 0 && record.body_map_responses.length === 0
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -76,11 +143,13 @@ function SessionDetailDialog({
 
         <div className="flex flex-col gap-6 py-1">
           {/* Info sesi */}
-          <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 border border-border rounded-sm">
-            <div className="flex flex-col gap-0.5">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Mulai</p>
-              <p className="text-sm font-medium">{fmtLocalTime(record.started_at)}</p>
-            </div>
+          <div className="flex flex-col gap-2 p-4 bg-foreground/2 border border-foreground/10 rounded-xl">
+            {record.started_at && (
+              <div className="flex flex-col gap-0.5">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Mulai</p>
+                <p className="text-sm font-medium">{fmtLocalTime(record.started_at)}</p>
+              </div>
+            )}
             <div className="flex flex-col gap-0.5">
               <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Selesai</p>
               <p className="text-sm font-medium">{fmtLocalTime(record.completed_at)}</p>
@@ -91,28 +160,40 @@ function SessionDetailDialog({
             </div>
           </div>
 
+          {hasNoData && (
+            <p className="text-sm text-muted-foreground text-center py-6 italic">
+              Tidak ada response yang tersimpan untuk sesi ini
+            </p>
+          )}
+
           {/* Form Responses */}
           {record.form_responses.length > 0 && (
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide border-b border-border pb-2">
-                Form Response ({record.form_responses.length} step)
-              </h4>
-              <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <ClipboardTextIcon className="w-4 h-4 text-muted-foreground" />
+                <p className="text-sm font-semibold text-foreground">Form</p>
+                {/* <span className="text-xs text-muted-foreground">
+                  ({record.form_responses.length} step)
+                </span> */}
+              </div>
+              <div className="flex flex-col gap-3">
                 {record.form_responses.map((step, si) => (
-                  <div key={si} className="flex flex-col gap-2">
-                    <p className="text-xs font-semibold text-muted-foreground">
-                      Step {step.step_number}{step.step_title ? ` — ${step.step_title}` : ""}
+                  <div key={si} className="flex flex-col gap-3 bg-background rounded-xl border border-foreground/15 p-4">
+                    <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide">
+                      {step.step_title ? `${step.step_title}` : ""}
                     </p>
-                    {step.answers.map((ans, ai) => (
-                      <div key={ai} className="flex flex-col gap-1">
-                        <p className="text-xs font-medium text-foreground">{ans.label}</p>
-                        <div className="bg-muted/40 border border-border rounded-sm px-3 py-2 text-sm">
-                          {ans.value != null && ans.value !== ""
-                            ? String(ans.value)
-                            : <span className="text-muted-foreground italic">Tidak diisi</span>}
-                        </div>
+                    {step.answers.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">Tidak ada response tersimpan.</p>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {step.answers.map((ans, ai) => (
+                          <div key={ai} className="flex flex-col gap-1">
+                            <p className="text-xs font-medium text-foreground/70">{ans.label}</p>
+                            {renderAnswerValue(ans.value, ans.type)}
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 ))}
               </div>
@@ -122,18 +203,28 @@ function SessionDetailDialog({
           {/* Body Map Responses */}
           {record.body_map_responses.length > 0 && (
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide border-b border-border pb-2">
-                Body Map Response ({record.body_map_responses.length})
-              </h4>
+              <div className="flex items-center gap-2">
+                <CheckCircleIcon className="w-4 h-4 text-muted-foreground" />
+                <p className="text-sm font-semibold text-foreground">Body Map</p>
+                {/* <span className="text-xs text-muted-foreground">
+                  ({record.body_map_responses.length} respons)
+                </span> */}
+              </div>
               <div className="flex flex-col gap-3">
                 {record.body_map_responses.map((bm, i) => (
-                  <div key={i} className="flex flex-col gap-2 p-3 bg-muted/30 border border-border rounded-sm">
+                  <div key={i} className="flex flex-col gap-3 bg-background rounded-xl border border-foreground/15 p-4">
+                    <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide">
+                      Respons {i + 1}
+                    </p>
                     {bm.selected_parts.length > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <p className="text-xs font-medium text-foreground">Bagian tubuh dipilih</p>
-                        <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-col gap-1.5">
+                        <p className="text-xs font-medium text-foreground/70">Bagian tubuh dipilih</p>
+                        <div className="flex flex-wrap gap-1.5">
                           {bm.selected_parts.map((part, pi) => (
-                            <span key={pi} className="inline-flex px-2 py-0.5 bg-baby-blue/40 border border-baby-blue rounded text-xs font-medium">
+                            <span
+                              key={pi}
+                              className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-foreground/8 border border-foreground/15"
+                            >
                               {bodyPartLabelMap.get(part) ?? part}
                             </span>
                           ))}
@@ -142,31 +233,25 @@ function SessionDetailDialog({
                     )}
                     {bm.sensation && (
                       <div className="flex flex-col gap-1">
-                        <p className="text-xs font-medium text-foreground">Sensasi</p>
-                        <p className="text-sm capitalize">{bm.sensation}</p>
+                        <p className="text-xs font-medium text-foreground/70">Sensasi</p>
+                        <p className="text-sm font-medium text-foreground capitalize">{bm.sensation}</p>
                       </div>
                     )}
                     {bm.note && (
                       <div className="flex flex-col gap-1">
-                        <p className="text-xs font-medium text-foreground">Catatan</p>
-                        <div className="bg-muted/40 border border-border rounded-sm px-3 py-2 text-sm">
+                        <p className="text-xs font-medium text-foreground/70">Catatan</p>
+                        <div className="bg-foreground/4 rounded-lg px-3 py-2 text-sm text-foreground leading-relaxed">
                           {bm.note}
                         </div>
                       </div>
                     )}
                     {!bm.selected_parts.length && !bm.sensation && !bm.note && (
-                      <p className="text-sm text-muted-foreground italic">Tidak ada input body map</p>
+                      <p className="text-xs text-muted-foreground italic">Tidak ada input body map.</p>
                     )}
                   </div>
                 ))}
               </div>
             </div>
-          )}
-
-          {record.form_responses.length === 0 && record.body_map_responses.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-6 italic">
-              Tidak ada response yang tersimpan untuk sesi ini
-            </p>
           )}
         </div>
       </DialogContent>
@@ -254,10 +339,11 @@ export function UserOverviewView({ userId }: { userId: string }) {
       for (const fr of formResponsesData ?? []) {
         if (!formByCompletion.has(fr.completion_id)) formByCompletion.set(fr.completion_id, [])
         const step = stepMap.get(fr.step_id)
-        const questions: { _key: string; label: string }[] = step?.step_config?.questions ?? []
+        const questions: { _key: string; label: string; type?: string }[] = step?.step_config?.questions ?? []
         const answers = questions.map((q) => ({
           label: q.label,
-          value: (fr.responses as Record<string, string | number | null>)?.[q._key] ?? null,
+          value: (fr.responses as Record<string, string | number | string[] | null>)?.[q._key] ?? null,
+          type: q.type,
         }))
         formByCompletion.get(fr.completion_id)!.push({
           step_number: fr.step_number,
@@ -326,10 +412,10 @@ export function UserOverviewView({ userId }: { userId: string }) {
         <div className="flex flex-col gap-2 p-4 bg-white border border-border rounded-sm">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <ClipboardTextIcon className="w-4 h-4" />
-            <span className="text-xs font-medium uppercase tracking-wide">Sesi Unik</span>
+            <span className="text-xs font-medium uppercase tracking-wide">Sesi</span>
           </div>
           <p className="text-2xl font-bold">{uniqueSessions}</p>
-          <p className="text-xs text-muted-foreground">dari {sessionHistory.length} total penyelesaian</p>
+          <p className="text-xs text-muted-foreground">telah diselesaikan</p>
         </div>
         <div className="flex flex-col gap-2 p-4 bg-white border border-border rounded-sm">
           <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -399,16 +485,16 @@ export function UserOverviewView({ userId }: { userId: string }) {
                               {globalIdx + 1}.
                             </TableCell>
                             <TableCell className="font-medium text-sm">{r.session_name}</TableCell>
-                            <TableCell className="text-center text-sm text-muted-foreground">
+                            <TableCell className="text-center text-xs text-muted-foreground">
                               {r.week_number != null ? `Week ${r.week_number}` : "—"}
                             </TableCell>
                             <TableCell className="text-xs text-muted-foreground">
-                              {fmtLocalTime(r.started_at)}
+                              {fmtClock(r.started_at)}
                             </TableCell>
                             <TableCell className="text-xs text-muted-foreground">
-                              {fmtLocalTime(r.completed_at)}
+                              {fmtClock(r.completed_at)}
                             </TableCell>
-                            <TableCell className="text-center text-sm font-medium tabular-nums">
+                            <TableCell className="text-center text-xs text-muted-foreground">
                               {fmtDuration(r.started_at, r.completed_at)}
                             </TableCell>
                             <TableCell className="text-center text-sm text-muted-foreground">
