@@ -52,7 +52,7 @@ type Props = {
   sessionSlug: string
   sessionId: string
   sessionImageCover: string
-  onDone: (completionId: string, userId: string, responses: Record<string, Record<string, unknown>>) => void
+  onDone: (completionId: string, userId: string, responses: Record<string, Record<string, unknown>>, startedAt: string | null) => void
   onBack?: () => void
 }
 
@@ -134,8 +134,9 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const [showMusicTray, setShowMusicTray] = useState(false)
   const [formResponses, setFormResponses] = useState<Record<string, Record<string, unknown>>>({})
 
-  // sessionStorage key for this session's draft responses
+  // sessionStorage keys for this session
   const sessionStorageKey = `dmai_form_draft_${sessionId}`
+  const startedAtKey = `dmai_started_at_${sessionId}`
 
   // Sub-step index — for narration steps with multiple sub_steps
   const [currentSubStep, setCurrentSubStep] = useState(0)
@@ -196,6 +197,17 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
       }
     } catch {}
   }, [sessionStorageKey])
+
+  // Record started_at once when the stepper first mounts for this session.
+  // We only write if the key doesn't exist yet, so resuming after a refresh
+  // keeps the original start time instead of resetting it.
+  useEffect(() => {
+    try {
+      if (!sessionStorage.getItem(startedAtKey)) {
+        sessionStorage.setItem(startedAtKey, new Date().toISOString())
+      }
+    } catch {}
+  }, [startedAtKey])
 
   const handleFormResponse = useCallback((stepId: string, responses: Record<string, unknown>) => {
     formResponsesRef.current = { ...formResponsesRef.current, [stepId]: responses }
@@ -288,11 +300,10 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
       )
     }
 
-await Promise.all(promises)
-
     await Promise.all(promises)
     try { sessionStorage.removeItem(sessionStorageKey) } catch {}
-  }, [instructions, sessionId, sessionStorageKey])
+    try { sessionStorage.removeItem(startedAtKey) } catch {}
+  }, [instructions, sessionId, sessionStorageKey, startedAtKey])
 
   const handleBack = () => {
     if (onBack) onBack()
@@ -318,9 +329,14 @@ await Promise.all(promises)
       setIsPlaying(false)
       bgmStop()
       const responseSnapshot = formResponsesRef.current
-      setTimeout(() => onDone('', '', responseSnapshot), 600)
+      let startedAt: string | null = null
+      try {
+        startedAt = sessionStorage.getItem(startedAtKey)
+        sessionStorage.removeItem(startedAtKey)
+      } catch {}
+      setTimeout(() => onDone('', '', responseSnapshot, startedAt), 600)
     }
-  }, [currentStep, totalSteps, onDone, bgmStop, isTimed, hasSubSteps, currentSubStep, subSteps.length])
+  }, [currentStep, totalSteps, onDone, bgmStop, isTimed, hasSubSteps, currentSubStep, subSteps.length, startedAtKey])
 
   const goPrev = useCallback(() => {
     narrationStartedRef.current = false

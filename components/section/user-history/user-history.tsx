@@ -11,18 +11,17 @@ import {
   ChartLineUpIcon,
   TimerIcon,
 } from "@phosphor-icons/react"
-import Image from "next/image"
 import { SessionDetailModal } from "./session-detail-modal"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type CompletionRecord = {
   id: string
+  session_id: string
   session_name: string
   session_slug: string
-  started_at: string | null
-  completed_at: string
-  duration_seconds: number | null
+  started_at: string | ''
+  completed_at: string | ''
 }
 
 type GroupedDay = {
@@ -33,8 +32,10 @@ type GroupedDay = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function toDateKey(iso: string) {
-  return iso.slice(0, 10)
+function toDateKey(iso: string): string {
+  // Use WITA offset (+8) for date bucketing
+  const wita = new Date(new Date(iso).getTime() + 8 * 60 * 60 * 1000)
+  return wita.toISOString().slice(0, 10)
 }
 
 function dayLabel(dateKey: string, todayKey: string, yesterdayKey: string): string {
@@ -44,18 +45,24 @@ function dayLabel(dateKey: string, todayKey: string, yesterdayKey: string): stri
   return d.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "short" })
 }
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZoneName: "short",
-  })
+// Format: "24/06 10:56 WITA"
+export function formatWITA(iso: string): string {
+  const date = new Date(iso)
+  const wita = new Date(date.getTime() + 8 * 60 * 60 * 1000)
+  const dd = String(wita.getUTCDate()).padStart(2, "0")
+  const mm = String(wita.getUTCMonth() + 1).padStart(2, "0")
+  const hh = String(wita.getUTCHours()).padStart(2, "0")
+  const min = String(wita.getUTCMinutes()).padStart(2, "0")
+  return `${dd}/${mm} ${hh}:${min} WITA`
 }
 
-function formatDuration(seconds: number | null): string {
-  if (!seconds) return "—"
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
+export function calcDuration(started: string | null, completed: string): string {
+  if (!started) return "—"
+  const diffMs = new Date(completed).getTime() - new Date(started).getTime()
+  if (diffMs <= 0) return "—"
+  const totalSec = Math.floor(diffMs / 1000)
+  const m = Math.floor(totalSec / 60)
+  const s = totalSec % 60
   if (m === 0) return `${s}d`
   if (s === 0) return `${m}m`
   return `${m}m ${s}d`
@@ -90,20 +97,17 @@ function groupByDay(items: CompletionRecord[]): GroupedDay[] {
 function DashboardSkeleton() {
   return (
     <div className="flex lg:gap-6 gap-3 items-start w-full lg:items-center animate-pulse">
-      <div className="rounded-3xl lg:w-120 lg:h-120 w-24 h-24 bg-foreground/8 lg:block hidden" />
-      <div className="flex flex-col lg:gap-6 gap-4 w-full lg:h-120 h-full overflow-hidden">
-        {/* Stats row skeleton */}
+      <div className="flex flex-col lg:gap-6 gap-4 w-full min-h-90 h-full overflow-hidden">
         <div className="flex gap-3">
           <div className="h-16 bg-foreground/8 rounded-xl flex-1" />
           <div className="h-16 bg-foreground/8 rounded-xl flex-1" />
         </div>
-        <div className="h-5 bg-foreground/10 rounded w-40" />
-        {Array.from({ length: 3 }).map((_, gi) => (
+        {Array.from({ length: 2 }).map((_, gi) => (
           <div key={gi} className="flex flex-col gap-3">
             <div className="h-3.5 bg-foreground/10 rounded w-24" />
             <div className="grid 2xs:grid-cols-2 grid-cols-1 xs:gap-3 gap-2">
               {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="h-18 bg-background rounded-xl border border-foreground/10" />
+                <div key={i} className="h-20 bg-background rounded-xl border border-foreground/10" />
               ))}
             </div>
           </div>
@@ -144,6 +148,8 @@ function CompletionCard({
   item: CompletionRecord
   onSelect: (item: CompletionRecord) => void
 }) {
+  const duration = calcDuration(item.started_at, item.completed_at)
+
   return (
     <button
       onClick={() => onSelect(item)}
@@ -159,17 +165,17 @@ function CompletionCard({
         {item.started_at && (
           <div className="flex items-center gap-1 text-muted-foreground">
             <ClockIcon className="w-3 h-3 shrink-0" />
-            <span className="text-2xs font-medium">Mulai: {formatTime(item.started_at)}</span>
+            <span className="text-2xs font-medium">{formatWITA(item.started_at)}</span>
           </div>
         )}
         <div className="flex items-center gap-1 text-muted-foreground">
           <CheckCircleIcon className="w-3 h-3 shrink-0 text-green-500" />
-          <span className="text-2xs font-medium">{formatTime(item.completed_at)}</span>
+          <span className="text-2xs font-medium">{formatWITA(item.completed_at)}</span>
         </div>
-        {item.duration_seconds != null && (
+        {duration !== "—" && (
           <div className="flex items-center gap-1 text-muted-foreground">
             <TimerIcon className="w-3 h-3 shrink-0" />
-            <span className="text-2xs font-medium">{formatDuration(item.duration_seconds)}</span>
+            <span className="text-2xs font-medium">{duration}</span>
           </div>
         )}
       </div>
@@ -213,7 +219,7 @@ function DayGroup({
 const RECENT_DAYS = 10
 const OLDER_DAYS = 10
 
-export function UserDashboard() {
+export function UserHistory() {
   const [recentGroups, setRecentGroups] = useState<GroupedDay[]>([])
   const [olderGroups, setOlderGroups] = useState<GroupedDay[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -231,32 +237,25 @@ export function UserDashboard() {
       const { data: userData } = await supabase.auth.getUser()
       const user = userData?.user
       if (!user) { setLoading(false); return }
-      console.log(userData)
 
-      // Fetch recent completions
       const since = new Date()
       since.setDate(since.getDate() - RECENT_DAYS)
 
       const { data } = await supabase
         .from("session_completions")
-        .select("id, session_name, session_slug, started_at, completed_at")
+        .select("id, session_id, session_name, session_slug, started_at, completed_at")
         .eq("user_id", user.id)
         .gte("completed_at", since.toISOString())
         .order("completed_at", { ascending: false })
 
-        console.log(data)
+      setRecentGroups(groupByDay((data ?? []) as CompletionRecord[]))
 
-      const grouped = groupByDay((data ?? []) as CompletionRecord[])
-      setRecentGroups(grouped)
-
-      // Total count all-time
       const { count: allCount } = await supabase
         .from("session_completions")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
       setTotalCount(allCount ?? 0)
 
-      // Check older data
       const olderCutoff = new Date()
       olderCutoff.setDate(olderCutoff.getDate() - RECENT_DAYS)
       const { count } = await supabase
@@ -264,13 +263,18 @@ export function UserDashboard() {
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
         .lt("completed_at", olderCutoff.toISOString())
-
       setHasOlderData((count ?? 0) > 0)
+
       setLoading(false)
     }
 
     fetchData()
   }, [])
+
+  useEffect(() => {
+    console.log(selectedCompletion)
+  }, [selectedCompletion])
+
 
   const handleLoadOlder = async () => {
     if (olderFetched) { setShowOlder(true); return }
@@ -288,15 +292,13 @@ export function UserDashboard() {
 
     const { data } = await supabase
       .from("session_completions")
-      .select("id, session_name, session_slug, started_at, completed_at")
+      .select("id, session_id, session_name, session_slug, started_at, completed_at")
       .eq("user_id", user.id)
       .lt("completed_at", olderEnd.toISOString())
       .gte("completed_at", olderStart.toISOString())
       .order("completed_at", { ascending: false })
 
-    const grouped = groupByDay((data ?? []) as CompletionRecord[])
-    console.log(data)
-    setOlderGroups(grouped)
+    setOlderGroups(groupByDay((data ?? []) as CompletionRecord[]))
     setOlderFetched(true)
     setShowOlder(true)
     setLoadingOlder(false)
@@ -307,13 +309,13 @@ export function UserDashboard() {
   const recentCount = recentGroups.reduce((s, g) => s + g.items.length, 0)
   const isEmpty = recentGroups.length === 0 && totalCount === 0
 
+  
   return (
     <>
       <div className="flex items-start gap-1 w-full">
-        <div className="flex flex-col gap-4 items-start w-full lg:h-120 h-full">
-          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">Dashboard</h2>
+        <div className="flex flex-col gap-4 items-start w-full min-h-90 h-full">
+          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">History Session</h2>
 
-          {/* Stats row */}
           <div className="flex gap-3 w-full">
             <StatCard
               icon={<ChartLineUpIcon className="w-5 h-5" />}
@@ -340,14 +342,12 @@ export function UserDashboard() {
               </div>
             ) : (
               <div className="flex flex-col gap-5">
-                {/* Recent */}
                 <div className="flex flex-col gap-5">
                   {recentGroups.map((group) => (
                     <DayGroup key={group.date} group={group} onSelect={setSelectedCompletion} />
                   ))}
                 </div>
 
-                {/* Older */}
                 {showOlder && olderGroups.length > 0 && (
                   <div className="flex flex-col gap-5 mt-2 border-t border-foreground/10">
                     <p className="xs:text-p/5 text-sm/4 text-muted-foreground pt-2">
@@ -387,7 +387,6 @@ export function UserDashboard() {
         </div>
       </div>
 
-      {/* Detail Modal */}
       {selectedCompletion && (
         <SessionDetailModal
           completion={selectedCompletion}

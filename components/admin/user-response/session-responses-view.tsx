@@ -13,20 +13,14 @@ import {
 import {
   Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious,
 } from "@/components/ui/pagination"
-import {
-  ArrowLeftIcon, EyeIcon,
-} from "@phosphor-icons/react"
+import { ArrowLeftIcon, EyeIcon } from "@phosphor-icons/react"
+import { BodyMapRegion } from "@/lib/body-map-region"
+import { fmtLocalTime, fmtDuration, groupByDay } from "@/lib/session-helper"
+import type { CompletionRecord, SessionInfo, FormStep, BodyMapResponse} from "@/lib/session-helper"
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Constants ───────────────────────────────────────────────────────────────
 
-function fmtDateTime(iso) {
-  if (!iso) return "—"
-  return new Date(iso).toLocaleDateString("id-ID", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  })
-}
-
+const bodyPartLabelMap = new Map(BodyMapRegion.map((r) => [r.id, r.label_id]))
 const PAGE_SIZE = 10
 
 // ─── Skeleton ───────────────────────────────────────────────────────────────
@@ -59,7 +53,17 @@ function Skeleton() {
 
 // ─── Pagination UI ───────────────────────────────────────────────────────────
 
-function TablePagination({ page, totalPages, onPageChange, total }) {
+function TablePagination({
+  page,
+  totalPages,
+  onPageChange,
+  total,
+}: {
+  page: number
+  totalPages: number
+  onPageChange: (p: number) => void
+  total: number
+}) {
   if (totalPages <= 1) return null
   const from = (page - 1) * PAGE_SIZE + 1
   const to = Math.min(page * PAGE_SIZE, total)
@@ -102,7 +106,15 @@ function TablePagination({ page, totalPages, onPageChange, total }) {
 
 // ─── Response Detail Dialog ──────────────────────────────────────────────────
 
-function ResponseDetailDialog({ record, open, onClose }) {
+function ResponseDetailDialog({
+  record,
+  open,
+  onClose,
+}: {
+  record: CompletionRecord | null
+  open: boolean
+  onClose: () => void
+}) {
   if (!record) return null
 
   return (
@@ -123,9 +135,17 @@ function ResponseDetailDialog({ record, open, onClose }) {
               <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Email</p>
               <p className="text-sm text-muted-foreground">{record.email}</p>
             </div>
-            <div className="col-span-2 flex flex-col gap-0.5">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Diselesaikan</p>
-              <p className="text-sm">{fmtDateTime(record.completed_at)}</p>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Mulai</p>
+              <p className="text-sm">{fmtLocalTime(record.started_at)}</p>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Selesai</p>
+              <p className="text-sm">{fmtLocalTime(record.completed_at)}</p>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Durasi</p>
+              <p className="text-sm font-medium">{fmtDuration(record.started_at, record.completed_at)}</p>
             </div>
           </div>
 
@@ -166,13 +186,13 @@ function ResponseDetailDialog({ record, open, onClose }) {
               <div className="flex flex-col gap-3">
                 {record.body_map_responses.map((bm, i) => (
                   <div key={i} className="flex flex-col gap-2 p-3 bg-muted/30 border border-border rounded-sm">
-                    {bm.selected_parts?.length > 0 && (
+                    {bm.selected_parts.length > 0 && (
                       <div className="flex flex-col gap-1">
                         <p className="text-xs font-medium text-foreground">Bagian tubuh dipilih</p>
                         <div className="flex flex-wrap gap-1">
                           {bm.selected_parts.map((part, pi) => (
                             <span key={pi} className="inline-flex px-2 py-0.5 bg-baby-blue/40 border border-baby-blue rounded text-xs font-medium">
-                              {part}
+                              {bodyPartLabelMap.get(part) ?? part}
                             </span>
                           ))}
                         </div>
@@ -211,13 +231,13 @@ function ResponseDetailDialog({ record, open, onClose }) {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function SessionResponsesView({ sessionId }: {sessionId: string | null}) {
+export function SessionResponsesView({ sessionId }: { sessionId: string | null }) {
   const router = useRouter()
-  const [session, setSession] = useState(null)
-  const [completions, setCompletions] = useState([])
+  const [session, setSession] = useState<SessionInfo | null>(null)
+  const [completions, setCompletions] = useState<CompletionRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
-  const [detailRecord, setDetailRecord] = useState(null)
+  const [detailRecord, setDetailRecord] = useState<CompletionRecord | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
   useEffect(() => {
@@ -226,7 +246,6 @@ export function SessionResponsesView({ sessionId }: {sessionId: string | null}) 
       setLoading(true)
       const supabase = createClient()
 
-      // Fetch session info
       const { data: sessionData } = await supabase
         .from("sessions")
         .select("id, session_name, week_number")
@@ -234,14 +253,12 @@ export function SessionResponsesView({ sessionId }: {sessionId: string | null}) 
         .single()
 
       setSession(sessionData)
-      
 
-      // Fetch all completions for this session
       const { data: completionsData } = await supabase
         .from("session_completions")
-        .select("id, user_id, session_name, created_at")
+        .select("id, user_id, session_name, started_at, completed_at")
         .eq("session_id", sessionId)
-        .order("created_at", { ascending: false })
+        .order("completed_at", { ascending: false })
 
       if (!completionsData || completionsData.length === 0) {
         setCompletions([])
@@ -252,25 +269,21 @@ export function SessionResponsesView({ sessionId }: {sessionId: string | null}) 
       const userIds = [...new Set(completionsData.map((c) => c.user_id))]
       const completionIds = completionsData.map((c) => c.id)
 
-      // Fetch user profiles
       const { data: profiles } = await supabase
         .from("user_profiles")
         .select("id, email, full_name")
         .in("id", userIds)
 
-      // Fetch form responses for all these completions
       const { data: formResponsesData } = await supabase
         .from("session_form_responses")
-        .select("id, step_id, session_id, responses, completion_id")
+        .select("id, step_id, step_number, session_id, responses, completion_id")
         .in("completion_id", completionIds)
 
-      // Fetch body map responses for all these completions
       const { data: bodyMapData } = await supabase
         .from("session_body_map_responses")
-        .select("id, step_id, selected_parts, sensation, notes, completion_id")
+        .select("id, step_id, selected_parts, sensation, note, completion_id")
         .in("completion_id", completionIds)
 
-      // Fetch step titles from session_steps
       const stepIds = [
         ...new Set([
           ...(formResponsesData ?? []).map((r) => r.step_id),
@@ -285,54 +298,49 @@ export function SessionResponsesView({ sessionId }: {sessionId: string | null}) 
           .in("id", stepIds)
         : { data: [] }
 
-      const profileMap = new Map()
-      for (const p of profiles ?? []) profileMap.set(p.id, p)
+      const profileMap = new Map(
+        (profiles ?? []).map((p) => [p.id, p])
+      )
+      const stepMap = new Map(
+        (stepsData ?? []).map((s) => [s.id, s])
+      )
 
-      const stepMap = new Map()
-      for (const s of stepsData ?? []) stepMap.set(s.id, s)
-
-      // Group form responses by completion_id
-      const formByCompletion = new Map()
+      const formByCompletion = new Map<string, FormStep[]>()
       for (const fr of formResponsesData ?? []) {
         if (!formByCompletion.has(fr.completion_id)) formByCompletion.set(fr.completion_id, [])
         const step = stepMap.get(fr.step_id)
-        const stepConfig = step?.step_config ?? {}
-        const questions = stepConfig.questions ?? []
-        // responses is a jsonb object keyed by question _key
+        const questions: { _key: string; label: string }[] = step?.step_config?.questions ?? []
         const answers = questions.map((q) => ({
           label: q.label,
-          value: fr.responses?.[q._key] ?? null,
+          value: (fr.responses as Record<string, string | number | null>)?.[q._key] ?? null,
         }))
-        formByCompletion.get(fr.completion_id).push({
+        formByCompletion.get(fr.completion_id)!.push({
+          step_number: fr.step_number,
           step_title: step?.title ?? null,
           answers,
         })
       }
 
-      // Group body map responses by completion_id
-      const bodyMapByCompletion = new Map()
+      const bodyMapByCompletion = new Map<string, BodyMapResponse[]>()
       for (const bm of bodyMapData ?? []) {
         if (!bodyMapByCompletion.has(bm.completion_id)) bodyMapByCompletion.set(bm.completion_id, [])
-        bodyMapByCompletion.get(bm.completion_id).push({
+        bodyMapByCompletion.get(bm.completion_id)!.push({
           selected_parts: bm.selected_parts ?? [],
           sensation: bm.sensation,
-          note: bm.notes,
+          note: bm.note,
         })
       }
 
-      const merged = completionsData.map((c) => {
-        const formSteps = (formByCompletion.get(c.id) ?? [])
-          // .sort((a, b) => a.step_number - b.step_number)
-        return {
-          id: c.id,
-          user_id: c.user_id,
-          completed_at: c.created_at,
-          full_name: profileMap.get(c.user_id)?.full_name ?? null,
-          email: profileMap.get(c.user_id)?.email ?? "—",
-          form_responses: formSteps,
-          body_map_responses: bodyMapByCompletion.get(c.id) ?? [],
-        }
-      })
+      const merged: CompletionRecord[] = completionsData.map((c) => ({
+        id: c.id,
+        user_id: c.user_id,
+        started_at: c.started_at,
+        completed_at: c.completed_at,
+        full_name: profileMap.get(c.user_id)?.full_name ?? null,
+        email: profileMap.get(c.user_id)?.email ?? "—",
+        form_responses: formByCompletion.get(c.id) ?? [],
+        body_map_responses: bodyMapByCompletion.get(c.id) ?? [],
+      }))
 
       setCompletions(merged)
       setLoading(false)
@@ -341,13 +349,20 @@ export function SessionResponsesView({ sessionId }: {sessionId: string | null}) 
     load()
   }, [sessionId])
 
-  const handleViewDetail = useCallback((record) => {
+  const handleViewDetail = useCallback((record: CompletionRecord) => {
     setDetailRecord(record)
     setDetailOpen(true)
   }, [])
 
-  const totalPages = Math.ceil(completions.length / PAGE_SIZE) || 1
-  const paginated = completions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const grouped = groupByDay(completions, "completed_at")
+
+  // Flatten grouped for pagination
+  const flat = grouped.flatMap((g) => g.items)
+  const totalPages = Math.ceil(flat.length / PAGE_SIZE) || 1
+  const paginated = flat.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  // Rebuild grouped structure for current page only
+  const pagedGrouped = groupByDay(paginated, "completed_at")
 
   if (loading) return <Skeleton />
 
@@ -373,7 +388,7 @@ export function SessionResponsesView({ sessionId }: {sessionId: string | null}) 
         </div>
       </div>
 
-      {/* Completions Table */}
+      {/* Completions Table — grouped by day */}
       <div className="flex flex-col gap-3">
         <div className="border border-border">
           <Table>
@@ -381,55 +396,77 @@ export function SessionResponsesView({ sessionId }: {sessionId: string | null}) 
               <TableRow className="bg-muted/40">
                 <TableHead className="w-10 text-center">#</TableHead>
                 <TableHead>Nama User</TableHead>
-                <TableHead className="w-48">Diselesaikan</TableHead>
-                <TableHead className="w-24 text-center">Form Steps</TableHead>
-                <TableHead className="w-24 text-center">Body Map</TableHead>
+                <TableHead className="w-44">Mulai</TableHead>
+                <TableHead className="w-44">Selesai</TableHead>
+                <TableHead className="w-20 text-center">Durasi</TableHead>
+                <TableHead className="w-20 text-center">Form</TableHead>
+                <TableHead className="w-20 text-center">Body Map</TableHead>
                 <TableHead className="w-20 text-center">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginated.length === 0 ? (
+              {pagedGrouped.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-14 text-sm">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-14 text-sm">
                     Belum ada penyelesaian untuk sesi ini
                   </TableCell>
                 </TableRow>
               ) : (
-                paginated.map((c, i) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="text-center text-muted-foreground text-sm">
-                      {(page - 1) * PAGE_SIZE + i + 1}.
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm">
-                          {c.full_name ?? <span className="italic text-muted-foreground">—</span>}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{c.email}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {fmtDateTime(c.completed_at)}
-                    </TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">
-                      {c.form_responses.length}
-                    </TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">
-                      {c.body_map_responses.length}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-sm gap-1.5 bg-background hover:bg-lemon text-foreground [&_svg]:size-3.5"
-                        onClick={() => handleViewDetail(c)}
-                      >
-                        <EyeIcon className="w-3.5 h-3.5" />
-                        Lihat
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                pagedGrouped.map((group) => {
+                  const globalOffset = flat.indexOf(group.items[0])
+                  return (
+                    <>
+                      <TableRow key={`day-${group.label}`} className="bg-muted/20 hover:bg-muted/20">
+                        <TableCell colSpan={8} className="py-1.5 px-4">
+                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            {group.label}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                      {group.items.map((c, i) => (
+                        <TableRow key={c.id}>
+                          <TableCell className="text-center text-muted-foreground text-sm">
+                            {globalOffset + i + 1}.
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium text-sm">
+                                {c.full_name ?? <span className="italic text-muted-foreground">—</span>}
+                              </span>
+                              <span className="text-xs text-muted-foreground">{c.email}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {fmtLocalTime(c.started_at)}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {fmtLocalTime(c.completed_at)}
+                          </TableCell>
+                          <TableCell className="text-center text-sm font-medium tabular-nums">
+                            {fmtDuration(c.started_at, c.completed_at)}
+                          </TableCell>
+                          <TableCell className="text-center text-sm text-muted-foreground">
+                            {c.form_responses.length}
+                          </TableCell>
+                          <TableCell className="text-center text-sm text-muted-foreground">
+                            {c.body_map_responses.length}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-sm gap-1.5 bg-background hover:bg-lemon text-foreground [&_svg]:size-3.5"
+                              onClick={() => handleViewDetail(c)}
+                            >
+                              <EyeIcon className="w-3.5 h-3.5" />
+                              Lihat
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </>
+                  )
+                })
               )}
             </TableBody>
           </Table>
@@ -439,7 +476,7 @@ export function SessionResponsesView({ sessionId }: {sessionId: string | null}) 
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          total={completions.length}
+          total={flat.length}
         />
       </div>
 

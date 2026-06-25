@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import {
@@ -18,18 +18,11 @@ import {
   CaretRightIcon,
   ArrowSquareOutIcon,
 } from "@phosphor-icons/react"
+import { fmtLocalTime, fmtDuration, groupByDay } from "@/lib/session-helper"
+import type { SessionSummary, RecentCompletion } from "@/lib/session-helper"
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function fmtDateTime(iso) {
-  if (!iso) return "—"
-  return new Date(iso).toLocaleDateString("id-ID", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  })
-}
-
-const PAGE_SIZE = 10
+// ─── Constants ───────────────────────────────────────────────────────────────
+const PAGE_SIZE = 25
 
 // ─── Skeleton ───────────────────────────────────────────────────────────────
 
@@ -74,7 +67,19 @@ function PageSkeleton() {
 
 // ─── Pagination UI ───────────────────────────────────────────────────────────
 
-function TablePagination({ page, totalPages, onPageChange, total, pageSize }) {
+function TablePagination({
+  page,
+  totalPages,
+  onPageChange,
+  total,
+  pageSize,
+}: {
+  page: number
+  totalPages: number
+  onPageChange: (p: number) => void
+  total: number
+  pageSize: number
+}) {
   if (totalPages <= 1) return null
   const from = (page - 1) * pageSize + 1
   const to = Math.min(page * pageSize, total)
@@ -119,49 +124,58 @@ function TablePagination({ page, totalPages, onPageChange, total, pageSize }) {
 
 export function UserResponsesManager() {
   const router = useRouter()
-  const [sessions, setSessions] = useState([])
-  const [recentCompletions, setRecentCompletions] = useState([])
-  const [loading, setLoading] = useState(true)
+
+  // ── Cache via ref — survives navigation back to this page ──────────────────
+  const cache = useRef<{
+    sessions: SessionSummary[]
+    recentCompletions: RecentCompletion[]
+  } | null>(null)
+
+  const [sessions, setSessions] = useState<SessionSummary[]>([])
+  const [recentCompletions, setRecentCompletions] = useState<RecentCompletion[]>([])
+  const [loading, setLoading] = useState(!cache.current)
   const [search, setSearch] = useState("")
   const [recentPage, setRecentPage] = useState(1)
 
   useEffect(() => {
+    // If we already fetched once, reuse cached data — no re-fetch
+    if (cache.current) {
+      setSessions(cache.current.sessions)
+      setRecentCompletions(cache.current.recentCompletions)
+      setLoading(false)
+      return
+    }
+
     const load = async () => {
       setLoading(true)
       const supabase = createClient()
 
-      // Fetch all sessions ordered by sort_order
       const { data: sessionsData } = await supabase
         .from("sessions")
         .select("id, session_name, week_number, sort_order")
         .order("sort_order", { ascending: true })
 
-      // Fetch all completions to count per session (distinct users)
       const { data: completionsData } = await supabase
         .from("session_completions")
         .select("session_id, user_id")
 
-      // Count unique users who completed each session
-      const completionMap = {}
+      const completionMap = new Map<string, Set<string>>()
       for (const c of completionsData ?? []) {
-        if (!completionMap[c.session_id]) completionMap[c.session_id] = new Set()
-        completionMap[c.session_id].add(c.user_id)
+        if (!completionMap.has(c.session_id)) completionMap.set(c.session_id, new Set())
+        completionMap.get(c.session_id)!.add(c.user_id)
       }
 
-      const sessionList = (sessionsData ?? []).map((s) => ({
+      const sessionList: SessionSummary[] = (sessionsData ?? []).map((s) => ({
         id: s.id,
         session_name: s.session_name,
         week_number: s.week_number,
-        total_completed: completionMap[s.id]?.size ?? 0,
+        total_completed: completionMap.get(s.id)?.size ?? 0,
       }))
 
-      setSessions(sessionList)
-
-      // Fetch recent completions
       const { data: recent } = await supabase
         .from("session_completions")
-        .select("id, user_id, session_id, session_name, created_at")
-        .order("created_at", { ascending: false })
+        .select("id, user_id, session_id, session_name, started_at, completed_at")
+        .order("completed_at", { ascending: false })
         .limit(200)
 
       const userIds = [...new Set((recent ?? []).map((r) => r.user_id))]
@@ -171,27 +185,33 @@ export function UserResponsesManager() {
         .select("id, email, full_name")
         .in("id", userIds)
 
-      const profileMap = new Map()
-      for (const p of profiles ?? []) profileMap.set(p.id, p)
+      const profileMap = new Map(
+        (profiles ?? []).map((p) => [p.id, p])
+      )
 
-      const completions = (recent ?? []).map((r) => ({
+      const recentList: RecentCompletion[] = (recent ?? []).map((r) => ({
         id: r.id,
         user_id: r.user_id,
         session_id: r.session_id,
         session_name: r.session_name,
-        completed_at: r.created_at,
+        started_at: r.started_at ?? null,
+        completed_at: r.completed_at ?? null,
         full_name: profileMap.get(r.user_id)?.full_name ?? null,
         email: profileMap.get(r.user_id)?.email ?? "—",
       }))
 
-      setRecentCompletions(completions)
+      // Store in cache
+      cache.current = { sessions: sessionList, recentCompletions: recentList }
+
+      setSessions(sessionList)
+      setRecentCompletions(recentList)
       setLoading(false)
     }
 
     load()
   }, [])
 
-  const handleSearchChange = useCallback((e) => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
     setRecentPage(1)
   }, [])
@@ -207,6 +227,7 @@ export function UserResponsesManager() {
 
   const totalPages = Math.ceil(filteredCompletions.length / PAGE_SIZE) || 1
   const paginated = filteredCompletions.slice((recentPage - 1) * PAGE_SIZE, recentPage * PAGE_SIZE)
+  const pagedGrouped = groupByDay(paginated, "completed_at")
 
   if (loading) return <PageSkeleton />
 
@@ -277,7 +298,7 @@ export function UserResponsesManager() {
         </div>
       </div>
 
-      {/* ── Recent Completions Table ───────────────────────── */}
+      {/* ── Recent Completions Table — grouped by day ──────── */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
@@ -303,46 +324,74 @@ export function UserResponsesManager() {
                 <TableHead className="w-10 text-center">#</TableHead>
                 <TableHead>Nama User</TableHead>
                 <TableHead>Sesi</TableHead>
-                <TableHead className="w-48">Diselesaikan</TableHead>
+                <TableHead className="w-44">Mulai</TableHead>
+                <TableHead className="w-44">Selesai</TableHead>
+                <TableHead className="w-20 text-center">Durasi</TableHead>
                 <TableHead className="w-20 text-center">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginated.length === 0 ? (
+              {pagedGrouped.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-10 text-sm">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-10 text-sm">
                     {search ? "Tidak ada hasil pencarian" : "Belum ada penyelesaian"}
                   </TableCell>
                 </TableRow>
               ) : (
-                paginated.map((c, i) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="text-center text-muted-foreground text-sm">
-                      {(recentPage - 1) * PAGE_SIZE + i + 1}.
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm">
-                          {c.full_name ?? <span className="italic text-muted-foreground">—</span>}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{c.email}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{c.session_name}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{fmtDateTime(c.completed_at)}</TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-sm gap-1.5 bg-background hover:bg-lemon text-foreground [&_svg]:size-3.5"
-                        onClick={() => router.push(`/admin/user-responses/${c.user_id}`)}
-                      >
-                        <ArrowSquareOutIcon className="w-3.5 h-3.5" />
-                        Detail
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                pagedGrouped.map((group) => {
+                  const groupStartIdx = filteredCompletions.indexOf(group.items[0])
+                  const pageOffset = (recentPage - 1) * PAGE_SIZE
+                  return (
+                    <>
+                      <TableRow key={`day-${group.label}`} className="bg-muted/20 hover:bg-muted/20">
+                        <TableCell colSpan={7} className="py-1.5 px-4">
+                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            {group.label}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                      {group.items.map((c, i) => {
+                        const absoluteIdx = paginated.indexOf(c) + pageOffset
+                        return (
+                          <TableRow key={c.id}>
+                            <TableCell className="text-center text-muted-foreground text-sm">
+                              {absoluteIdx + 1}.
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="font-medium text-sm">
+                                  {c.full_name ?? <span className="italic text-muted-foreground">—</span>}
+                                </span>
+                                <span className="text-xs text-muted-foreground">{c.email}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">{c.session_name}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {fmtLocalTime(c.started_at)}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {fmtLocalTime(c.completed_at)}
+                            </TableCell>
+                            <TableCell className="text-center text-xs text-muted-foreground tabular-nums">
+                              {fmtDuration(c.started_at, c.completed_at)} tes
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="rounded-sm gap-1.5 bg-background hover:bg-lemon text-foreground [&_svg]:size-3.5"
+                                onClick={() => router.push(`/admin/user-responses/${c.user_id}`)}
+                              >
+                                <ArrowSquareOutIcon className="w-3.5 h-3.5" />
+                                Detail
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </>
+                  )
+                })
               )}
             </TableBody>
           </Table>

@@ -13,23 +13,12 @@ import {
 import {
   ArrowLeftIcon, EyeIcon, ClipboardTextIcon, CheckCircleIcon, CalendarCheckIcon,
 } from "@phosphor-icons/react"
+import { BodyMapRegion } from "@/lib/body-map-region"
+import { fmtLocalTime, fmtDuration, groupByDay, fmtDate } from "@/lib/session-helper"
+import type { SessionHistoryRecord, UserProfile, FormStep, BodyMapResponse } from "@/lib/session-helper"
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function fmtDateTime(iso) {
-  if (!iso) return "—"
-  return new Date(iso).toLocaleDateString("id-ID", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  })
-}
-
-function fmtDate(iso) {
-  if (!iso) return "—"
-  return new Date(iso).toLocaleDateString("id-ID", {
-    day: "numeric", month: "short", year: "numeric",
-  })
-}
+// ─── Constants ───────────────────────────────────────────────────────────────
+const bodyPartLabelMap = new Map(BodyMapRegion.map((r) => [r.id, r.label_id]))
 
 // ─── Skeleton ───────────────────────────────────────────────────────────────
 
@@ -67,7 +56,15 @@ function Skeleton() {
 
 // ─── Session Detail Dialog ─────────────────────────────────────────────────
 
-function SessionDetailDialog({ record, open, onClose }) {
+function SessionDetailDialog({
+  record,
+  open,
+  onClose,
+}: {
+  record: SessionHistoryRecord | null
+  open: boolean
+  onClose: () => void
+}) {
   if (!record) return null
 
   return (
@@ -80,9 +77,17 @@ function SessionDetailDialog({ record, open, onClose }) {
         <div className="flex flex-col gap-6 py-1">
           {/* Info sesi */}
           <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 border border-border rounded-sm">
-            <div className="col-span-2 flex flex-col gap-0.5">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Diselesaikan</p>
-              <p className="text-sm font-medium">{fmtDateTime(record.completed_at)}</p>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Mulai</p>
+              <p className="text-sm font-medium">{fmtLocalTime(record.started_at)}</p>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Selesai</p>
+              <p className="text-sm font-medium">{fmtLocalTime(record.completed_at)}</p>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Durasi</p>
+              <p className="text-sm font-semibold tabular-nums">{fmtDuration(record.started_at, record.completed_at)}</p>
             </div>
           </div>
 
@@ -123,13 +128,13 @@ function SessionDetailDialog({ record, open, onClose }) {
               <div className="flex flex-col gap-3">
                 {record.body_map_responses.map((bm, i) => (
                   <div key={i} className="flex flex-col gap-2 p-3 bg-muted/30 border border-border rounded-sm">
-                    {bm.selected_parts?.length > 0 && (
+                    {bm.selected_parts.length > 0 && (
                       <div className="flex flex-col gap-1">
                         <p className="text-xs font-medium text-foreground">Bagian tubuh dipilih</p>
                         <div className="flex flex-wrap gap-1">
                           {bm.selected_parts.map((part, pi) => (
                             <span key={pi} className="inline-flex px-2 py-0.5 bg-baby-blue/40 border border-baby-blue rounded text-xs font-medium">
-                              {part}
+                              {bodyPartLabelMap.get(part) ?? part}
                             </span>
                           ))}
                         </div>
@@ -149,7 +154,7 @@ function SessionDetailDialog({ record, open, onClose }) {
                         </div>
                       </div>
                     )}
-                    {!bm.selected_parts?.length && !bm.sensation && !bm.note && (
+                    {!bm.selected_parts.length && !bm.sensation && !bm.note && (
                       <p className="text-sm text-muted-foreground italic">Tidak ada input body map</p>
                     )}
                   </div>
@@ -171,12 +176,12 @@ function SessionDetailDialog({ record, open, onClose }) {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function UserOverviewView({ userId }) {
+export function UserOverviewView({ userId }: { userId: string }) {
   const router = useRouter()
-  const [user, setUser] = useState(null)
-  const [sessionHistory, setSessionHistory] = useState([])
+  const [user, setUser] = useState<UserProfile | null>(null)
+  const [sessionHistory, setSessionHistory] = useState<SessionHistoryRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const [detailRecord, setDetailRecord] = useState(null)
+  const [detailRecord, setDetailRecord] = useState<SessionHistoryRecord | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
   useEffect(() => {
@@ -185,7 +190,6 @@ export function UserOverviewView({ userId }) {
       setLoading(true)
       const supabase = createClient()
 
-      // User profile
       const { data: profile } = await supabase
         .from("user_profiles")
         .select("id, email, full_name, created_at")
@@ -194,12 +198,11 @@ export function UserOverviewView({ userId }) {
 
       setUser(profile)
 
-      // All completions by this user
       const { data: completionsData } = await supabase
         .from("session_completions")
-        .select("id, session_id, session_name, created_at")
+        .select("id, session_id, session_name, started_at, completed_at")
         .eq("user_id", userId)
-        .order("created_at", { ascending: false })
+        .order("completed_at", { ascending: false })
 
       if (!completionsData || completionsData.length === 0) {
         setSessionHistory([])
@@ -210,28 +213,25 @@ export function UserOverviewView({ userId }) {
       const completionIds = completionsData.map((c) => c.id)
       const sessionIds = [...new Set(completionsData.map((c) => c.session_id))]
 
-      // Session week numbers
       const { data: sessionsData } = await supabase
         .from("sessions")
         .select("id, week_number")
         .in("id", sessionIds)
 
-      const sessionMeta = new Map()
-      for (const s of sessionsData ?? []) sessionMeta.set(s.id, s)
+      const sessionMeta = new Map(
+        (sessionsData ?? []).map((s) => [s.id, s])
+      )
 
-      // Form responses
       const { data: formResponsesData } = await supabase
         .from("session_form_responses")
         .select("completion_id, step_id, step_number, responses")
         .in("completion_id", completionIds)
 
-      // Body map responses
       const { data: bodyMapData } = await supabase
         .from("session_body_map_responses")
         .select("completion_id, step_id, selected_parts, sensation, note")
         .in("completion_id", completionIds)
 
-      // Step titles from session_steps
       const stepIds = [
         ...new Set([
           ...(formResponsesData ?? []).map((r) => r.step_id),
@@ -246,61 +246,46 @@ export function UserOverviewView({ userId }) {
           .in("id", stepIds)
         : { data: [] }
 
-        console.log('===================')
-      console.log(formResponsesData)
-      console.log('===================')
-        console.log('===================')
-      console.log(bodyMapData)
-      console.log('===================')
-        console.log('===================')
-      console.log(stepsData)
-      console.log('===================')
+      const stepMap = new Map(
+        (stepsData ?? []).map((s) => [s.id, s])
+      )
 
-      const stepMap = new Map()
-      for (const s of stepsData ?? []) stepMap.set(s.id, s)
-
-      // Group form responses by completion_id
-      const formByCompletion = new Map()
+      const formByCompletion = new Map<string, FormStep[]>()
       for (const fr of formResponsesData ?? []) {
         if (!formByCompletion.has(fr.completion_id)) formByCompletion.set(fr.completion_id, [])
         const step = stepMap.get(fr.step_id)
-        const questions = step?.step_config?.questions ?? []
+        const questions: { _key: string; label: string }[] = step?.step_config?.questions ?? []
         const answers = questions.map((q) => ({
           label: q.label,
-          value: fr.responses?.[q._key] ?? null,
+          value: (fr.responses as Record<string, string | number | null>)?.[q._key] ?? null,
         }))
-        formByCompletion.get(fr.completion_id).push({
+        formByCompletion.get(fr.completion_id)!.push({
           step_number: fr.step_number,
           step_title: step?.title ?? null,
           answers,
         })
       }
 
-      // Group body map responses by completion_id
-      const bodyMapByCompletion = new Map()
+      const bodyMapByCompletion = new Map<string, BodyMapResponse[]>()
       for (const bm of bodyMapData ?? []) {
         if (!bodyMapByCompletion.has(bm.completion_id)) bodyMapByCompletion.set(bm.completion_id, [])
-        bodyMapByCompletion.get(bm.completion_id).push({
+        bodyMapByCompletion.get(bm.completion_id)!.push({
           selected_parts: bm.selected_parts ?? [],
           sensation: bm.sensation,
           note: bm.note,
         })
       }
 
-      const history = completionsData.map((c) => {
-        const meta = sessionMeta.get(c.session_id)
-        const formSteps = (formByCompletion.get(c.id) ?? [])
-          .sort((a, b) => a.step_number - b.step_number)
-        return {
-          id: c.id,
-          session_id: c.session_id,
-          session_name: c.session_name,
-          week_number: meta?.week_number ?? null,
-          completed_at: c.created_at ?? null,
-          form_responses: formSteps,
-          body_map_responses: bodyMapByCompletion.get(c.id) ?? [],
-        }
-      })
+      const history: SessionHistoryRecord[] = completionsData.map((c) => ({
+        id: c.id,
+        session_id: c.session_id,
+        session_name: c.session_name,
+        week_number: sessionMeta.get(c.session_id)?.week_number ?? null,
+        started_at: c.started_at ?? null,
+        completed_at: c.completed_at ?? null,
+        form_responses: formByCompletion.get(c.id) ?? [],
+        body_map_responses: bodyMapByCompletion.get(c.id) ?? [],
+      }))
 
       setSessionHistory(history)
       setLoading(false)
@@ -309,8 +294,8 @@ export function UserOverviewView({ userId }) {
     load()
   }, [userId])
 
-  // Unique sessions completed
   const uniqueSessions = new Set(sessionHistory.map((r) => r.session_id)).size
+  const grouped = groupByDay(sessionHistory, "completed_at")
 
   if (loading) return <Skeleton />
 
@@ -367,7 +352,7 @@ export function UserOverviewView({ userId }) {
         </div>
       </div>
 
-      {/* Session History Table */}
+      {/* Session History Table — grouped by day */}
       <div className="flex flex-col gap-3">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
           Riwayat Sesi ({sessionHistory.length})
@@ -379,50 +364,76 @@ export function UserOverviewView({ userId }) {
               <TableRow className="bg-muted/40">
                 <TableHead className="w-10 text-center">#</TableHead>
                 <TableHead>Nama Sesi</TableHead>
-                <TableHead className="w-28 text-center">Week</TableHead>
-                <TableHead className="w-48">Diselesaikan</TableHead>
-                <TableHead className="w-24 text-center">Form</TableHead>
-                <TableHead className="w-24 text-center">Body Map</TableHead>
+                <TableHead className="w-20 text-center">Week</TableHead>
+                <TableHead className="w-40">Mulai</TableHead>
+                <TableHead className="w-40">Selesai</TableHead>
+                <TableHead className="w-20 text-center">Durasi</TableHead>
+                <TableHead className="w-16 text-center">Form</TableHead>
+                <TableHead className="w-20 text-center">Body Map</TableHead>
                 <TableHead className="w-20 text-center">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sessionHistory.length === 0 ? (
+              {grouped.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-14 text-sm">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-14 text-sm">
                     Belum ada riwayat sesi
                   </TableCell>
                 </TableRow>
               ) : (
-                sessionHistory.map((r, i) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="text-center text-muted-foreground text-sm">{i + 1}.</TableCell>
-                    <TableCell className="font-medium text-sm">{r.session_name}</TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">
-                      {r.week_number != null ? `Week ${r.week_number}` : "—"}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {fmtDateTime(r.completed_at)}
-                    </TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">
-                      {r.form_responses.length}
-                    </TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">
-                      {r.body_map_responses.length}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-sm gap-1.5 bg-background hover:bg-lemon text-foreground [&_svg]:size-3.5"
-                        onClick={() => { setDetailRecord(r); setDetailOpen(true) }}
-                      >
-                        <EyeIcon className="w-3.5 h-3.5" />
-                        Lihat
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                grouped.map((group) => {
+                  return (
+                    <>
+                      <TableRow key={`day-${group.label}`} className="bg-muted/20 hover:bg-muted/20">
+                        <TableCell colSpan={9} className="py-1.5 px-4">
+                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            {group.label}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                      {group.items.map((r, i) => {
+                        const globalIdx = sessionHistory.indexOf(r)
+                        return (
+                          <TableRow key={r.id}>
+                            <TableCell className="text-center text-muted-foreground text-sm">
+                              {globalIdx + 1}.
+                            </TableCell>
+                            <TableCell className="font-medium text-sm">{r.session_name}</TableCell>
+                            <TableCell className="text-center text-sm text-muted-foreground">
+                              {r.week_number != null ? `Week ${r.week_number}` : "—"}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {fmtLocalTime(r.started_at)}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {fmtLocalTime(r.completed_at)}
+                            </TableCell>
+                            <TableCell className="text-center text-sm font-medium tabular-nums">
+                              {fmtDuration(r.started_at, r.completed_at)}
+                            </TableCell>
+                            <TableCell className="text-center text-sm text-muted-foreground">
+                              {r.form_responses.length}
+                            </TableCell>
+                            <TableCell className="text-center text-sm text-muted-foreground">
+                              {r.body_map_responses.length}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="rounded-sm gap-1.5 bg-background hover:bg-lemon text-foreground [&_svg]:size-3.5"
+                                onClick={() => { setDetailRecord(r); setDetailOpen(true) }}
+                              >
+                                <EyeIcon className="w-3.5 h-3.5" />
+                                Lihat
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </>
+                  )
+                })
               )}
             </TableBody>
           </Table>
