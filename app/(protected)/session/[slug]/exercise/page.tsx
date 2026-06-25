@@ -78,14 +78,12 @@ export default function ExercisePage({ params }: Props) {
   const handleDone = async (
     _completionId: string,
     _userId: string,
-    formResponses: Record<string, Record<string, unknown>>
+    formResponses: Record<string, Record<string, unknown>>,
+    startedAt: string | null
   ) => {
     const supabase = createClient()
     const { data: userData } = await supabase.auth.getUser()
     const user = userData?.user
-
-    console.log('formResponses:', formResponses)
-    console.log('instructions:', session?.instructions.map(i => ({ id: i.id, step_type: i.step_type })))
   
     if (!user || !session) {
       toast.error('Gagal menyimpan sesi.', { duration: 4000 })
@@ -101,6 +99,7 @@ export default function ExercisePage({ params }: Props) {
         session_id: session.id,
         session_slug: slug,
         session_name: session.session_name,
+        started_at: startedAt ?? new Date().toISOString(),
       })
       .select('id')
       .single()

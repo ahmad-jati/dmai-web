@@ -31,6 +31,8 @@ export function SessionsManager() {
           .order('sort_order', { ascending: true })
           .returns<SessionRaw[]>()
 
+          console.log(data)
+
         if (error) {
           console.error('Failed to load sessions:', error)
           setSessions([])
