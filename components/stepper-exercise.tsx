@@ -848,6 +848,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
         return (
           <StepVideo
             youtubeUrl={(config.youtube_url as string) ?? ''}
+            youtubeKredit={(config.credit as string) ?? ''}
             onNext={goNext}
             onPrev={showPrev ? goPrev : undefined}
           />

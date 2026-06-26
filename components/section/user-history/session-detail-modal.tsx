@@ -462,21 +462,14 @@ export function SessionDetailModal({
         </div>
 
         {/* Meta: mulai / selesai / durasi — reuse data dari props, 0 DB calls */}
-        <div className="flex flex-col gap-2 px-5 py-3 border-b border-foreground/10 shrink-0 bg-foreground/2">
-          {completion.started_at && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <ClockIcon className="w-3.5 h-3.5 shrink-0" />
-              <span className="text-xs font-medium">Mulai: {formatWITA(completion.started_at)}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <CheckCircleIcon className="w-3.5 h-3.5 shrink-0 text-green-500" />
-            <span className="text-xs font-medium">Selesai: {formatWITA(completion.completed_at)}</span>
-          </div>
+        <div className="flex flex-col gap-3 px-5 py-3.5 border-b border-foreground/10 shrink-0 bg-foreground/2">
           {duration !== "—" && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <TimerIcon className="w-3.5 h-3.5 shrink-0" />
-              <span className="text-xs font-medium">Durasi: {duration}</span>
+            <div className="flex items-center gap-2.5 text-sm font-medium text-foreground/90">
+              <TimerIcon className="w-4 h-4 shrink-0 text-foreground" />
+              <p className="leading-tight">
+                Kamu mengakses sesi ini selama <span className="font-bold text-foreground text-base mx-0.5">{duration}</span> 
+                dari <span className="font-medium whitespace-nowrap">{formatWITA(completion.started_at)}</span> sampai <span className="font-medium whitespace-nowrap">{formatWITA(completion.completed_at)}</span>.
+              </p>
             </div>
           )}
         </div>

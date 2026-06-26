@@ -55,7 +55,7 @@ export function TrainingOverviewOnboarding() {
 
           <div className="grid md:grid-cols-3 xs:grid-cols-2 grid-cols-1 gap-3.5 w-full">
             {loading
-              ? Array.from({ length: 7 }).map((_, i) => <SkeletonCard key={i} />)
+              ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
               : sessions.map((session) => (
                   <div
                     key={session.slug}
