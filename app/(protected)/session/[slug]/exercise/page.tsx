@@ -13,7 +13,6 @@ import { RepeatIcon, HouseIcon } from "@phosphor-icons/react"
 import { Route } from "next"
 import { createClient } from "@/lib/supabase/client"
 import { Spinner } from "@/components/ui/spinner"
-import { FeedbackDialog } from "@/components/session/feeedback-dialog"
 import { toast } from 'sonner'
 
 type Props = {
@@ -252,17 +251,6 @@ export default function ExercisePage({ params }: Props) {
             )}
           </Section>
         </div>
-
-        {userId && (
-          <FeedbackDialog
-            open={feedbackOpen}
-            sessionSlug={slug}
-            sessionName={session.session_name}
-            userId={userId}
-            onClose={() => setFeedbackOpen(false)}
-            onSkip={() => setFeedbackOpen(false)}
-          />
-        )}
       </>
     )
   }
