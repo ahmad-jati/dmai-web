@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Spinner } from '@/components/ui/spinner'
 import { PlusIcon } from '@phosphor-icons/react'
-import { StepTypeForm, BodyPart } from './step-type-form'
+import { StepTypeForm } from './step-type-form'
 import { SessionStep, StepType } from './types'
 
 interface AddStepDialogProps {
@@ -46,33 +46,18 @@ export function AddStepDialog({
 }: AddStepDialogProps) {
   const [form, setForm] = useState<SessionStep>(() => emptyStep(nextStepNumber))
   const [saving, setSaving] = useState(false)
-  const [bodyParts, setBodyParts] = useState<BodyPart[]>([])
-  const [bodyPartsLoading, setBodyPartsLoading] = useState(false)
 
   // Reset on open
   useEffect(() => {
     if (open) setForm(emptyStep(nextStepNumber))
   }, [open, nextStepNumber])
 
-  // Fetch body_parts once on first open
-  useEffect(() => {
-    if (!open || bodyParts.length > 0) return
-    const load = async () => {
-      setBodyPartsLoading(true)
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('body_parts')
-        .select('id, part_key, label_id, region, sort_order')
-        .order('sort_order', { ascending: true })
-      if (!error && data) setBodyParts(data as BodyPart[])
-      setBodyPartsLoading(false)
-    }
-    load()
-  }, [open])
 
   const handleFormChange = useCallback((patch: Partial<SessionStep>) => {
     setForm((prev) => ({ ...prev, ...patch }))
   }, [])
+
+  
 
   const handleAdd = async () => {
     if (!form.title.trim()) {
@@ -135,8 +120,6 @@ export function AddStepDialog({
         <StepTypeForm
           form={form}
           setForm={handleFormChange}
-          bodyParts={bodyParts}
-          bodyPartsLoading={bodyPartsLoading}
         />
 
         <DialogFooter className="gap-2 pt-2">

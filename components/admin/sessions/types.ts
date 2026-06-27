@@ -1,7 +1,8 @@
 // ─── Step & Session Types ──────────────────────────────────────────────────────
 
 export type StepType =
-  | 'form'
+  | 'pre_form'
+  | 'post_form'
   | 'video'
   | 'narration'
   | 'body_map'
@@ -120,7 +121,8 @@ export type ExternalEmbedStepConfigData = {
 
 export const STEP_TYPE_LABELS: Record<StepType, string> = {
   narration: 'Narasi / Panduan Suara',
-  form: 'Form Input',
+  pre_form: 'Form sebelum sesi',
+  post_form: 'Form setelah sesi',
   video: 'Video Edukasi',
   body_map: 'Body Map',
   external_embed: 'External Embed',
@@ -129,7 +131,8 @@ export const STEP_TYPE_LABELS: Record<StepType, string> = {
 
 export const STEP_TYPE_COLORS: Record<StepType, string> = {
   narration: 'bg-blue-50 text-blue-700 border-blue-200',
-  form: 'bg-amber-50 text-amber-700 border-amber-200',
+  pre_form: 'bg-amber-50 text-amber-700 border-amber-200',
+  post_form: 'bg-violet-50 text-violet-700 border-violet-200',
   video: 'bg-purple-50 text-purple-700 border-purple-200',
   body_map: 'bg-green-50 text-green-700 border-green-200',
   external_embed: 'bg-orange-50 text-orange-700 border-orange-200',

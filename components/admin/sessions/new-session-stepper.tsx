@@ -283,7 +283,8 @@ function StepBuilderCard({
 
   // Sync incoming step prop → localForm when the step identity changes (e.g. type reset)
   const prevKeyRef = useRef(step._key)
-  if (prevKeyRef.current !== step._key) {
+  useEffect(() => {
+    if (prevKeyRef.current === step._key) return
     prevKeyRef.current = step._key
     setLocalForm({
       id: step._key,
@@ -296,7 +297,7 @@ function StepBuilderCard({
       image_url: step.image_preview ?? '',
       audio_url: '',
     })
-  }
+  }, [step._key, step.step_number, step.title, step.description, step.duration_seconds, step.step_type, step.step_config, step.image_preview])
 
   const handleChange = (patch: Partial<typeof localForm>) => {
     // When step_type changes, reset step_config
@@ -468,7 +469,7 @@ function ReviewStep({
             {steps.map((step) => {
               // Config summary per type
               let configSummary: React.ReactNode = null
-              if (step.step_type === 'form') {
+              if (step.step_type === 'pre_form' || step.step_type === 'post_form') {
                 const qs = (step.step_config.questions as FormQuestion[]) ?? []
                 configSummary = qs.length > 0
                   ? <p className="text-xs text-muted-foreground">{qs.length} pertanyaan: {qs.map(q => q.label || '(kosong)').join(' · ')}</p>

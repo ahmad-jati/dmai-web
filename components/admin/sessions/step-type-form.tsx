@@ -402,13 +402,6 @@ function FormStepConfig({ config, onChange }: FormStepConfigProps) {
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           Pertanyaan Form
         </p>
-        <button
-          onClick={addQ}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <PlusIcon className="w-3.5 h-3.5" />
-          Tambah pertanyaan
-        </button>
       </div>
 
       {questions.length === 0 && (
@@ -463,6 +456,16 @@ function FormStepConfig({ config, onChange }: FormStepConfigProps) {
           </div>
         ))}
       </div>
+
+      <div className='w-full flex items-end'>
+        <Button
+          onClick={addQ}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <PlusIcon className="w-3.5 h-3.5" />
+          Tambah pertanyaan
+        </Button>
+      </div>
     </div>
   )
 }
@@ -513,17 +516,9 @@ function VideoStepConfig({ config, onChange }: VideoStepConfigProps) {
 type BodyMapStepConfigProps = {
   config: BodyMapStepConfigData
   onChange: (patch: Partial<BodyMapStepConfigData>) => void
-  bodyParts: BodyPart[]
-  bodyPartsLoading: boolean
 }
 
-function BodyMapStepConfig({ config, onChange, bodyParts, bodyPartsLoading }: BodyMapStepConfigProps) {
-  const grouped = bodyParts.reduce<Record<string, BodyPart[]>>((acc, p) => {
-    if (!acc[p.region]) acc[p.region] = []
-    acc[p.region].push(p)
-    return acc
-  }, {})
-  const regions = Object.keys(grouped)
+function BodyMapStepConfig({ config, onChange }: BodyMapStepConfigProps) {
 
   return (
     <div className="flex flex-col gap-3 pt-3 border-t border-border">
@@ -541,7 +536,7 @@ function BodyMapStepConfig({ config, onChange, bodyParts, bodyPartsLoading }: Bo
         />
         <p className="text-xs text-muted-foreground">Pertanyaan ini akan muncul di atas peta tubuh.</p>
       </div>
-      <div className="flex flex-col gap-2">
+      {/* <div className="flex flex-col gap-2">
         <p className="text-xs text-muted-foreground font-medium">
           Bagian tubuh dari tabel{' '}
           <code className="bg-muted px-1 rounded">body_parts</code>:
@@ -575,7 +570,7 @@ function BodyMapStepConfig({ config, onChange, bodyParts, bodyPartsLoading }: Bo
           </div>
         )}
         <p className="text-xs text-muted-foreground italic">Pilihan ini muncul otomatis di UI pengguna.</p>
-      </div>
+      </div> */}
     </div>
   )
 }
@@ -628,8 +623,6 @@ type StepTypeFormProps = {
 export function StepTypeForm({
   form,
   setForm,
-  bodyParts = [],
-  bodyPartsLoading = false,
 }: StepTypeFormProps) {
   const showDescription = !(['video', 'external_embed', 'narration'] as StepType[]).includes(form.step_type)
 
@@ -671,7 +664,8 @@ export function StepTypeForm({
             onChange={(e) => setForm({ title: e.target.value })}
             placeholder={
               form.step_type === 'video' ? 'e.g. Video Edukasi'
-              : form.step_type === 'form' ? 'e.g. Form Check-in Awal'
+              : form.step_type === 'pre_form' ? 'e.g. Form Check-in Awal'
+              : form.step_type === 'post_form' ? 'e.g. Form Check-in Akhir'
               : form.step_type === 'body_map' ? 'e.g. Pemetaan Tubuh'
               : form.step_type === 'external_embed' ? 'e.g. Aktivitas Mentimeter'
               : form.step_type === 'game' ? 'e.g. Game Fokus'
@@ -711,8 +705,10 @@ export function StepTypeForm({
                 ? 'Jelaskan cara main game dan tujuannya...'
                 : form.step_type === 'body_map'
                 ? 'Instruksi tambahan sebelum pengguna memilih bagian tubuh...'
-                : form.step_type === 'form'
-                ? 'Instruksi pengisian form untuk pengguna...'
+                : form.step_type === 'pre_form'
+                ? 'Instruksi pengisian form awal untuk pengguna...'
+                : form.step_type === 'post_form'
+                ? 'Instruksi pengisian form akhir untuk pengguna...'
                 : ''
             }
           />
@@ -727,7 +723,7 @@ export function StepTypeForm({
           onTotalDurationChange={(total) => setForm({ duration_seconds: total })}
         />
       )}
-      {form.step_type === 'form' && (
+      {(form.step_type === 'pre_form' || form.step_type === 'post_form') && (
         <FormStepConfig config={form.step_config as FormStepConfigData} onChange={updateConfig} />
       )}
       {form.step_type === 'video' && (
@@ -737,8 +733,6 @@ export function StepTypeForm({
         <BodyMapStepConfig
           config={form.step_config as BodyMapStepConfigData}
           onChange={updateConfig}
-          bodyParts={bodyParts}
-          bodyPartsLoading={bodyPartsLoading}
         />
       )}
       {form.step_type === 'external_embed' && (

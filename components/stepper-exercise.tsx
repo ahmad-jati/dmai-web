@@ -19,7 +19,7 @@ import { Spinner } from '@/components/ui/spinner'
 
 import { StepVideo } from './steps/step-video'
 import { StepForm } from './steps/step-form'
-import { StepBodyMap, type BodyMapResponse } from './steps/step-body-map'
+import { StepBodyMap } from './steps/step-body-map'
 import { StepExternalEmbed } from './steps/step-external-embed'
 import { StepGame } from './steps/step-game'
 
@@ -52,17 +52,9 @@ type Props = {
   sessionSlug: string
   sessionId: string
   sessionImageCover: string
-  onDone: (completionId: string, userId: string, responses: Record<string, StepResponse>, startedAt: string | null) => void
+  onDone: (completionId: string, userId: string, responses: Record<string, Record<string, unknown>>, startedAt: string | null) => void
   onBack?: () => void
 }
-
-// ─── Response Types ────────────────────────────────────────────────────────────
-
-// Generic form response: field id → value
-type FormStepResponse = Record<string, unknown>
-
-// Union of all possible step response shapes
-type StepResponse = BodyMapResponse | FormStepResponse
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -92,7 +84,8 @@ function resolveImage(sub: SubStep): string {
 
 const STEP_TYPE_LABEL: Record<StepType, string> = {
   narration: 'Panduan Suara',
-  form: 'Form',
+  pre_form: 'Form Sebelum Sesi',
+  post_form: 'Form Setelah Sesi',
   video: 'Video',
   body_map: 'Body Map',
   external_embed: 'Aktivitas',
@@ -140,17 +133,11 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const [isReady, setIsReady] = useState(false)
   const [narrationKey, setNarrationKey] = useState(0)
   const [showMusicTray, setShowMusicTray] = useState(false)
-  const [formResponses, setFormResponses] = useState<Record<string, StepResponse>>({})
+  const [formResponses, setFormResponses] = useState<Record<string, Record<string, unknown>>>({})
 
   // sessionStorage keys for this session
   const sessionStorageKey = `dmai_form_draft_${sessionId}`
   const startedAtKey = `dmai_started_at_${sessionId}`
-
-  // Per-step body map draft keys: `dmai_body_map_draft_${sessionId}_${stepId}`
-  const getBodyMapDraftKey = useCallback(
-    (stepId: string) => `dmai_body_map_draft_${sessionId}_${stepId}`,
-    [sessionId]
-  )
 
   // Sub-step index — for narration steps with multiple sub_steps
   const [currentSubStep, setCurrentSubStep] = useState(0)
@@ -199,33 +186,18 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const progress = isTimed ? Math.min((elapsed / activeDuration) * 100, 100) : 0
   const strokeDashoffset = circumference * (1 - progress / 100)
   const currentTrack = tracks[currentTrackIndex]
-  const formResponsesRef = useRef<Record<string, StepResponse>>({})
+  const formResponsesRef = useRef<Record<string, Record<string, unknown>>>({})
 
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(sessionStorageKey)
-      const base = saved ? JSON.parse(saved) : {}
-
-      // Hydrate per-step body map drafts that were saved mid-edit
-      // (user changed selections but did not click Lanjutkan yet)
-      for (const instruction of instructions) {
-        if (instruction.step_type === 'body_map') {
-          const draftRaw = sessionStorage.getItem(getBodyMapDraftKey(instruction.id))
-          if (draftRaw) {
-            const draft = JSON.parse(draftRaw)
-            if (!base[instruction.id] || draft.selected_parts?.length > 0 || draft.note) {
-              base[instruction.id] = draft
-            }
-          }
-        }
-      }
-
-      if (Object.keys(base).length > 0) {
-        setFormResponses(base)
-        formResponsesRef.current = base
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setFormResponses(parsed)
+        formResponsesRef.current = parsed
       }
     } catch {}
-  }, [sessionStorageKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sessionStorageKey])
 
   // Record started_at once when the stepper first mounts for this session.
   // We only write if the key doesn't exist yet, so resuming after a refresh
@@ -238,7 +210,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     } catch {}
   }, [startedAtKey])
 
-  const handleFormResponse = useCallback((stepId: string, responses: StepResponse) => {
+  const handleFormResponse = useCallback((stepId: string, responses: Record<string, unknown>) => {
     formResponsesRef.current = { ...formResponsesRef.current, [stepId]: responses }
     setFormResponses((prev) => {
       const next = { ...prev, [stepId]: responses }
@@ -250,19 +222,19 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const persistFormResponses = useCallback(async (
     completionId: string,
     userId: string,
-    responses: Record<string, StepResponse>
+    responses: Record<string, Record<string, unknown>>
   ) => {
     const supabase = createClient()
     const entries = Object.entries(responses)
     if (entries.length === 0) return
 
     const formRows: {
-      completion_id: string
-      user_id: string
+      completion_id: string; 
+      user_id: string; 
       session_id: string
-      step_id: string
-      step_number: number
-      responses: FormStepResponse
+      step_id: string; 
+      step_number: number; 
+      responses: Record<string, unknown>
     }[] = []
     
     const bodyMapRows: {
@@ -277,14 +249,13 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     for (const [stepId, stepResponses] of entries) {
       const stepInstruction = instructions.find((i) => i.id === stepId)
       if (stepInstruction?.step_type === 'body_map') {
-        const bodyMapResponse = stepResponses as BodyMapResponse
         bodyMapRows.push({
           completion_id: completionId,
           user_id: userId,
           step_id: stepId,
-          selected_parts: bodyMapResponse.selected_parts ?? [],
-          sensation: bodyMapResponse.sensation?.toLowerCase() ?? null,
-          note: bodyMapResponse.note ?? '',
+          selected_parts: (stepResponses.selected_parts as string[]) ?? [],
+          sensation: (stepResponses.sensation as string | null)?.toLowerCase() ?? null,
+          note: (stepResponses.note as string) ?? '',
         })
       } else {
         formRows.push({
@@ -293,7 +264,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           session_id: sessionId,
           step_id: stepId,
           step_number: stepInstruction?.step ?? 0,
-          responses: stepResponses as FormStepResponse,
+          responses: stepResponses,
         })
       }
     }
@@ -333,13 +304,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     await Promise.all(promises)
     try { sessionStorage.removeItem(sessionStorageKey) } catch {}
     try { sessionStorage.removeItem(startedAtKey) } catch {}
-    // Clean up per-step body map drafts
-    for (const instruction of instructions) {
-      if (instruction.step_type === 'body_map') {
-        try { sessionStorage.removeItem(getBodyMapDraftKey(instruction.id)) } catch {}
-      }
-    }
-  }, [instructions, sessionId, sessionStorageKey, startedAtKey, getBodyMapDraftKey])
+  }, [instructions, sessionId, sessionStorageKey, startedAtKey])
 
   const handleBack = () => {
     if (onBack) onBack()
@@ -848,12 +813,12 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
         return (
           <StepVideo
             youtubeUrl={(config.youtube_url as string) ?? ''}
-            youtubeKredit={(config.credit as string) ?? ''}
+            youtubeKredit={(config.youtubeKredit as string) ?? ''}
             onNext={goNext}
             onPrev={showPrev ? goPrev : undefined}
           />
         )
-      case 'form': {
+      case 'pre_form': {
         const fields = (config.fields ?? config.questions ?? []) as unknown[]
         return (
           <StepForm
@@ -865,13 +830,26 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           />
         )
       }
+      case 'post_form': {
+        const fields = (config.fields ?? config.questions ?? []) as unknown[]
+        return (
+          <StepForm
+            fields={fields as never}
+            onNext={(responses) => { handleFormResponse(step.id, responses); goNext() }}
+            onPrev={showPrev ? goPrev : undefined}
+            showPrev={showPrev}
+            initialValues={formResponses[step.id]}
+            isLastForm={isLastStep}
+          />
+        )
+      }
       case 'body_map':
         return (
           <StepBodyMap
-            onNext={(response) => { handleFormResponse(step.id, response); goNext() }}
+            onNext={(response) => { handleFormResponse(step.id, response as Record<string, unknown>); goNext() }}
             onPrev={showPrev ? goPrev : undefined}
-            initialValues={formResponses[step.id] as BodyMapResponse | undefined}
-            storageKey={getBodyMapDraftKey(step.id)}
+            initialValues={formResponses[step.id] as { selected_parts: string[]; sensation: string | null; note: string } | undefined}
+            onDraftChange={(draft) => handleFormResponse(step.id, draft as Record<string, unknown>)}
           />
         )
       case 'external_embed':
