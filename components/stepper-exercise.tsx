@@ -956,7 +956,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             )}
    
             {/* Content */}
-            <div className="flex-1 w-full flex items-center justify-center overflow-y-auto min-h-96">
+            <div className="flex-1 w-full flex items-start justify-center overflow-y-auto min-h-96">
               <NonNarrationContent />
             </div>
 

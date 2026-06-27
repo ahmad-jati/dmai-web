@@ -13,14 +13,8 @@ type Props = {
 export function StepExternalEmbed({ url, label, onNext, onPrev }: Props) {
   return (
     <div className="flex flex-col items-center gap-6 w-full">
-      <div className="flex flex-col gap-1 items-center text-center">
-        <p className="font-semibold text-lg text-foreground">Aktivitas Eksternal</p>
-        <p className="text-sm text-muted-foreground max-w-sm">
-          Klik tombol di bawah untuk membuka aktivitas, lalu kembali ke sini setelah selesai.
-        </p>
-      </div>
 
-      <div className="w-full max-w-sm flex flex-col gap-3 p-6 rounded-2xl border border-border bg-muted items-center">
+      <div className="w-full max-w-lg h-60 flex flex-col justify-center gap-3 p-6 rounded-2xl border border-border bg-green items-center ">
         <div className="text-4xl">🔗</div>
         <a href={url} target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 px-6 py-3 rounded-full bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-all">

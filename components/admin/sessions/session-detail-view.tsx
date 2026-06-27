@@ -560,7 +560,7 @@ export function SessionDetailView({
               <TableHeader>
                 <TableRow className="bg-muted/40">
                   <TableHead className="w-12 text-center">No</TableHead>
-                  <TableHead>Judul</TableHead>
+                  <TableHead className='w-40 max-w-40'>Judul</TableHead>
                   <TableHead className="w-36">Tipe</TableHead>
                   <TableHead className="w-20 text-center">Durasi</TableHead>
                   <TableHead className="text-center w-28">Aksi</TableHead>
@@ -572,7 +572,7 @@ export function SessionDetailView({
                     <TableCell className="text-center font-semibold text-sm text-muted-foreground">
                       {step.step_number}
                     </TableCell>
-                    <TableCell className="font-medium text-sm">{step.title}</TableCell>
+                    <TableCell className="font-medium text-sm w-40 max-w-40 wrap-break-word whitespace-normal">{step.title}</TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-sm border text-xs font-medium ${

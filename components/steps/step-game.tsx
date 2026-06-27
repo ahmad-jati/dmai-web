@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { PlayIcon, ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
 import { Button } from '../ui/button'
+import Link from 'next/link'
 
 type Props = {
   onNext: () => void
@@ -13,14 +14,13 @@ export function StepGame({ onNext, onPrev }: Props) {
   const [started, setStarted] = useState(false)
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full">
+    <div className="flex flex-col items-center px-12 gap-6 w-full">
       {/* <div className="flex flex-col gap-1 items-center text-center">
         <p className="font-semibold text-lg text-foreground">Mini Game: Fokus & Konsentrasi</p>
         <p className="text-sm text-muted-foreground">Latih fokusmu sebelum melanjutkan sesi.</p>
       </div> */}
 
-      <div className="w-full max-w-2xl rounded-2xl overflow-hidden border border-border shadow-sm bg-muted relative"
-        style={{ height: '380px' }}>
+      <div className="w-full rounded-2xl overflow-hidden border border-border shadow-sm bg-muted relative md:h-106 h-140"> 
         {!started ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
             <div className="text-5xl">🦕</div>
@@ -33,9 +33,22 @@ export function StepGame({ onNext, onPrev }: Props) {
             <p className="text-xs text-muted-foreground">Tekan spasi untuk melompat</p>
           </div>
         ) : (
-          <iframe src="https://dinogameclone.netlify.app/" title="Mini Game Fokus" className="w-full h-full" allow="autoplay" />
+          <iframe src="https://elgoog.im/dinosaur-game/" title="Mini Game Fokus" className="w-full h-full" allow="autoplay" />
         )}
       </div>
+
+      <p className="text-sm/4.5 text-muted-foreground font-medium text-center max-w-2xl">
+        Original game by Google. Web version by{" "}
+        <Link
+          href="https://elgoog.im/dinosaur-game/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:no-underline"
+        >
+          Team elgooG
+        </Link>
+        . 
+      </p>
 
       <div className="flex items-center gap-3">
         {onPrev && (
