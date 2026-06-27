@@ -23,7 +23,7 @@ import {
 } from '@phosphor-icons/react'
 import Image from 'next/image'
 import { StepTypeForm, BodyPart, newKey, FormQuestion } from './step-type-form'
-import { SessionMeta, StepType, STEP_TYPE_LABELS, STEP_TYPE_COLORS } from './types'
+import { SessionMeta, StepType, STEP_TYPE_LABELS, STEP_TYPE_COLORS, NarrationSubStep } from './types'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 type DraftStep = {
@@ -626,18 +626,18 @@ export function NewSessionStepper() {
       }
 
       for (const draft of draftSteps) {
-        // Build the clean step_config — upload narration sub-step files, strip runtime fields
-        let cleanConfig: Record<string, unknown> = {}
+        // Coerce empty description → null so DB stores NULL rather than an empty string
+        const descriptionValue = draft.description.trim() || null
 
         if (draft.step_type === 'narration' && Array.isArray(draft.step_config?.sub_steps)) {
-          // We need the step ID first — insert with empty config, then update
+          // Narration: need step ID first to build storage paths for sub-step files
           const { data: insertedStep, error: stepErr } = await supabase
             .from('session_steps')
             .insert({
               session_id: sessionId,
               step_number: draft.step_number,
               title: draft.title,
-              description: draft.description,
+              description: descriptionValue,
               duration_seconds: draft.duration_seconds,
               step_type: draft.step_type,
               step_config: {},
@@ -649,34 +649,36 @@ export function NewSessionStepper() {
 
           if (stepErr || !insertedStep) { console.error('Step insert error:', stepErr); continue }
 
-          const stepId = insertedStep.id
-          const uploadedSubSteps = await Promise.all(
-            (draft.step_config.sub_steps as Record<string, unknown>[]).map(async (sub, i) => {
-              const s = sub as { _key?: string; audio_file?: File; image_file?: File; audio_url?: string; image_url?: string; audio_preview?: string; image_preview?: string; [k: string]: unknown }
-              let audioUrl = s.audio_url ?? ''
-              let imageUrl = s.image_url ?? ''
+          const stepId = insertedStep.id as string
+          const rawSubSteps = draft.step_config.sub_steps as NarrationSubStep[]
 
-              if (s.audio_file instanceof File) {
-                const ext = s.audio_file.name.split('.').pop()
+          const uploadedSubSteps = await Promise.all(
+            rawSubSteps.map(async (sub, i) => {
+              let audioUrl = sub.audio_url ?? ''
+              let imageUrl = sub.image_url ?? ''
+
+              if (sub.audio_file instanceof File) {
+                const ext = sub.audio_file.name.split('.').pop()
                 const path = `steps/${stepId}/sub_${i}_audio.${ext}`
-                const { error } = await supabase.storage.from('session-assets').upload(path, s.audio_file, { upsert: true })
+                const { error } = await supabase.storage.from('session-assets').upload(path, sub.audio_file, { upsert: true })
                 if (!error) {
                   const { data } = supabase.storage.from('session-assets').getPublicUrl(path)
                   audioUrl = data.publicUrl
                 }
               }
 
-              if (s.image_file instanceof File) {
-                const ext = s.image_file.name.split('.').pop()
+              if (sub.image_file instanceof File) {
+                const ext = sub.image_file.name.split('.').pop()
                 const path = `steps/${stepId}/sub_${i}_image.${ext}`
-                const { error } = await supabase.storage.from('session-assets').upload(path, s.image_file, { upsert: true })
+                const { error } = await supabase.storage.from('session-assets').upload(path, sub.image_file, { upsert: true })
                 if (!error) {
                   const { data } = supabase.storage.from('session-assets').getPublicUrl(path)
                   imageUrl = data.publicUrl
                 }
               }
 
-              const { audio_file, image_file, image_preview, audio_preview, ...rest } = s
+              // Strip runtime-only File/preview fields before persisting to DB
+              const { audio_file: _af, image_file: _if, audio_preview: _ap, image_preview: _ip, ...rest } = sub
               return { ...rest, audio_url: audioUrl, image_url: imageUrl }
             })
           )
@@ -686,13 +688,16 @@ export function NewSessionStepper() {
             .update({ step_config: { sub_steps: uploadedSubSteps } })
             .eq('id', stepId)
 
-          continue // already handled
+          continue // narration fully handled above
         }
 
-        // Non-narration steps: sanitize config (strip any accidental File refs) then insert
-        cleanConfig = JSON.parse(JSON.stringify(draft.step_config ?? {}, (_, v) =>
-          v instanceof File || v instanceof Blob ? undefined : v
-        ))
+        // Non-narration steps (pre_form, post_form, video, body_map, external_embed, game):
+        // Sanitize config — remove any accidental File/Blob references before storing
+        const cleanConfig: Record<string, unknown> = JSON.parse(
+          JSON.stringify(draft.step_config ?? {}, (_, v) =>
+            v instanceof File || v instanceof Blob ? undefined : v
+          )
+        )
 
         const { data: insertedStep, error: stepErr } = await supabase
           .from('session_steps')
@@ -700,7 +705,7 @@ export function NewSessionStepper() {
             session_id: sessionId,
             step_number: draft.step_number,
             title: draft.title,
-            description: draft.description,
+            description: descriptionValue,
             duration_seconds: draft.duration_seconds,
             step_type: draft.step_type,
             step_config: cleanConfig,

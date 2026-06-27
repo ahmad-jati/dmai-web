@@ -388,13 +388,26 @@ type FormStepConfigProps = {
 }
 
 function FormStepConfig({ config, onChange }: FormStepConfigProps) {
-  const questions: FormQuestion[] = config.questions ?? []
+  // Own questions in local state so edits survive parent re-renders that pass a stale config prop.
+  // Sync from config only when the config reference changes (e.g. a different step is opened).
+  const [questions, setQuestions] = useState<FormQuestion[]>(() => config.questions ?? [])
+  const prevConfigRef = useRef(config)
+  useEffect(() => {
+    if (prevConfigRef.current === config) return
+    prevConfigRef.current = config
+    setQuestions(config.questions ?? [])
+  }, [config])
+
+  const commit = (updated: FormQuestion[]) => {
+    setQuestions(updated)
+    onChange({ questions: updated })
+  }
 
   const addQ = () =>
-    onChange({ questions: [...questions, { _key: newKey(), label: '', type: 'text_input' }] })
-  const removeQ = (key: string) => onChange({ questions: questions.filter((q) => q._key !== key) })
+    commit([...questions, { _key: newKey(), label: '', type: 'text_input' }])
+  const removeQ = (key: string) => commit(questions.filter((q) => q._key !== key))
   const updateQ = (key: string, patch: Partial<FormQuestion>) =>
-    onChange({ questions: questions.map((q) => (q._key === key ? { ...q, ...patch } : q)) })
+    commit(questions.map((q) => (q._key === key ? { ...q, ...patch } : q)))
 
   return (
     <div className="flex flex-col gap-3 pt-3 border-t border-border">
@@ -626,7 +639,14 @@ export function StepTypeForm({
 }: StepTypeFormProps) {
   const showDescription = !(['video', 'external_embed', 'narration'] as StepType[]).includes(form.step_type)
 
-  const updateConfig = (patch: Record<string, unknown>) =>
+  type StepConfigPatch =
+    | Partial<NarrationStepConfigData>
+    | Partial<FormStepConfigData>
+    | Partial<VideoStepConfigData>
+    | Partial<BodyMapStepConfigData>
+    | Partial<ExternalEmbedStepConfigData>
+
+  const updateConfig = (patch: StepConfigPatch) =>
     setForm({ step_config: { ...form.step_config, ...patch } })
 
   return (

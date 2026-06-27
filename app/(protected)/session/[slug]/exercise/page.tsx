@@ -114,7 +114,7 @@ type PostFormScreenProps = {
 
 function PostFormScreen({ session, postFormStepId: _, postFormFields, initialValues, onSubmit }: PostFormScreenProps) {
   return (
-    <div className="fixed inset-0 z-55 flex items-center justify-center lg:px-28 px-4 lg:py-14 py-8 bg-muted/30 overflow-y-auto">
+    <div className="fixed inset-0 z-55 flex items-center justify-center lg:px-28 px-4 lg:py-14 py-8 bg-background overflow-y-auto">
       <div className="flex flex-col items-center w-full max-w-lg rounded-4xl bg-background border border-border overflow-y-auto flex-1 py-8 px-6 gap-6 my-auto">
         <div className="flex flex-col items-center gap-2 text-center">
           <p className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">Form Setelah Sesi</p>
@@ -175,17 +175,12 @@ function ResultScreen({
     const config = parseConfig(step.step_config)
     return ((config.questions ?? config.fields ?? []) as FormField[])
   }
-  const preFields = getFields(preFormStep)
-  const postFields = getFields(postFormStep)
 
-  const groupedBodyParts = bodyMapResponses?.selected_parts
-    ? groupBodyParts(bodyMapResponses.selected_parts as string[])
-    : []
 
   return (
     <>
-      <div className="w-full">
-        <div className="flex flex-col items-center w-full lg:px-28 sm:px-12 px-4 lg:py-14 py-8 gap-8">
+      <div className="w-full md:rounded-5xl rounded-xl border border-foreground md:p-8 xs:p-6 p-4 bg-celeste">
+        <div className="flex flex-col items-center gap-7">
           {/* Hero */}
           <div className="flex flex-col items-center gap-3 text-center max-w-lg">
             <p className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">Sesi Selesai 🎉</p>
@@ -219,97 +214,7 @@ function ResultScreen({
             ))}
           </div>
 
-          {/* Pre & Post Form side by side */}
-          {(preResponses || postResponses) && (
-            <div className="w-full max-w-2xl flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <ClipboardTextIcon className="w-4 h-4 text-muted-foreground" />
-                <p className="text-sm font-semibold text-foreground">Respons Form</p>
-              </div>
-              <div className="grid sm:grid-cols-2 grid-cols-1 gap-3">
-                {/* Pre Form */}
-                {preResponses && (
-                  <div className="flex flex-col gap-3 bg-foreground/4 rounded-2xl border border-foreground/10 p-4">
-                    <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide flex items-center gap-1.5">
-                      <span className="inline-block w-2 h-2 rounded-full bg-amber-400" />
-                      {preFormStep?.title ?? 'Form Sebelum Sesi'}
-                    </p>
-                    <div className="flex flex-col gap-3">
-                      {Object.entries(preResponses).map(([key, value]) => {
-                        if (value === undefined || value === null || value === '') return null
-                        const field = preFields.find((f) => (f._key ?? f.id ?? f.label) === key)
-                        return (
-                          <div key={key} className="flex flex-col gap-1">
-                            <p className="text-xs font-semibold text-muted-foreground">{field?.label ?? key}</p>
-                            {renderAnswerValue(value, field)}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
 
-                {/* Post Form */}
-                {postResponses && (
-                  <div className="flex flex-col gap-3 bg-foreground/4 rounded-2xl border border-foreground/10 p-4">
-                    <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide flex items-center gap-1.5">
-                      <span className="inline-block w-2 h-2 rounded-full bg-violet-400" />
-                      {postFormStep?.title ?? 'Form Setelah Sesi'}
-                    </p>
-                    <div className="flex flex-col gap-3">
-                      {Object.entries(postResponses).map(([key, value]) => {
-                        if (value === undefined || value === null || value === '') return null
-                        const field = postFields.find((f) => (f._key ?? f.id ?? f.label) === key)
-                        return (
-                          <div key={key} className="flex flex-col gap-1">
-                            <p className="text-xs font-semibold text-muted-foreground">{field?.label ?? key}</p>
-                            {renderAnswerValue(value, field)}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Body Map */}
-          {bodyMapResponses && groupedBodyParts.length > 0 && (
-            <div className="w-full max-w-2xl flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <UserIcon className="w-4 h-4 text-muted-foreground" />
-                <p className="text-sm font-semibold text-foreground">Body Map</p>
-              </div>
-              <div className="flex flex-col gap-3 bg-foreground/4 rounded-2xl border border-foreground/10 p-4">
-                <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide">{bodyMapStep?.title ?? 'Pemetaan Tubuh'}</p>
-                <div className="flex flex-col gap-3">
-                  {groupedBodyParts.map(({ regionLabel, parts }) => (
-                    <div key={regionLabel} className="flex flex-col gap-1.5">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{regionLabel}</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {parts.map((p) => (
-                          <span key={p} className="px-2.5 py-1 rounded-full text-xs font-medium bg-foreground/8 border border-foreground/15">{p}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                  {!!bodyMapResponses.sensation && (
-                    <div className="flex flex-col gap-1">
-                      <p className="text-xs font-semibold text-muted-foreground">Sensasi</p>
-                      <span className="inline-flex self-start px-2.5 py-1 rounded-full text-xs font-medium bg-foreground text-background">{String(bodyMapResponses.sensation)}</span>
-                    </div>
-                  )}
-                  {!!bodyMapResponses.note && (
-                    <div className="flex flex-col gap-1">
-                      <p className="text-xs font-semibold text-muted-foreground">Catatan</p>
-                      <p className="text-sm bg-foreground/4 rounded-lg px-3 py-2 leading-relaxed">{String(bodyMapResponses.note)}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Actions */}
           <div className="flex xs:flex-row flex-col items-center xs:gap-3 gap-2 w-full max-w-xs">
@@ -321,13 +226,6 @@ function ResultScreen({
               <RepeatIcon weight="fill" />
               Ulangi Sesi
             </Button>
-
-            <Link href={"/history" as Route}>
-              <Button variant="outline" className="w-full flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground">
-                <BookOpenTextIcon weight="fill" />
-                Lihat Riwayat
-              </Button>
-            </Link>
 
             <Link href={"/homepage" as Route}>
               <Button variant="outline" className="w-full flex items-center gap-2 bg-background dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground">

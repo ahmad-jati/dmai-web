@@ -164,8 +164,11 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const narrationStartedRef = useRef(false)
   const isMutedRef = useRef(isMuted)
 
-  const step = instructions[currentStep]
-  const totalSteps = instructions.length
+  // Exclude post_form steps — they have a dedicated place outside the stepper
+  const activeInstructions = instructions.filter((i) => i.step_type !== 'post_form')
+
+  const step = activeInstructions[currentStep]
+  const totalSteps = activeInstructions.length
   const isTimed = isNarrationStep(step.step_type)
   const isLastStep = currentStep === totalSteps - 1
   const showPrev = currentStep > 0
@@ -691,7 +694,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                     )}
                   </span>
                   <div className='flex items-center gap-3'>
-                    {instructions.map((_, i) => (
+                    {activeInstructions.map((_, i) => (
                       <button key={i} onClick={() => jumpToStep(i)}
                         className="flex flex-col items-center gap-1 group transition-all duration-200 ease-out cursor-pointer">
                         <span className={cn('block h-1 rounded-full transition-all duration-300',
@@ -871,7 +874,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   // Step dots for non-narration
   const StepDots = () => (
     <div className="sm:flex hidden items-center gap-3 shrink-0">
-      {instructions.map((_, i) => (
+      {activeInstructions.map((_, i) => (
         <button key={i} onClick={() => jumpToStep(i)}
           className={cn('block h-1 rounded-full transition-all duration-300 cursor-pointer',
             i === currentStep ? 'w-8 bg-foreground/90' : i < currentStep ? 'w-4 bg-foreground/50' : 'w-4 bg-foreground/20')} />
@@ -951,7 +954,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             )}
    
             {/* Content */}
-            <div className="flex-1 w-full flex items-center justify-center overflow-y-auto">
+            <div className="flex-1 w-full flex items-center justify-center overflow-y-auto min-h-96">
               <NonNarrationContent />
             </div>
 
