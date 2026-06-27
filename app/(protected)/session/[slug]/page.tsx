@@ -26,7 +26,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       <Section className="flex 2md:flex-row flex-col justify-between items-center gap-8 bg-celeste h-fit">
         <div className="flex flex-col 2md:items-start items-center 2md:justify-between gap-4 lg:max-w-xl 2md:max-w-sm h-fit">
           
-          <div className="2md:flex hidden items-center gap-1">
+          {/* <div className="2md:flex hidden items-center gap-1">
             <Link
               href={'/session' as Route}
               className="hover:underline underline-offset-2 xs:text-p/5 text-xs/3.5 font-medium"
@@ -35,7 +35,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             </Link>
             <p className="xs:text-p/5 text-sm/4 font-medium">/</p>
             <p className="xs:text-p/5 text-sm/4 font-medium">{session.session_name.toUpperCase()}</p>
-          </div>
+          </div> */}
 
           {/* Mobile image */}
           <div className="rounded-lg border border-foreground bg-background p-2 sm:h-70 xs:h-60 2md:hidden block">
@@ -76,6 +76,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           </div>
 
           <div className="flex flex-col 2md:items-start items-center gap-4">
+            <p className="text-lg font-medium text-muted-foreground -mb-3">Session</p>
             <h1 className="sm:text-h1/8 xs:text-[1.8rem]/8 text-h2/7 md:text-left text-center font-semibold 2md:block hidden">
               {session.session_name.toUpperCase()}
             </h1>
@@ -85,20 +86,11 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 {para}
               </p>
             ))}
+          </div>
 
-            {/* Desktop meta */}
-            <div className="2md:flex hidden flex-col md:items-start items-center gap-1.5 text-muted-foreground dark:text-popover-foreground">
-              <div className="flex items-center gap-1">
-                <PersonSimpleTaiChiIcon className="w-5 h-5" weight="fill" />
-                <p className="font-medium xs:text-p/5 text-xs/3.5">{session.total_instruction} Instruksi</p>
-              </div>
-              <div className="flex items-center gap-1">
-                <TimerIcon className="w-5 h-5" weight="fill" />
-                <p className="font-medium xs:text-p/5 text-xs/3.5">{session.duration}</p>
-              </div>
-              {/* Client component — loads user's count independently */}
-              <CompletionCount slug={slug} />
-            </div>
+          <div className="2md:flex hidden flex-row md:items-start items-center gap-1.5 text-muted-foreground dark:text-popover-foreground">
+            {/* Client component — loads user's count independently */}
+            <CompletionCount slug={slug} />
           </div>
 
           <Link href={`/session/${slug}/exercise` as Route} className="flex items-center gap-2">
@@ -113,19 +105,31 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         </div>
 
         {/* Desktop image */}
-        <div className="flex-1 rounded-5xl border border-foreground bg-background p-2 max-w-130 h-88 2md:block hidden">
-          <div className="w-full h-full overflow-hidden rounded-4xl bg-muted-foreground/10">
-            <Image
-              src={session.image_cover}
-              alt={session.session_name}
-              width={2000}
-              height={2000}
-              priority
-              unoptimized
-              placeholder="blur"
-              blurDataURL={BLUR_DATA_URL}
-              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-            />
+        <div className="flex flex-col gap-3 items-center">
+          <div className="flex-1 rounded-5xl border border-foreground bg-background p-2 max-w-130 h-88 2md:block hidden">
+            <div className="w-full h-full overflow-hidden rounded-4xl bg-muted-foreground/10">
+              <Image
+                src={session.image_cover}
+                alt={session.session_name}
+                width={2000}
+                height={2000}
+                priority
+                unoptimized
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
+                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+              />
+            </div>
+          </div>
+          <div className="2md:flex hidden flex-row md:items-start items-center gap-6 text-muted-foreground dark:text-popover-foreground">
+            <div className="flex items-center gap-1">
+              <PersonSimpleTaiChiIcon className="w-5 h-5" weight="fill" />
+              <p className="font-medium xs:text-p/5 text-xs/3.5">{session.total_instruction} Instruksi</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <TimerIcon className="w-5 h-5" weight="fill" />
+              <p className="font-medium xs:text-p/5 text-xs/3.5">{session.duration}</p>
+            </div>
           </div>
         </div>
       </Section>

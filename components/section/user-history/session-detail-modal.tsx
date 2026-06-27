@@ -55,7 +55,7 @@ type SessionStep = {
   id: string
   step_number: number
   title: string | null
-  step_type: string
+  step_type: 'pre_form' | 'post_form' | 'body_map' | 'narration' | 'video' | 'external_embed' | 'game'
   step_config: StepConfig | null
 }
 
@@ -81,6 +81,7 @@ type BodyMapResponseRow = {
 type ResolvedFormResponse = {
   id: string
   stepTitle: string
+  stepType: 'pre_form' | 'post_form' | string
   fields: FormField[]
   responses: Record<string, string | number | string[]>
   createdAt: string
@@ -395,6 +396,7 @@ export function SessionDetailModal({
           return {
             id: row.id,
             stepTitle,
+            stepType: step?.step_type ?? 'pre_form',
             fields,
             responses: row.responses,
             createdAt: row.created_at,
@@ -501,15 +503,12 @@ export function SessionDetailModal({
           {data && !hasNoData && (
             <div className="flex flex-col gap-6">
 
-              {/* Body Map — hanya sesi tertentu */}
+              {/* Body Map */}
               {data.bodyMapResponses.length > 0 && (
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4 text-muted-foreground" />
                     <p className="text-sm font-semibold text-foreground">Body Map</p>
-                    {/* <span className="text-xs text-muted-foreground">
-                      ({data.bodyMapResponses.length} respons)
-                    </span> */}
                   </div>
                   {data.bodyMapResponses.map((r) => (
                     <BodyMapCard key={r.id} response={r} />
@@ -517,21 +516,67 @@ export function SessionDetailModal({
                 </div>
               )}
 
-              {/* Form */}
-              {data.formResponses.length > 0 && (
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2">
-                    <ClipboardTextIcon className="w-4 h-4 text-muted-foreground" />
-                    <p className="text-sm font-semibold text-foreground">Form</p>
-                    {/* <span className="text-xs text-muted-foreground">
-                      ({data.formResponses.length} respons)
-                    </span> */}
+              {/* Form — pre & post side by side */}
+              {data.formResponses.length > 0 && (() => {
+                const preResponses = data.formResponses.filter((r) => r.stepType === 'pre_form')
+                const postResponses = data.formResponses.filter((r) => r.stepType === 'post_form')
+                const otherResponses = data.formResponses.filter(
+                  (r) => r.stepType !== 'pre_form' && r.stepType !== 'post_form'
+                )
+                const hasSideBySide = preResponses.length > 0 && postResponses.length > 0
+
+                return (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <ClipboardTextIcon className="w-4 h-4 text-muted-foreground" />
+                      <p className="text-sm font-semibold text-foreground">Form</p>
+                    </div>
+
+                    {/* Side by side: pre + post */}
+                    {hasSideBySide && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-block w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                            <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide">Sebelum Sesi</p>
+                          </div>
+                          {preResponses.map((r) => <FormResponseCard key={r.id} response={r} />)}
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-block w-2 h-2 rounded-full bg-violet-400 shrink-0" />
+                            <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide">Setelah Sesi</p>
+                          </div>
+                          {postResponses.map((r) => <FormResponseCard key={r.id} response={r} />)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Only pre or only post */}
+                    {!hasSideBySide && preResponses.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-block w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                          <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide">Sebelum Sesi</p>
+                        </div>
+                        {preResponses.map((r) => <FormResponseCard key={r.id} response={r} />)}
+                      </div>
+                    )}
+                    {!hasSideBySide && postResponses.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-block w-2 h-2 rounded-full bg-violet-400 shrink-0" />
+                          <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide">Setelah Sesi</p>
+                        </div>
+                        {postResponses.map((r) => <FormResponseCard key={r.id} response={r} />)}
+                      </div>
+                    )}
+
+                    {/* Legacy or other form step_type */}
+                    {otherResponses.length > 0 && otherResponses.map((r) => <FormResponseCard key={r.id} response={r} />)}
                   </div>
-                  {data.formResponses.map((r) => (
-                    <FormResponseCard key={r.id} response={r} />
-                  ))}
-                </div>
-              )}
+                )
+              })()}
 
             </div>
           )}

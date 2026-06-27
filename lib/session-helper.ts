@@ -1,8 +1,6 @@
 // ─── Timezone helper ────────────────────────────────────────────────────────
 // Indonesia has 3 timezones: WIB (UTC+7), WITA (UTC+8), WIT (UTC+9)
 // We detect from the browser's local offset and label accordingly.
-
-function getWibOffset(): number { return 7 * 60 }
 function getWitaOffset(): number { return 8 * 60 }
 function getWitOffset(): number { return 9 * 60 }
 
@@ -47,8 +45,6 @@ export function fmtDuration(startedAt: string | null, completedAt: string | null
   if (!startedAt || !completedAt) return "—";
 
   const diffMs = new Date(completedAt).getTime() - new Date(startedAt).getTime();
-  console.log(startedAt, completedAt)
-  console.log(diffMs)
   
   if (diffMs <= 0) return "00:00"; 
 
@@ -62,6 +58,22 @@ export function fmtDuration(startedAt: string | null, completedAt: string | null
   console.log(formattedMinutes)
 
   return `${formattedMinutes}:${formattedSeconds}`;
+}
+
+// Output: "09:58 WIB"
+export function fmtClock(iso: string | null): string {
+  if (!iso) return "—";
+
+  const date = new Date(iso);
+  const offsetMinutes = -date.getTimezoneOffset();
+  const label = tzLabel(offsetMinutes);
+
+  const formatted = date.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `${formatted} ${label}`;
 }
 
 // ─── Group by day helper ─────────────────────────────────────────────────────
@@ -85,7 +97,8 @@ export function groupByDay<T>(
 
 export type FormAnswer = {
   label: string
-  value: string | number | null
+  value: string | number | string[] | null
+  type?: string
 }
 
 export type FormStep = {
@@ -116,8 +129,8 @@ export type SessionHistoryRecord = {
   session_id: string
   session_name: string
   week_number: number | null
-  started_at: string | null
-  completed_at: string | null
+  started_at: string | ''
+  completed_at: string | ''
   form_responses: FormStep[]
   body_map_responses: BodyMapResponse[]
 }

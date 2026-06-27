@@ -63,6 +63,7 @@ function isNarrationStep(type: StepType) {
 }
 
 function parseConfig(config: unknown): Record<string, unknown> {
+  console.log(config)
   if (!config) return {}
   if (typeof config === 'string') {
     try { return JSON.parse(config) } catch { return {} }
@@ -84,7 +85,8 @@ function resolveImage(sub: SubStep): string {
 
 const STEP_TYPE_LABEL: Record<StepType, string> = {
   narration: 'Panduan Suara',
-  form: 'Form',
+  pre_form: 'Form Sebelum Sesi',
+  post_form: 'Form Setelah Sesi',
   video: 'Video',
   body_map: 'Body Map',
   external_embed: 'Aktivitas',
@@ -163,8 +165,11 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const narrationStartedRef = useRef(false)
   const isMutedRef = useRef(isMuted)
 
-  const step = instructions[currentStep]
-  const totalSteps = instructions.length
+  // Exclude post_form steps — they have a dedicated place outside the stepper
+  const activeInstructions = instructions.filter((i) => i.step_type !== 'post_form')
+
+  const step = activeInstructions[currentStep]
+  const totalSteps = activeInstructions.length
   const isTimed = isNarrationStep(step.step_type)
   const isLastStep = currentStep === totalSteps - 1
   const showPrev = currentStep > 0
@@ -690,7 +695,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                     )}
                   </span>
                   <div className='flex items-center gap-3'>
-                    {instructions.map((_, i) => (
+                    {activeInstructions.map((_, i) => (
                       <button key={i} onClick={() => jumpToStep(i)}
                         className="flex flex-col items-center gap-1 group transition-all duration-200 ease-out cursor-pointer">
                         <span className={cn('block h-1 rounded-full transition-all duration-300',
@@ -807,16 +812,18 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
   const NonNarrationContent = () => {
     const config = parseConfig(step.step_config)
+    console.log(config)
     switch (step.step_type) {
       case 'video':
         return (
           <StepVideo
             youtubeUrl={(config.youtube_url as string) ?? ''}
+            youtubeKredit={(config.credit as string) ?? ''}
             onNext={goNext}
             onPrev={showPrev ? goPrev : undefined}
           />
         )
-      case 'form': {
+      case 'pre_form': {
         const fields = (config.fields ?? config.questions ?? []) as unknown[]
         return (
           <StepForm
@@ -828,12 +835,26 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           />
         )
       }
+      case 'post_form': {
+        const fields = (config.fields ?? config.questions ?? []) as unknown[]
+        return (
+          <StepForm
+            fields={fields as never}
+            onNext={(responses) => { handleFormResponse(step.id, responses); goNext() }}
+            onPrev={showPrev ? goPrev : undefined}
+            showPrev={showPrev}
+            initialValues={formResponses[step.id]}
+            isLastForm={isLastStep}
+          />
+        )
+      }
       case 'body_map':
         return (
           <StepBodyMap
             onNext={(response) => { handleFormResponse(step.id, response as Record<string, unknown>); goNext() }}
             onPrev={showPrev ? goPrev : undefined}
             initialValues={formResponses[step.id] as { selected_parts: string[]; sensation: string | null; note: string } | undefined}
+            onDraftChange={(draft) => handleFormResponse(step.id, draft as Record<string, unknown>)}
           />
         )
       case 'external_embed':
@@ -855,7 +876,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   // Step dots for non-narration
   const StepDots = () => (
     <div className="sm:flex hidden items-center gap-3 shrink-0">
-      {instructions.map((_, i) => (
+      {activeInstructions.map((_, i) => (
         <button key={i} onClick={() => jumpToStep(i)}
           className={cn('block h-1 rounded-full transition-all duration-300 cursor-pointer',
             i === currentStep ? 'w-8 bg-foreground/90' : i < currentStep ? 'w-4 bg-foreground/50' : 'w-4 bg-foreground/20')} />
@@ -935,7 +956,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             )}
    
             {/* Content */}
-            <div className="flex-1 w-full flex items-center justify-center overflow-y-auto">
+            <div className="flex-1 w-full flex items-start justify-center overflow-y-auto min-h-96">
               <NonNarrationContent />
             </div>
 

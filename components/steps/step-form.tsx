@@ -23,6 +23,7 @@ type Props = {
   onPrev?: () => void
   showPrev?: boolean
   initialValues?: Record<string, unknown>
+  isLastForm?: boolean
 }
 
 const EMOJIS = [
@@ -128,7 +129,7 @@ function CheckboxGroupField({ field, value, onChange }: {
   )
 }
 
-export function StepForm({ fields, onNext, onPrev, showPrev, initialValues }: Props) {
+export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLastForm }: Props) {
   const [responses, setResponses] = useState<Record<string, unknown>>(initialValues ?? {})
   const getKey = (field: FormField) => field._key ?? field.id ?? field.label
   const setField = (field: FormField, value: unknown) =>
@@ -214,7 +215,7 @@ export function StepForm({ fields, onNext, onPrev, showPrev, initialValues }: Pr
           variant={'ghost'}
           className="bg-lemon hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg"
         >
-          Lanjut
+          {isLastForm ? 'Selesai' : 'Lanjut'}
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
         </Button>
       </div>
