@@ -39,8 +39,6 @@ function mapStep(step: any): SessionInstruction {
     title: step.title,
     description: step.description ?? '',
     duration_seconds: step.duration_seconds,
-    image: step.image_url ?? '',
-    audio: step.audio_url ?? '',
     step_type: step.step_type ?? 'narration',
     step_config: step.step_config ?? {},
   }
@@ -91,7 +89,7 @@ export async function fetchAllSessions(): Promise<SessionData[]> {
     .from('session_steps')
     .select(`
       id, session_id, step_number, title, description,
-      duration_seconds, image_url, audio_url, step_type, step_config
+      duration_seconds, step_type, step_config
     `)
     .in('session_id', sessionIds)
     .order('step_number', { ascending: true })
@@ -128,7 +126,7 @@ export async function fetchSessionBySlug(slug: string): Promise<SessionData | nu
     .from('session_steps')
     .select(`
       id, session_id, step_number, title, description,
-      duration_seconds, image_url, audio_url, step_type, step_config
+      duration_seconds, step_type, step_config
     `)
     .eq('session_id', session.id)
     .order('step_number', { ascending: true })
