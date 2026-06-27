@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
@@ -32,27 +32,34 @@ type BodyMapResponse = { selected_parts: string[]; sensation: string | null; not
 type Props = { onNext: (response: BodyMapResponse) => void; onPrev?: () => void; initialValues?: BodyMapResponse; onDraftChange?: (draft: BodyMapResponse) => void }
 
 export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Props) {
-  const [selected, setSelected] = useState<string[]>(initialValues?.selected_parts ?? [])
-  const [sensation, setSensation] = useState<string | null>(initialValues?.sensation ?? null)
+  const [selected, setSelected] = useState(initialValues?.selected_parts ?? [])
+  const [sensation, setSensation] = useState(initialValues?.sensation ?? null)
   const [note, setNote] = useState(initialValues?.note ?? '')
 
   const draft = { selected_parts: selected, sensation, note }
 
+  // Debounce onDraftChange for the note field so parent doesn't re-render
+  // on every keystroke (which resets scroll position)
+  const debounceRef = useRef(undefined as ReturnType<typeof setTimeout> | undefined)
+
+  const handleNote = (val: string) => {
+    setNote(val)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      onDraftChange?.({ selected_parts: selected, sensation, note: val })
+    }, 500)
+  }
+
   const toggle = (key: string) => {
     const next = selected.includes(key) ? selected.filter((k) => k !== key) : [...selected, key]
     setSelected(next)
-    onDraftChange?.({ ...draft, selected_parts: next })
+    onDraftChange?.({ selected_parts: next, sensation, note })
   }
 
   const handleSensation = (s: string) => {
     const next = s === sensation ? null : s
     setSensation(next)
-    onDraftChange?.({ ...draft, sensation: next })
-  }
-
-  const handleNote = (val: string) => {
-    setNote(val)
-    onDraftChange?.({ ...draft, note: val })
+    onDraftChange?.({ selected_parts: selected, sensation: next, note })
   }
 
   return (

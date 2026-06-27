@@ -683,26 +683,28 @@ export function StepTypeForm({
         )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label>Instruksi / Deskripsi</Label>
-        <Textarea
-          value={form.description}
-          onChange={(e) => setForm({ description: e.target.value })}
-          rows={3}
-          className="resize-none text-sm"
-          placeholder={
-            form.step_type === 'game'
-              ? 'Jelaskan cara main game dan tujuannya...'
-              : form.step_type === 'body_map'
-              ? 'Instruksi tambahan sebelum pengguna memilih bagian tubuh...'
-              : form.step_type === 'pre_form'
-              ? 'Instruksi pengisian form awal untuk pengguna...'
-              : form.step_type === 'post_form'
-              ? 'Instruksi pengisian form akhir untuk pengguna...'
-              : ''
-          }
-        />
-      </div>
+      {form.step_type !== 'narration' && (
+        <div className="flex flex-col gap-1.5">
+          <Label>Instruksi / Deskripsi</Label>
+          <Textarea
+            value={form.description}
+            onChange={(e) => setForm({ description: e.target.value })}
+            rows={3}
+            className={`resize-none text-sm`}
+            placeholder={
+              form.step_type === 'game'
+                ? 'Jelaskan cara main game dan tujuannya...'
+                : form.step_type === 'body_map'
+                ? 'Instruksi tambahan sebelum pengguna memilih bagian tubuh...'
+                : form.step_type === 'pre_form'
+                ? 'Instruksi pengisian form awal untuk pengguna...'
+                : form.step_type === 'post_form'
+                ? 'Instruksi pengisian form akhir untuk pengguna...'
+                : ''
+            }
+          />
+        </div>
+      )}
 
       {/* ── Type-specific config ── */}
       {form.step_type === 'narration' && (
