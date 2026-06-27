@@ -185,7 +185,6 @@ function ResultScreen({
           <div className="flex flex-col items-center gap-3 text-center max-w-lg">
             <p className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">Sesi Selesai 🎉</p>
             <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>
-            <p className="text-sm text-muted-foreground">Kerja keras kamu hari ini luar biasa. Istirahat sejenak dan rasakan perubahannya.</p>
           </div>
 
           <div className="2xs:rounded-3xl rounded-xl border border-foreground bg-background dark:border-none dark:p-0 p-2 sm:w-80 xs:h-56 w-full h-36">
@@ -214,8 +213,6 @@ function ResultScreen({
             ))}
           </div>
 
-
-
           {/* Actions */}
           <div className="flex xs:flex-row flex-col items-center xs:gap-3 gap-2 w-full max-w-xs">
             <Button
@@ -228,21 +225,15 @@ function ResultScreen({
             </Button>
 
             <Link href={"/homepage" as Route}>
-              <Button variant="outline" className="w-full flex items-center gap-2 bg-background dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground">
+              <Button 
+                variant="link" 
+                className="w-full flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5"
+              >
                 <HouseIcon weight="fill" />
                 Homepage
               </Button>
             </Link>
           </div>
-
-          {!feedbackOpen && (
-            <button
-              onClick={() => setFeedbackOpen(true)}
-              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
-            >
-              Bagikan perasaanmu →
-            </button>
-          )}
         </div>
       </div>
     </>

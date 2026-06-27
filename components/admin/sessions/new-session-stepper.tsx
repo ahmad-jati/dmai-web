@@ -677,9 +677,18 @@ export function NewSessionStepper() {
                 }
               }
 
-              // Strip runtime-only File/preview fields before persisting to DB
+              // Strip all runtime-only fields (File objects, blob preview URLs) before persisting to DB.
+              // We explicitly strip then also filter out any remaining blob: URLs as a safety net.
               const { audio_file: _af, image_file: _if, audio_preview: _ap, image_preview: _ip, ...rest } = sub
-              return { ...rest, audio_url: audioUrl, image_url: imageUrl }
+              const cleanSub: Record<string, unknown> = { ...rest, audio_url: audioUrl, image_url: imageUrl }
+              // Belt-and-suspenders: remove any value that is still a blob: URL or a File
+              for (const k of Object.keys(cleanSub)) {
+                const v = cleanSub[k]
+                if (v instanceof File || (typeof v === 'string' && v.startsWith('blob:'))) {
+                  delete cleanSub[k]
+                }
+              }
+              return cleanSub
             })
           )
 

@@ -56,16 +56,15 @@ export function newKey(): string {
 function formatDurSec(sec: number): string {
   const m = Math.floor(sec / 60)
   const s = sec % 60
-  if (m === 0) return `${s}d`
+  if (m === 0) return `${s}s`
   if (s === 0) return `${m}m`
-  return `${m}m ${s}d`
+  return `${m}m ${s}s`
 }
 
 const FORM_QUESTION_TYPES: { value: FormQuestionType; label: string; icon: ReactNode }[] = [
   { value: 'emoji_scale', label: 'Skala Emoji', icon: <SmileyIcon className="w-3.5 h-3.5" /> },
-  { value: 'slider', label: 'Slider (1–100)', icon: <SlidersIcon className="w-3.5 h-3.5" /> },
+  { value: 'slider', label: 'Slider (1-100)', icon: <SlidersIcon className="w-3.5 h-3.5" /> },
   { value: 'text_input', label: 'Input Teks', icon: <TextTIcon className="w-3.5 h-3.5" /> },
-  { value: 'textarea', label: 'Textarea', icon: <ListChecksIcon className="w-3.5 h-3.5" /> },
 ]
 
 // ─── Duration input (string-based so it can be cleared) ────────────────────────
@@ -166,12 +165,12 @@ function NarrationSubStepCard({ sub, index, total, onChange, onRemove }: Narrati
   }
 
   return (
-    <div className="flex flex-col gap-3 p-3 bg-muted/30 border border-border rounded-sm">
+    <div className="flex flex-col gap-3 p-3 bg-muted/20 border border-border rounded-sm">
       {/* Sub-step header */}
       <div className="flex items-center gap-2">
         <div className="w-5 h-5 rounded-full bg-blue-100 border border-blue-300 text-blue-700 text-xs font-bold flex items-center justify-center shrink-0">
           {index + 1}
-        </div>
+        </div> 
         <span className="text-xs text-muted-foreground font-medium">Sub-step narasi</span>
         <div className="flex-1" />
         {sub.duration_seconds > 0 && (
@@ -189,89 +188,94 @@ function NarrationSubStepCard({ sub, index, total, onChange, onRemove }: Narrati
         )}
       </div>
 
-      {/* Title */}
-      <div className="flex flex-col gap-1.5">
-        <Label className="text-xs">Nama Step Suara</Label>
-        <Input
-          value={sub.title}
-          onChange={(e) => onChange({ ...sub, title: e.target.value })}
-          placeholder="e.g. Pernapasan Dalam"
-          className="h-8 text-sm"
-        />
-      </div>
+      <div className="flex gap-6">
+        {/* Audio + Image row */}
+        <div className="flex flex-col gap-3 items-start flex-1">
+          {/* Title */}
+          <div className="flex flex-col gap-1.5 w-full">
+            <Label className="text-xs">Nama Step Suara</Label>
+            <Input
+              value={sub.title}
+              onChange={(e) => onChange({ ...sub, title: e.target.value })}
+              placeholder="e.g. Pernapasan Dalam"
+              className="h-8 text-sm"
+            />
+          </div>
 
-      {/* Description */}
-      <div className="flex flex-col gap-1.5">
-        <Label className="text-xs">Deskripsi</Label>
-        <Textarea
-          value={sub.description}
-          onChange={(e) => onChange({ ...sub, description: e.target.value })}
-          placeholder="Deskripsi singkat panduan ini..."
-          rows={2}
-          className="resize-none text-sm"
-        />
-      </div>
+          {/* Description */}
+          <div className="flex flex-col gap-1.5 w-full">
+            <Label className="text-xs">Deskripsi</Label>
+            <Textarea
+              value={sub.description}
+              onChange={(e) => onChange({ ...sub, description: e.target.value })}
+              placeholder="Deskripsi singkat panduan ini..."
+              rows={2}
+              className="resize-none text-sm"
+            />
+          </div>
 
-      {/* Audio + Image row */}
-      <div className="flex gap-3 items-start">
-        {/* Audio */}
-        <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-          <Label className="text-xs flex items-center gap-1">
-            <SpeakerHighIcon className="w-3.5 h-3.5" /> Audio Panduan
-          </Label>
-          {/* Show playback: prefer local preview blob, fallback to stored URL */}
-          {(sub.audio_preview || sub.audio_url) && (
-            <audio controls src={sub.audio_preview || sub.audio_url} className="w-full h-8" />
-          )}
-          {sub.audio_file && (
-            <p className="text-xs text-muted-foreground truncate">{sub.audio_file.name}</p>
-          )}
-          {sub.duration_seconds > 0 && (
-            <p className="text-xs text-blue-600">Durasi: {formatDurSec(sub.duration_seconds)}</p>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => audioRef.current?.click()}
-            className="w-fit h-7 text-xs px-2 rounded-sm bg-background hover:bg-lemon gap-1.5"
-          >
-            <SpeakerHighIcon className="w-3.5 h-3.5" />
-            {sub.audio_url || sub.audio_file ? 'Ganti Audio' : 'Upload Audio'}
-          </Button>
-          <input ref={audioRef} type="file" accept="audio/*" className="hidden" onChange={handleAudio} />
+          {/* Audio */}
+          <div className="flex flex-col gap-1.5 w-full">
+            <Label className="text-xs flex items-center gap-1">
+              <SpeakerHighIcon className="w-3.5 h-3.5" /> Audio Panduan
+            </Label>
+            {/* Show playback: prefer local preview blob, fallback to stored URL */}
+            {(sub.audio_preview || sub.audio_url) && (
+              <audio controls src={sub.audio_preview || sub.audio_url} className="w-full h-8" />
+            )}
+            {sub.audio_file && (
+              <p className="text-xs text-muted-foreground truncate">{sub.audio_file.name}</p>
+            )}
+            {sub.duration_seconds > 0 && (
+              <p className="text-xs text-blue-600">Durasi: {formatDurSec(sub.duration_seconds)}</p>
+            )}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => audioRef.current?.click()}
+              className="w-fit h-7 text-xs px-2 rounded-sm  gap-1.5"
+            >
+              <SpeakerHighIcon className="w-3.5 h-3.5" />
+              {sub.audio_url || sub.audio_file ? 'Ganti Audio' : 'Upload Audio'}
+            </Button>
+            <input ref={audioRef} type="file" accept="audio/*" className="hidden" onChange={handleAudio} />
+          </div>
+
         </div>
-
         {/* Image */}
-        <div className="flex flex-col gap-1.5 items-start shrink-0">
+        <div className="flex flex-col gap-1.5 items-start shrink-0 w-40">
           <Label className="text-xs flex items-center gap-1">
-            <ImageIcon className="w-3.5 h-3.5" /> Gambar
+            Gambar
           </Label>
           {/* Show preview: prefer local preview blob, fallback to stored URL */}
           {(sub.image_preview || sub.image_url) ? (
-            <Image
-              src={sub.image_preview || sub.image_url}
-              alt="preview"
-              width={56}
-              height={56}
-              className="w-14 h-14 object-cover border border-border rounded-sm bg-muted/50"
-              unoptimized
-            />
+            <div className="w-40 max-h-50">
+              <Image
+                src={sub.image_preview || sub.image_url}
+                alt="preview"
+                width={56}
+                height={56}
+                className="w-full h-full object-cover border border-border rounded-sm bg-muted/30"
+                unoptimized
+              />
+            </div> 
           ) : (
-            <div className="w-14 h-14 bg-muted border border-border rounded-sm flex items-center justify-center">
-              <ImageIcon className="w-4 h-4 text-muted-foreground/40" />
+            <div className="w-full h-30 bg-muted/30 border border-border rounded-sm flex items-center justify-center">
+              <ImageIcon className="w-10 h-10 text-muted-foreground/40" />
             </div>
           )}
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             onClick={() => imageRef.current?.click()}
-            className="w-fit h-7 text-xs px-2 rounded-sm bg-background hover:bg-lemon gap-1.5"
+            className="w-fit h-7 text-xs px-2 rounded-sm gap-1.5 mt-1"
           >
             {sub.image_url || sub.image_preview ? 'Ganti' : 'Upload'}
           </Button>
           <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
         </div>
       </div>
+        
     </div>
   )
 }
@@ -336,7 +340,7 @@ function NarrationStepConfig({ config, onChange, onTotalDurationChange }: Narrat
     commit(subSteps.map((s) => (s._key === key ? updated : s)))
 
   return (
-    <div className="flex flex-col gap-3 pt-3 border-t border-border">
+    <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
@@ -349,13 +353,6 @@ function NarrationStepConfig({ config, onChange, onTotalDurationChange }: Narrat
             </span>
           )}
         </div>
-        <button
-          onClick={addSub}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <PlusIcon className="w-3.5 h-3.5" />
-          Tambah sub-step
-        </button>
       </div>
 
       {subSteps.length === 0 && (
@@ -375,6 +372,17 @@ function NarrationStepConfig({ config, onChange, onTotalDurationChange }: Narrat
             onRemove={() => removeSub(sub._key)}
           />
         ))}
+      </div>
+
+      <div>
+        <Button
+        onClick={addSub}
+        size={'sm'}
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <PlusIcon className="w-3.5 h-3.5" />
+        Tambah sub-step
+      </Button>
       </div>
     </div>
   )
@@ -410,7 +418,7 @@ function FormStepConfig({ config, onChange }: FormStepConfigProps) {
     commit(questions.map((q) => (q._key === key ? { ...q, ...patch } : q)))
 
   return (
-    <div className="flex flex-col gap-3 pt-3 border-t border-border">
+    <div className="flex flex-col gap-3 ">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           Pertanyaan Form
@@ -427,7 +435,7 @@ function FormStepConfig({ config, onChange }: FormStepConfigProps) {
         {questions.map((q, i) => (
           <div
             key={q._key}
-            className="flex items-start gap-2 p-3 bg-muted/40 border border-border rounded-sm"
+            className="flex items-start gap-2 p-3 bg-muted/20 border border-border rounded-sm"
           >
             <span className="text-xs text-muted-foreground font-semibold mt-2 w-4 shrink-0">
               {i + 1}.
@@ -447,10 +455,10 @@ function FormStepConfig({ config, onChange }: FormStepConfigProps) {
                       key={t.value}
                       onClick={() => updateQ(q._key, { type: t.value })}
                       className={[
-                        'flex items-center gap-1 px-2 py-1 rounded-sm border text-xs font-medium transition-colors',
+                        'flex items-center gap-1 px-2 py-1 rounded-sm border text-xs font-medium transition-colors border-border',
                         q.type === t.value
-                          ? 'bg-foreground text-background border-foreground'
-                          : 'bg-background text-muted-foreground border-border hover:border-foreground/40',
+                          ? 'bg-lemon text-foreground'
+                          : 'bg-accent text-muted-foreground hover:border-foreground/40',
                       ].join(' ')}
                     >
                       {t.icon}
@@ -473,6 +481,7 @@ function FormStepConfig({ config, onChange }: FormStepConfigProps) {
       <div className='w-full flex items-end'>
         <Button
           onClick={addQ}
+          size={'sm'}
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <PlusIcon className="w-3.5 h-3.5" />
@@ -492,7 +501,7 @@ type VideoStepConfigProps = {
 
 function VideoStepConfig({ config, onChange }: VideoStepConfigProps) {
   return (
-    <div className="flex flex-col gap-3 pt-3 border-t border-border">
+    <div className="flex flex-col gap-3 ">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
         Konfigurasi Video
       </p>
@@ -534,7 +543,7 @@ type BodyMapStepConfigProps = {
 function BodyMapStepConfig({ config, onChange }: BodyMapStepConfigProps) {
 
   return (
-    <div className="flex flex-col gap-3 pt-3 border-t border-border">
+    <div className="flex flex-col gap-3 ">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
         <PersonIcon className="w-4 h-4" />
         Konfigurasi Body Map
@@ -549,41 +558,7 @@ function BodyMapStepConfig({ config, onChange }: BodyMapStepConfigProps) {
         />
         <p className="text-xs text-muted-foreground">Pertanyaan ini akan muncul di atas peta tubuh.</p>
       </div>
-      {/* <div className="flex flex-col gap-2">
-        <p className="text-xs text-muted-foreground font-medium">
-          Bagian tubuh dari tabel{' '}
-          <code className="bg-muted px-1 rounded">body_parts</code>:
-        </p>
-        {bodyPartsLoading ? (
-          <div className="flex gap-1.5 flex-wrap">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-5 w-20 bg-muted animate-pulse rounded-sm" style={{ animationDelay: `${i * 40}ms` }} />
-            ))}
-          </div>
-        ) : regions.length === 0 ? (
-          <p className="text-xs text-destructive italic">Tidak ada data body_parts di database.</p>
-        ) : (
-          <div className="flex flex-col gap-1.5">
-            {regions.map((region) => (
-              <div key={region} className="flex items-start gap-2">
-                <span className="text-xs text-muted-foreground w-24 shrink-0 pt-0.5 capitalize">
-                  {region.replace(/_/g, ' ')}
-                </span>
-                <div className="flex flex-wrap gap-1">
-                  {grouped[region]
-                    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-                    .map((part) => (
-                      <span key={part.id} className="px-1.5 py-0.5 rounded-sm bg-green-50 border border-green-200 text-green-700 text-xs font-medium">
-                        {part.label_id}
-                      </span>
-                    ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground italic">Pilihan ini muncul otomatis di UI pengguna.</p>
-      </div> */}
+     
     </div>
   )
 }
@@ -597,7 +572,7 @@ type ExternalEmbedStepConfigProps = {
 
 function ExternalEmbedStepConfig({ config, onChange }: ExternalEmbedStepConfigProps) {
   return (
-    <div className="flex flex-col gap-3 pt-3 border-t border-border">
+    <div className="flex flex-col gap-3 ">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
         <LinkIcon className="w-4 h-4" />
         Konfigurasi External Embed
@@ -637,8 +612,6 @@ export function StepTypeForm({
   form,
   setForm,
 }: StepTypeFormProps) {
-  const showDescription = !(['video', 'external_embed', 'narration'] as StepType[]).includes(form.step_type)
-
   type StepConfigPatch =
     | Partial<NarrationStepConfigData>
     | Partial<FormStepConfigData>
@@ -652,7 +625,7 @@ export function StepTypeForm({
   return (
     <div className="flex flex-col gap-4">
       {/* ── Type + Title + Duration row ── */}
-      <div className="grid grid-cols-[160px_1fr_140px] gap-3 items-end">
+      <div className="grid grid-cols-4 gap-3 items-start">
         <div className="flex flex-col gap-1.5">
           <Label>Tipe Step</Label>
           <Select
@@ -668,7 +641,6 @@ export function StepTypeForm({
               {(Object.entries(STEP_TYPE_LABELS) as [StepType, string][]).map(([val, label]) => (
                 <SelectItem key={val} value={val}>
                   <span className="flex items-center gap-2">
-                    <span className={`inline-block w-2 h-2 rounded-sm ${STEP_TYPE_COLORS[val].split(' ')[0]}`} />
                     {label}
                   </span>
                 </SelectItem>
@@ -677,7 +649,7 @@ export function StepTypeForm({
           </Select>
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 col-span-2">
           <Label>Nama Step *</Label>
           <Input
             value={form.title}
@@ -711,29 +683,26 @@ export function StepTypeForm({
         )}
       </div>
 
-      {/* ── Description (non-narration, non-video, non-embed) ── */}
-      {showDescription && (
-        <div className="flex flex-col gap-1.5">
-          <Label>Instruksi / Deskripsi</Label>
-          <Textarea
-            value={form.description}
-            onChange={(e) => setForm({ description: e.target.value })}
-            rows={3}
-            className="resize-none text-sm"
-            placeholder={
-              form.step_type === 'game'
-                ? 'Jelaskan cara main game dan tujuannya...'
-                : form.step_type === 'body_map'
-                ? 'Instruksi tambahan sebelum pengguna memilih bagian tubuh...'
-                : form.step_type === 'pre_form'
-                ? 'Instruksi pengisian form awal untuk pengguna...'
-                : form.step_type === 'post_form'
-                ? 'Instruksi pengisian form akhir untuk pengguna...'
-                : ''
-            }
-          />
-        </div>
-      )}
+      <div className="flex flex-col gap-1.5">
+        <Label>Instruksi / Deskripsi</Label>
+        <Textarea
+          value={form.description}
+          onChange={(e) => setForm({ description: e.target.value })}
+          rows={3}
+          className="resize-none text-sm"
+          placeholder={
+            form.step_type === 'game'
+              ? 'Jelaskan cara main game dan tujuannya...'
+              : form.step_type === 'body_map'
+              ? 'Instruksi tambahan sebelum pengguna memilih bagian tubuh...'
+              : form.step_type === 'pre_form'
+              ? 'Instruksi pengisian form awal untuk pengguna...'
+              : form.step_type === 'post_form'
+              ? 'Instruksi pengisian form akhir untuk pengguna...'
+              : ''
+          }
+        />
+      </div>
 
       {/* ── Type-specific config ── */}
       {form.step_type === 'narration' && (

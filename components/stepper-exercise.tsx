@@ -63,6 +63,7 @@ function isNarrationStep(type: StepType) {
 }
 
 function parseConfig(config: unknown): Record<string, unknown> {
+  console.log(config)
   if (!config) return {}
   if (typeof config === 'string') {
     try { return JSON.parse(config) } catch { return {} }
@@ -811,12 +812,13 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
   const NonNarrationContent = () => {
     const config = parseConfig(step.step_config)
+    console.log(config)
     switch (step.step_type) {
       case 'video':
         return (
           <StepVideo
             youtubeUrl={(config.youtube_url as string) ?? ''}
-            youtubeKredit={(config.youtubeKredit as string) ?? ''}
+            youtubeKredit={(config.credit as string) ?? ''}
             onNext={goNext}
             onPrev={showPrev ? goPrev : undefined}
           />

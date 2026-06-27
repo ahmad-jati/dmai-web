@@ -87,7 +87,9 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
         )}
       </div>
 
-      <p className="text-sm/4.5 font-medium text-center max-w-2xl">Source: {youtubeKredit}</p>
+      { youtubeKredit && (
+        <p className="text-sm/4.5 text-muted-foreground font-medium text-center max-w-2xl">Source: {youtubeKredit}</p>
+      )}
 
       <div className="flex items-center gap-3">
         {onPrev && (
