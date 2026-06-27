@@ -867,7 +867,13 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           />
         )
       case 'game':
-        return <StepGame onNext={goNext} onPrev={showPrev ? goPrev : undefined} />
+        return (
+          <StepGame 
+            onNext={goNext} 
+            onPrev={showPrev ? goPrev : undefined} 
+            duration={step.duration_seconds ?? undefined}
+          />
+        )
       default:
         return null
     }

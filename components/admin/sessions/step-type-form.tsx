@@ -316,6 +316,7 @@ function NarrationStepConfig({ config, onChange, onTotalDurationChange }: Narrat
   const totalDuration = subSteps.reduce((acc, s) => acc + (s.duration_seconds || 0), 0)
 
   const commit = (updated: NarrationSubStep[]) => {
+    console.log('commit dipanggil, sub_steps:', updated)  // ← tambah ini
     setSubSteps(updated)
     onChange({ sub_steps: updated })
     onTotalDurationChange(updated.reduce((acc, s) => acc + (s.duration_seconds || 0), 0))
@@ -619,8 +620,10 @@ export function StepTypeForm({
     | Partial<BodyMapStepConfigData>
     | Partial<ExternalEmbedStepConfigData>
 
-  const updateConfig = (patch: StepConfigPatch) =>
-    setForm({ step_config: { ...form.step_config, ...patch } })
+  const updateConfig = (patch: StepConfigPatch) => {
+  console.log('updateConfig patch:', patch)  // ← tambah ini
+  setForm({ step_config: { ...form.step_config, ...patch } })
+}
 
   return (
     <div className="flex flex-col gap-4">
