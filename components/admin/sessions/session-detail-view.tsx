@@ -348,8 +348,6 @@ export function SessionDetailView({
         title: updated.title,
         description: updated.description,
         duration_seconds: updated.duration_seconds,
-        image_url: updated.image_url ?? '',
-        audio_url: updated.audio_url ?? '',
         step_type: updated.step_type,
         step_config: finalConfig,
       })

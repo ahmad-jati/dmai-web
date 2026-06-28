@@ -81,9 +81,7 @@ export function AddStepDialog({
         description: form.description,
         duration_seconds: form.duration_seconds,
         step_type: form.step_type,
-        step_config: safeConfig,
-        image_url: '',
-        audio_url: '',
+        step_config: safeConfig
       })
       .select()
       .single()

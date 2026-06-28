@@ -181,7 +181,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
   const activeDuration = activeSubStep?.duration_seconds ?? step.duration_seconds
 
-  const activeImage = activeSubStep ? resolveImage(activeSubStep) : (step.image || sessionImageCover)
+  const activeImage = activeSubStep ? resolveImage(activeSubStep) : (sessionImageCover)
 
   const activeTitle = activeSubStep?.title || step.title
   const activeDescription = activeSubStep?.description || step.description
@@ -384,7 +384,9 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
       } catch (err) {
         console.error('[BGM] init error:', err)
       } finally {
-        setTimeout(() => setIsReady(true), 5000)
+        // Delay 2500ms
+        setTimeout(() => setIsReady(true), 2500)
+        // setIsReady(true)
       }
     }
     init()
@@ -419,14 +421,16 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
   // ── 3. Sync play/pause button ───────────────────────────────────────────────
   useEffect(() => {
-    if (!isTimed || !bgmStartedRef.current) return
+    if (!isTimed) return
     if (isPlaying === prevIsPlayingRef.current) return
     prevIsPlayingRef.current = isPlaying
+
     if (!isPlaying) {
-      bgmPause(); pauseNarration()
+      bgmPause()
+      pauseNarration()
     } else {
       if (!isBGMStopped) bgmResume()
-      if (narrationStartedRef.current) resumeNarration()
+      resumeNarration() 
     }
   }, [isPlaying, isTimed, isBGMStopped, bgmPause, bgmResume, pauseNarration, resumeNarration])
 
@@ -434,7 +438,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   useEffect(() => {
     if (!isReady || !isTimed) return
 
-    const audioUrl = activeSubStep?.audio_url || step.audio
+    const audioUrl = activeSubStep?.audio_url
     if (!audioUrl) return
 
     narrationStartedRef.current = true
@@ -551,252 +555,263 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     )
   }
 
+  // ── Step dots (shared by narration and non-narration shells) ─────────────────
+  const StepDots = () => (
+    <div className="sm:flex hidden items-center gap-3 shrink-0">
+      {activeInstructions.map((_, i) => (
+        <button key={i} onClick={() => jumpToStep(i)}
+          className={cn('block h-1 rounded-full transition-all duration-300 cursor-pointer',
+            i === currentStep ? 'w-8 bg-foreground/90' : i < currentStep ? 'w-4 bg-foreground/50' : 'w-4 bg-foreground/20')} />
+      ))}
+    </div>
+  )
+
   // ════════════════════════════════════════════════════════
-  // NARRATION LAYOUT — full bleed image, BGM active
+  // NARRATION LAYOUT — shared shell, immersive image panel
   // ════════════════════════════════════════════════════════
   if (isTimed) {
     return (
       <>
         {/* ── MOBILE narration ── */}
-        <div className="2md:hidden fixed inset-0 z-55 flex 2xs:justify-start justify-center flex-col 2xs:gap-3 gap-6 bg-background p-6 overflow-y-auto">
+        <div className="2md:hidden fixed inset-0 z-55 flex flex-col bg-background p-4 gap-3 overflow-y-auto">
 
-          {/* Top bar: back + BGM */}
-          <div className="flex items-center gap-3 shrink-0">
-            <Button onClick={handleBack} variant="default"
-              className="2xs:rounded-xl xs:rounded-lg rounded-sm [&_svg]:size-4 px-1 py-1.5 xs:h-full h-fit border-muted-foreground">
-              <ArrowLeftIcon weight="bold" />
+          {/* Top bar */}
+          <div className="flex items-center justify-between gap-3 shrink-0">
+            <Button onClick={handleBack} variant="ghost" size="sm"
+              className="[&_svg]:size-4 gap-1.5 rounded-full px-3 text-foreground hover:bg-foreground/10">
+              <ArrowLeftIcon weight="bold" /> Kembali
             </Button>
+            <StepDots />
+            <div className="flex flex-col items-end gap-0.5">
+              <span className="text-xs font-semibold tracking-wide text-muted-foreground">
+                Tahap {currentStep + 1} / {totalSteps}
+              </span>
+              <span className="text-xs font-bold text-foreground">{STEP_TYPE_LABEL[step.step_type]}</span>
+            </div>
+          </div>
+
+          {/* Step title */}
+          {step.title && (
+            <p className="text-base font-semibold text-foreground text-center shrink-0">{step.title}</p>
+          )}
+
+          {/* BGM pill */}
+          <div className="flex justify-center shrink-0">
             <button ref={bgmButtonMobileRef} onClick={() => openMusicTray(bgmButtonMobileRef, true)}
-              className="flex items-center justify-between xs:gap-4 gap-2 flex-1 2xs:rounded-xl rounded-lg bg-background border border-muted-foreground p-3">
-              <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'text-foreground/40' : 'text-foreground')} />
-              <div className="flex flex-col items-start flex-1 gap-1 min-w-0 text-left overflow-hidden">
-                <span className="text-xs/3 font-semibold text-foreground">{bgmLabel}</span>
-                {bgmSublabel && <span className="text-xs/3 font-medium text-muted-foreground">{bgmSublabel}</span>}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-background border border-muted-foreground/40 text-foreground/80 hover:bg-muted/50 transition-all">
+              <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
+              <div className="flex flex-col items-start min-w-0">
+                <span className="text-xs font-semibold leading-tight truncate max-w-36">{bgmLabel}</span>
+                {bgmSublabel && <span className="text-xs leading-tight truncate max-w-36 text-muted-foreground">{bgmSublabel}</span>}
               </div>
-              <CaretDownIcon weight="bold" className={cn('w-3 h-3 shrink-0 text-foreground transition-transform duration-200', showMusicTray && trayMobile && 'rotate-180')} />
+              <CaretDownIcon weight="bold" className={cn('w-3 h-3 shrink-0 transition-transform duration-200', showMusicTray && trayMobile && 'rotate-180')} />
             </button>
           </div>
 
-          {/* Cover image */}
-          <div className="flex justify-center items-center shrink-0 2xs:flex-1 sm:px-16 px-0 min-h-fit bg-amber-50 mt-2 2xs:rounded-3xl rounded-xl">
-            <div className="relative w-full 2xs:h-full h-56 2xs:rounded-3xl rounded-xl overflow-hidden">
-              {activeImage ? (
-                <Image src={activeImage} alt={activeTitle} fill unoptimized priority className="object-cover object-center w-full h-full" />
-              ) : (
-                <div className="w-full h-full bg-muted" />
+          {/* Image panel */}
+          <div className="flex-1 flex flex-col justify-center gap-3 py-1">
+            <div className="relative w-full rounded-2xl overflow-hidden border border-border bg-muted aspect-[16/9]">
+              {activeImage && (
+                <Image src={activeImage} alt={activeTitle} fill unoptimized priority className="object-cover object-center" />
               )}
-              <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
-              <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
-            </div>
-          </div>
+              <div className="absolute inset-0 bg-black/30" />
+              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/70 via-black/30 to-transparent" />
 
-          {/* Step label + title */}
-          <div className="flex flex-col gap-1 text-center pt-1 shrink-0 2xs:h-32 h-40 overflow-y-auto my-2">
-            <span className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">
-              Tahap {currentStep + 1} / {totalSteps}
-            </span>
-            {/* Step title (from step row) */}
-            <p className="text-xs font-bold text-muted-foreground/70">{step.title}</p>
-            <SubStepDots dark={false} />
-            <div className="flex flex-col gap-2 items-center xs:px-6">
-              <p className="sm:text-h2/7 text-lg/5.5 font-semibold text-foreground text-center">{activeTitle}</p>
-              {activeDescription && (
-                <p className="xs:text-p/4.5 text-p/4.5 text-muted-foreground text-center text-pretty">{activeDescription}</p>
+              {/* Sub-step dots */}
+              {hasSubSteps && subSteps.length > 1 && (
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
+                  <SubStepDots dark={true} />
+                </div>
               )}
-            </div>
-          </div>
 
-          {/* Playback controls */}
-          <div className="flex items-center 2xs:justify-between justify-center 2xs:gap-6 gap-3 w-full shrink-0">
-            <Button onClick={() => setIsLooping((l) => !l)} variant="ghost" size="sm"
-              className={cn('[&_svg]:size-5 p-2 text-xs xs:text-sm font-medium',
-                isLooping ? 'text-foreground hover:bg-foreground/10' : 'text-muted-foreground hover:bg-foreground/10')}>
-              {isLooping ? <RepeatOnceIcon weight="fill" /> : <RepeatIcon weight="fill" />}
-            </Button>
-
-            <div className="flex-1 flex flex-row 2xs:gap-13 gap-3 justify-center items-center">
-              <Button onClick={goPrev} disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
-                size="sm" variant="default"
-                className="[&_svg]:size-5 flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground rounded-full bg-transparent hover:bg-foreground/10 border-none disabled:cursor-not-allowed 2xs:w-fit w-6">
-                <ArrowLeftIcon weight="bold" />
-                <span className="2xs:inline hidden">Sebelumnya</span>
-              </Button>
+              {/* Timer */}
+              <p className="absolute top-3 right-3 z-10 text-xs font-medium tabular-nums">
+                <span className="text-white/90 font-semibold">{displayMins}:{displaySecs}</span>
+                <span className="mx-1 text-white/40">/</span>
+                <span className="text-white/60">{totalTime}</span>
+              </p>
 
               {/* Progress ring */}
-              <div className="relative w-18 h-18 shrink-0 flex items-center justify-center">
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" aria-hidden="true">
-                  <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(94, 94, 94, 0.2)" strokeWidth="3" />
-                  <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(94, 94, 94)" strokeOpacity="0.75" strokeWidth="3"
-                    strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
-                    transform="rotate(-90 50 50)" style={{ transition: 'stroke-dashoffset 1s linear' }} />
-                </svg>
-                <button onClick={() => setIsPlaying((p) => !p)}
-                  className="relative z-10 w-12 h-12 rounded-full flex items-center justify-center bg-background text-muted-foreground transition-all hover:cursor-pointer hover:scale-105 active:scale-95">
-                  {isPlaying ? <PauseIcon weight="fill" className="w-6 h-6" /> : <PlayIcon weight="fill" className="w-6 h-6" />}
-                </button>
-              </div>
-
-              <Button onClick={goNext} variant="default" size="sm"
-                className="[&_svg]:size-5 flex items-center justify-center gap-1.5 sm:px-3 px-2 py-2 text-xs xs:text-sm text-muted-foreground rounded-full bg-transparent border-none hover:bg-foreground/10 2xs:w-fit w-6">
-                <span className="2xs:inline hidden">Berikutnya</span>
-                <ArrowRightIcon weight="bold" />
-              </Button>
-            </div>
-
-            <Button onClick={() => setIsMuted((m) => !m)} size="sm" variant="ghost"
-              className={cn('[&_svg]:size-5 p-2 text-xs xs:text-sm font-medium',
-                isMuted ? 'text-foreground hover:bg-foreground/10' : 'text-muted-foreground hover:bg-foreground/10')}>
-              {isMuted ? <SpeakerSlashIcon weight="fill" /> : <SpeakerHighIcon weight="fill" />}
-            </Button>
-          </div>
-
-          {/* Timer */}
-          <p className="xs:text-sm text-xs text-center font-medium text-muted-foreground/60 shrink-0">
-            <span className="text-foreground/80 font-medium">{displayMins}:{displaySecs}</span>
-            <span className="mx-1 text-muted-foreground/30">/</span>
-            <span>{totalTime}</span>
-          </p>
-
-          <p className="xs:text-p text-sm text-muted-foreground/40 text-center font-semibold">DMAI - {sessionName} Session</p>
-        </div>
-
-        {/* ── DESKTOP narration ── */}
-        <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-transparent">
-          <div className="flex flex-col  items-center w-full rounded-4xl relative overflow-y-auto flex-1">
-
-            {/* Background image */}
-            <div className="absolute inset-0 z-0">
-              {activeImage ? (
-                <Image src={activeImage} alt={activeTitle} fill unoptimized priority className="object-cover object-center rounded-4xl" />
-              ) : (
-                <div className="absolute inset-0 bg-muted rounded-4xl" />
-              )}
-              <div className="absolute inset-0 rounded-4xl bg-black/25" />
-              <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/50 to-transparent rounded-t-4xl" />
-              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/80 via-black/50 to-transparent rounded-b-4xl" />
-            </div>
-
-            <div className="relative z-10 flex flex-col items-center justify-between h-full w-full py-8 px-6">
-
-              {/* Top bar */}
-              <div className="flex items-center justify-between w-full gap-4">
-                <div className="flex-1 flex justify-start">
-                  <Button onClick={handleBack} variant="link"
-                    className="flex items-center justify-center text-background dark:text-foreground">
-                    <ArrowLeftIcon weight="bold" className="w-4 h-4" /> Kembali
-                  </Button>
-                </div>
-
-                {/* Step dots */}
-                <div className="flex flex-col items-center gap-3">
-                  <span className="text-xs text-background/80 font-semibold tracking-[0.2em] uppercase">
-                    Tahap {currentStep + 1} / {totalSteps} · {step.title && (
-                      <span className="text-xs text-background/60 font-semibold">{step.title}</span>
-                    )}
-                  </span>
-                  <div className='flex items-center gap-3'>
-                    {activeInstructions.map((_, i) => (
-                      <button key={i} onClick={() => jumpToStep(i)}
-                        className="flex flex-col items-center gap-1 group transition-all duration-200 ease-out cursor-pointer">
-                        <span className={cn('block h-1 rounded-full transition-all duration-300',
-                          i === currentStep ? 'w-8 bg-background/90' : i < currentStep ? 'w-4 bg-background/55' : 'w-4 bg-background/30')} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* BGM pill */}
-                <div className="flex-1 flex justify-end">
-                  <button ref={bgmButtonRef} onClick={() => openMusicTray(bgmButtonRef, false)}
-                    className="flex items-center gap-3 px-4 py-2 2md:rounded-2xl rounded-lg bg-background/90 dark:bg-foreground/90 text-foreground/80 dark:text-background/80 hover:bg-popover/90 border border-foreground hover:cursor-pointer transition-all duration-150 ease-out w-60">
-                    <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
-                    <div className="flex flex-1 flex-col min-w-0 text-left">
-                      <span className="text-xs font-semibold leading-tight truncate max-w-42">{bgmLabel}</span>
-                      {bgmSublabel && <span className="text-xs leading-tight truncate max-w-42 font-medium">{bgmSublabel}</span>}
-                    </div>
-                    <CaretDownIcon weight="bold" className={cn('w-4 h-4 shrink-0 transition-transform duration-200', showMusicTray && !trayMobile && 'rotate-180')} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Middle */}
-              <div className="flex flex-1 flex-col justify-center items-center gap-4 text-center">
-                
-                {/* <SubStepDots dark={true} /> */}
-
-                <p className="xs:text-p/5 text-sm/4 tracking-wide font-medium -mt-2">
-                  <span className="text-white/90">{displayMins}:{displaySecs}</span>
-                  <span className="text-white/30 mx-1">/</span>
-                  <span className="text-white/50">{totalTime}</span>
-                </p>
-
-                {/* Progress ring */}
-                <div className="relative w-28 h-28 flex items-center justify-center">
+              <div className="absolute inset-0 z-10 flex items-center justify-center">
+                <div className="relative w-16 h-16 flex items-center justify-center">
                   <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" aria-hidden="true">
-                    <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2.5" />
-                    <circle cx="50" cy="50" r="44" fill="none" stroke="white" strokeOpacity="0.85" strokeWidth="2.5"
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="3" />
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="white" strokeOpacity="0.85" strokeWidth="3"
                       strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
                       transform="rotate(-90 50 50)" style={{ transition: 'stroke-dashoffset 1s linear' }} />
                   </svg>
                   <button onClick={() => setIsPlaying((p) => !p)}
-                    className="relative z-10 w-17.5 h-17.5 rounded-full flex items-center justify-center bg-background dark:bg-foreground text-muted-foreground dark:text-background transition-all hover:cursor-pointer hover:scale-105 active:scale-95">
-                    {isPlaying ? <PauseIcon weight="fill" className="w-7 h-7" /> : <PlayIcon weight="fill" className="w-7 h-7" />}
+                    className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center bg-background dark:bg-foreground text-muted-foreground dark:text-background transition-all hover:cursor-pointer hover:scale-105 active:scale-95">
+                    {isPlaying ? <PauseIcon weight="fill" className="w-4 h-4" /> : <PlayIcon weight="fill" className="w-4 h-4" />}
                   </button>
-                </div>
-
-                <span className="text-xs text-background/80 font-semibold tracking-[0.2em] uppercase">
-                  Langkah {currentSubStep + 1 } / {subSteps.length} 
-                </span>
-
-                {/* Sub-step title + description */}
-                <div className="flex flex-col gap-1 text-center pt-1 shrink-0 max-w-xl sm:max-w-lg h-auto max-h-30 min-h-12  overflow-y-auto justify-start">
-                  <div className="flex flex-col gap-2 items-center xs:px-6">
-                    <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-background dark:text-foreground text-center">{activeTitle}</p>
-                    {activeDescription && (
-                      <p className="xs:text-p/5 text-sm/4 text-background dark:text-foreground text-center">{activeDescription}</p>
-                    )}
-                  </div>
                 </div>
               </div>
 
-              {/* Bottom controls */}
-              <div className="flex flex-col items-center gap-3.5 px-3">
-                <div className="flex items-center justify-center gap-2 bg-background/90 dark:bg-foreground/90 rounded-full px-2 py-1.5 w-full">
+              {/* Title + description */}
+              <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-3 flex flex-col gap-0.5 text-center items-center">
+                <p className="text-base/5.5 font-semibold text-white drop-shadow">{activeTitle}</p>
+                {activeDescription && (
+                  <p className="text-xs/4 text-white/75 text-center text-pretty line-clamp-2">{activeDescription}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Control bar */}
+            <div className="flex items-center justify-center gap-1 bg-muted/50 border border-border rounded-full px-2 py-1.5 flex-wrap">
+              <Button onClick={goPrev} disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
+                size="sm" variant="ghost"
+                className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground disabled:opacity-30 disabled:cursor-not-allowed font-medium rounded-full hover:bg-foreground/10">
+                <ArrowLeftIcon weight="bold" /> Sebelumnya
+              </Button>
+              <Button onClick={() => setIsLooping((l) => !l)} variant="ghost" size="sm"
+                className={cn('[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full',
+                  isLooping ? 'text-foreground border border-border bg-foreground/8' : 'text-muted-foreground hover:bg-foreground/10')}>
+                {isLooping ? <RepeatOnceIcon weight="fill" /> : <RepeatIcon weight="fill" />}
+                Ulangi
+              </Button>
+              <Button onClick={() => setIsMuted((m) => !m)} size="sm" variant="ghost"
+                className={cn('[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full',
+                  isMuted ? 'text-foreground border border-border bg-foreground/8' : 'text-muted-foreground hover:bg-foreground/10')}>
+                {isMuted ? <SpeakerSlashIcon weight="fill" /> : <SpeakerHighIcon weight="fill" />}
+                {isMuted ? 'Bisu' : 'Narasi'}
+              </Button>
+              {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
+                <Button onClick={goNext} size="sm" variant="ghost"
+                  className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-foreground font-medium rounded-full bg-lemon hover:bg-lemon/80 dark:bg-primary dark:text-background">
+                  Selesai <CheckIcon weight="bold" />
+                </Button>
+              ) : (
+                <Button onClick={goNext} size="sm" variant="ghost"
+                  className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground font-medium rounded-full hover:bg-foreground/10">
+                  Berikutnya <ArrowRightIcon weight="bold" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground/40 text-center font-semibold shrink-0">DMAI - {sessionName} Session</p>
+        </div>
+
+        {/* ── DESKTOP narration — two-column layout ── */}
+        <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-muted/30">
+          <div className="flex flex-col w-full rounded-4xl bg-background border border-border flex-1 overflow-hidden">
+
+            {/* Top bar */}
+            <div className="flex items-center justify-between w-full gap-4 px-8 pt-8 pb-6 shrink-0">
+              <Button onClick={handleBack} variant="ghost" size="sm"
+                className="[&_svg]:size-4 gap-1.5 rounded-full px-3 text-foreground hover:bg-foreground/10">
+                <ArrowLeftIcon weight="bold" /> Kembali
+              </Button>
+              <div className="flex flex-col items-center justify-center gap-2.5 flex-1">
+                <span className="text-xs font-semibold tracking-wide text-muted-foreground">
+                  Tahap {currentStep + 1} / {totalSteps} · {STEP_TYPE_LABEL[step.step_type]}
+                </span>
+                <StepDots />
+              </div>
+              {/* BGM pill */}
+              <button ref={bgmButtonRef} onClick={() => openMusicTray(bgmButtonRef, false)}
+                className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-muted/50 text-foreground/80 hover:bg-muted border border-border hover:cursor-pointer transition-all duration-150 ease-out w-52 shrink-0">
+                <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
+                <div className="flex flex-1 flex-col min-w-0 text-left">
+                  <span className="text-xs font-semibold leading-tight truncate">{bgmLabel}</span>
+                  {bgmSublabel && <span className="text-xs leading-tight truncate font-medium text-muted-foreground">{bgmSublabel}</span>}
+                </div>
+                <CaretDownIcon weight="bold" className={cn('w-4 h-4 shrink-0 transition-transform duration-200', showMusicTray && !trayMobile && 'rotate-180')} />
+              </button>
+            </div>
+
+            {/* Two-column body */}
+            <div className="flex flex-1 gap-0 overflow-hidden">
+
+              {/* Left — image */}
+              <div className="flex-1 relative overflow-hidden rounded-bl-4xl">
+                {activeImage && (
+                  <Image src={activeImage} alt={activeTitle} fill unoptimized priority className="object-cover object-center" />
+                )}
+                {!activeImage && <div className="absolute inset-0 bg-muted" />}
+                <div className="absolute inset-0 bg-black/20" />
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/60 to-transparent" />
+
+                {/* Sub-step dots on image */}
+                {hasSubSteps && subSteps.length > 1 && (
+                  <div className="absolute top-5 left-1/2 -translate-x-1/2 z-10">
+                    <SubStepDots dark={true} />
+                  </div>
+                )}
+
+                {/* Title + description pinned to bottom of image */}
+                <div className="absolute inset-x-0 bottom-0 z-10 px-8 pb-8 flex flex-col gap-1">
+                  <p className="sm:text-h2/7 text-xl/6 font-semibold text-white drop-shadow">{activeTitle}</p>
+                  {activeDescription && (
+                    <p className="text-sm/5 text-white/75 text-pretty">{activeDescription}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Right — controls panel */}
+              <div className="w-72 shrink-0 flex flex-col justify-between gap-6 px-8 pb-8 pt-2">
+
+                {/* Progress ring + timer */}
+                <div className="flex flex-col items-center gap-4 flex-1 justify-center">
+                  <div className="relative w-32 h-32 flex items-center justify-center">
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" aria-hidden="true">
+                      <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="3" />
+                      <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeOpacity="0.7" strokeWidth="3"
+                        strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+                        transform="rotate(-90 50 50)" style={{ transition: 'stroke-dashoffset 1s linear' }} />
+                    </svg>
+                    <button onClick={() => setIsPlaying((p) => !p)}
+                      className="relative z-10 w-18 h-18 rounded-full flex items-center justify-center bg-foreground text-background transition-all hover:cursor-pointer hover:scale-105 active:scale-95">
+                      {isPlaying ? <PauseIcon weight="fill" className="w-7 h-7" /> : <PlayIcon weight="fill" className="w-7 h-7" />}
+                    </button>
+                  </div>
+
+                  <p className="text-sm font-medium tabular-nums text-center">
+                    <span className="text-foreground font-semibold">{displayMins}:{displaySecs}</span>
+                    <span className="mx-1.5 text-muted-foreground/40">/</span>
+                    <span className="text-muted-foreground">{totalTime}</span>
+                  </p>
+                </div>
+
+                {/* Action buttons — stacked vertically */}
+                <div className="flex flex-col gap-2">
                   <Button onClick={goPrev} disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
-                    size="sm" variant="ghost"
-                    className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground dark:text-background disabled:opacity-30 disabled:cursor-not-allowed font-medium rounded-full bg-transparent hover:bg-foreground/10 hover:dark:bg-background/10">
+                    variant="ghost" size="sm"
+                    className="[&_svg]:size-3.5 justify-start gap-2 px-3 py-2 text-sm text-muted-foreground disabled:opacity-30 disabled:cursor-not-allowed font-medium rounded-xl hover:bg-foreground/8 w-full">
                     <ArrowLeftIcon weight="bold" /> Sebelumnya
                   </Button>
 
                   <Button onClick={() => setIsLooping((l) => !l)} variant="ghost" size="sm"
-                    className={cn('[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full bg-transparent',
-                      isLooping ? 'text-muted-foreground dark:text-background border border-muted-foreground bg-foreground/10' : 'text-muted-foreground dark:text-background hover:bg-foreground/10 hover:dark:bg-background/10')}>
+                    className={cn('[&_svg]:size-3.5 justify-start gap-2 px-3 py-2 text-sm font-medium rounded-xl w-full',
+                      isLooping ? 'text-foreground bg-foreground/8 hover:bg-foreground/12' : 'text-muted-foreground hover:bg-foreground/8')}>
                     {isLooping ? <RepeatOnceIcon weight="fill" /> : <RepeatIcon weight="fill" />}
-                    Ulangi
+                    Ulangi langkah ini
                   </Button>
 
-                  <Button onClick={() => setIsMuted((m) => !m)} size="sm" variant="ghost"
-                    className={cn('[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full bg-transparent',
-                      isMuted ? 'text-muted-foreground dark:text-background border border-muted-foreground bg-foreground/10' : 'text-muted-foreground dark:text-background hover:bg-foreground/10 hover:dark:bg-background/10')}>
+                  <Button onClick={() => setIsMuted((m) => !m)} variant="ghost" size="sm"
+                    className={cn('[&_svg]:size-3.5 justify-start gap-2 px-3 py-2 text-sm font-medium rounded-xl w-full',
+                      isMuted ? 'text-foreground bg-foreground/8 hover:bg-foreground/12' : 'text-muted-foreground hover:bg-foreground/8')}>
                     {isMuted ? <SpeakerSlashIcon weight="fill" /> : <SpeakerHighIcon weight="fill" />}
-                    {isMuted ? 'Tanpa Instruksi Suara' : 'Dengan Instruksi Suara'}
+                    {isMuted ? 'Tanpa narasi' : 'Dengan narasi'}
                   </Button>
+
+                  <div className="h-px bg-border my-1" />
 
                   {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
-                    <Button onClick={goNext} variant="ghost" size="sm"
-                      className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground dark:text-background font-medium rounded-full bg-transparent hover:bg-foreground/10 hover:dark:bg-background/10">
+                    <Button onClick={goNext} size="sm"
+                      className="[&_svg]:size-3.5 gap-2 px-3 py-2 text-sm font-medium rounded-xl w-full bg-lemon hover:bg-lemon/80 dark:bg-primary text-foreground dark:text-background">
                       Selesai <CheckIcon weight="bold" />
                     </Button>
                   ) : (
-                    <Button onClick={goNext} variant="ghost" size="sm"
-                      className="[&_svg]:size-3.5 flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground dark:text-background font-medium rounded-full bg-transparent hover:bg-foreground/10 hover:dark:bg-background/10">
+                    <Button onClick={goNext} size="sm" variant="ghost"
+                      className="[&_svg]:size-3.5 justify-start gap-2 px-3 py-2 text-sm text-muted-foreground font-medium rounded-xl hover:bg-foreground/8 w-full">
                       Berikutnya <ArrowRightIcon weight="bold" />
                     </Button>
                   )}
                 </div>
-                <p className="lg:text-p text-sm text-white/40 text-center font-semibold">DMAI - {sessionName} Session</p>
-              </div>
 
+                <p className="text-xs text-muted-foreground/40 font-semibold text-center">DMAI - {sessionName} Session</p>
+              </div>
             </div>
           </div>
         </div>
@@ -867,22 +882,17 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           />
         )
       case 'game':
-        return <StepGame onNext={goNext} onPrev={showPrev ? goPrev : undefined} />
+        return (
+          <StepGame 
+            onNext={goNext} 
+            onPrev={showPrev ? goPrev : undefined} 
+            duration={step.duration_seconds ?? undefined}
+          />
+        )
       default:
         return null
     }
   }
-
-  // Step dots for non-narration
-  const StepDots = () => (
-    <div className="sm:flex hidden items-center gap-3 shrink-0">
-      {activeInstructions.map((_, i) => (
-        <button key={i} onClick={() => jumpToStep(i)}
-          className={cn('block h-1 rounded-full transition-all duration-300 cursor-pointer',
-            i === currentStep ? 'w-8 bg-foreground/90' : i < currentStep ? 'w-4 bg-foreground/50' : 'w-4 bg-foreground/20')} />
-      ))}
-    </div>
-  )
 
   return (
     <>
