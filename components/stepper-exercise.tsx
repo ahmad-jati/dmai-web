@@ -181,7 +181,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
   const activeDuration = activeSubStep?.duration_seconds ?? step.duration_seconds
 
-  const activeImage = activeSubStep ? resolveImage(activeSubStep) : (step.image || sessionImageCover)
+  const activeImage = activeSubStep ? resolveImage(activeSubStep) : (sessionImageCover)
 
   const activeTitle = activeSubStep?.title || step.title
   const activeDescription = activeSubStep?.description || step.description
@@ -438,7 +438,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   useEffect(() => {
     if (!isReady || !isTimed) return
 
-    const audioUrl = activeSubStep?.audio_url || step.audio
+    const audioUrl = activeSubStep?.audio_url
     if (!audioUrl) return
 
     narrationStartedRef.current = true
