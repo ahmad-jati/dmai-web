@@ -9,8 +9,6 @@ export type SessionInstruction = {
   title: string
   description: string
   duration_seconds: number
-  image: string
-  audio: string
   step_type: StepType
   step_config: Record<string, unknown>
 }
