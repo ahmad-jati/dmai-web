@@ -26,7 +26,7 @@ export function SessionsManager() {
             `id, slug, session_name, detail_short, detail_full, image_cover_url,
              sort_order, week_number, duration, total_instruction, is_locked,
              session_steps (id, step_number, title, description, duration_seconds,
-               image_url, audio_url, step_type, step_config)`
+             step_type, step_config)`
           )
           .order('sort_order', { ascending: true })
           .returns<SessionRaw[]>()

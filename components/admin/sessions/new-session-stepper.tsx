@@ -645,9 +645,7 @@ export function NewSessionStepper() {
               description: descriptionValue,
               duration_seconds: draft.duration_seconds,
               step_type: draft.step_type,
-              step_config: {},
-              image_url: '',
-              audio_url: '',
+              step_config: {}
             })
             .select()
             .single()
@@ -718,9 +716,7 @@ export function NewSessionStepper() {
             description: descriptionValue,
             duration_seconds: draft.duration_seconds,
             step_type: draft.step_type,
-            step_config: cleanConfig,
-            image_url: '',
-            audio_url: '',
+            step_config: cleanConfig
           })
 
         if (stepErr) { console.error('Step insert error:', stepErr); continue }

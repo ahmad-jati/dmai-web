@@ -151,9 +151,8 @@ function CompletionCard({
   const duration = calcDuration(item.started_at, item.completed_at)
 
   return (
-    <button
-      onClick={() => onSelect(item)}
-      className="flex flex-col gap-2 bg-background rounded-xl border border-foreground/15 px-4 py-3 hover:border-foreground/40 hover:shadow-sm transition-all text-left w-full cursor-pointer group"
+    <div
+      className="flex flex-col gap-2 bg-background rounded-xl border border-foreground/15 px-4 py-3 hover:border-foreground/40 hover:shadow-sm transition-all text-left w-full cursor-pointer group" 
     >
       {/* Session name */}
       <p className="font-semibold xs:text-p/5 text-xs/3.5 truncate group-hover:text-foreground/80 transition-colors">
@@ -183,7 +182,7 @@ function CompletionCard({
       <p className="text-2xs text-muted-foreground/60 font-medium group-hover:text-muted-foreground/80 transition-colors">
         Klik untuk lihat detail →
       </p>
-    </button>
+    </div>
   )
 }
 
