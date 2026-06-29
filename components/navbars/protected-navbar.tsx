@@ -96,13 +96,10 @@ export function ProtectedNavbar() {
   };
 
   return (
-    // id="navbar-app" is used by globals.css to hide during exercise fullscreen
     <nav
       id="navbar-app"
       className="fixed top-0 left-0 z-40"
       style={{
-        // Lebar navbar = viewport width dikurangi scrollbar offset
-        // Ini yang bikin navbar tidak shift waktu dropdown buka
         width: "calc(100% - var(--navbar-scrollbar-offset, 0px))",
       }}
     >
