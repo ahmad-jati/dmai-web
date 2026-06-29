@@ -217,8 +217,6 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
         session_id: sessionId,
         session_name: sessionName,
         session_slug: sessionSlug,
-        step_index: currentStep,
-        step_type: step.step_type,
         joined_at: new Date().toISOString(),
       }
     : null

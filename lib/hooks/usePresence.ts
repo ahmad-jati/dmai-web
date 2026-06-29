@@ -4,9 +4,7 @@ import { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
-// ─── Types ──────────────────────────────────────────────────────────────────────
-
-export type PresenceStatus = 'browsing' | 'in_session'
+export type PresenceStatus = 'active' | 'in_session'
 
 export type PresencePayload = {
   user_id: string
@@ -15,114 +13,95 @@ export type PresencePayload = {
   session_id?: string
   session_name?: string
   session_slug?: string
-  step_index?: number
-  step_type?: string
   joined_at: string
 }
 
-// ─── Hook ───────────────────────────────────────────────────────────────────────
+// Singleton channel — one per tab, shared between PresenceTracker and StepperExercise
+let globalChannel: RealtimeChannel | null = null
+let globalSubscribeStatus: string = ''
 
-/**
- * Tracks the current user's presence on the shared 'dmai:online' channel.
- *
- * Channel is created once on mount and reused for the lifetime of the component.
- * When trackable fields change (status, step, etc), we re-track on the same
- * channel instead of tearing it down — this avoids the CLOSED/reopen loop.
- *
- * joined_at is intentionally excluded from the re-track trigger so that
- * new Date().toISOString() on every render doesn't cause infinite loops.
- */
+function getOrCreateChannel(userId: string): RealtimeChannel {
+  if (globalChannel) return globalChannel
+  const supabase = createClient()
+  globalChannel = supabase.channel('dmai:online', {
+    config: { presence: { key: userId } },
+  })
+  return globalChannel
+}
+
 export function usePresence(payload: PresencePayload | null) {
-  const channelRef = useRef<RealtimeChannel | null>(null)
-  const supabaseRef = useRef(createClient())
   const subscribedRef = useRef(false)
 
-  // ── Mount/unmount: create channel once ───────────────────────────────────────
-  useEffect(() => {
-    if (!payload) return
-
-    const supabase = supabaseRef.current
-    const channel = supabase.channel('dmai:online', {
-      config: { presence: { key: payload.user_id } },
-    })
-
-    channelRef.current = channel
-
-    channel.subscribe((status) => {
-      console.log('[Presence] subscribe status:', status)
-      if (status === 'SUBSCRIBED') {
-        subscribedRef.current = true
-        channel.track(payload).then((result) => {
-          console.log('[Presence] initial track result:', result)
-        })
-      }
-    })
-
-    return () => {
-      subscribedRef.current = false
-      channel.untrack().then(() => {
-        supabase.removeChannel(channel)
-      })
-    }
-  // Only run on mount — payload changes handled by the effect below
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [payload?.user_id])
-
-  // ── Re-track when payload fields change (not joined_at) ──────────────────────
-  // Stringify only the stable fields so new Date() doesn't trigger this
   const stableKey = payload
     ? JSON.stringify({
+        user_id: payload.user_id,
         status: payload.status,
-        session_id: payload.session_id,
-        session_name: payload.session_name,
-        session_slug: payload.session_slug,
-        step_index: payload.step_index,
-        step_type: payload.step_type,
+        session_id: payload.session_id ?? null,
+        session_name: payload.session_name ?? null,
       })
     : null
 
+  // Create channel and subscribe once per user
   useEffect(() => {
-    if (!payload || !channelRef.current || !subscribedRef.current) return
-    channelRef.current.track(payload).then((result) => {
-      console.log('[Presence] re-track result:', result)
-    })
+    if (!payload) return
+
+    const channel = getOrCreateChannel(payload.user_id)
+
+    if (globalSubscribeStatus === '') {
+      globalSubscribeStatus = 'PENDING'
+      channel.subscribe((status) => {
+        globalSubscribeStatus = status
+        if (status === 'SUBSCRIBED') {
+          subscribedRef.current = true
+          channel.track(payload)
+        }
+      })
+    }
+
+    return () => {
+      // Only untrack in_session on unmount (stepper leaving)
+      // The base 'active' tracker in layout stays alive
+      if (payload.status === 'in_session' && subscribedRef.current) {
+        channel.untrack()
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payload?.user_id])
+
+  // Re-track when status or session changes
+  useEffect(() => {
+    if (!payload || !globalChannel || globalSubscribeStatus !== 'SUBSCRIBED') return
+    globalChannel.track(payload)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stableKey])
 }
 
-// ─── Admin subscriber ────────────────────────────────────────────────────────────
-
-/**
- * Subscribes to the presence channel and calls onSync whenever the state changes.
- * Used by the admin panel — does NOT track itself.
- */
 export function usePresenceSubscriber(
   onSync: (users: PresencePayload[]) => void
 ) {
+  const onSyncRef = useRef(onSync)
+  useEffect(() => { onSyncRef.current = onSync }, [onSync])
+
   useEffect(() => {
     const supabase = createClient()
     const channel = supabase.channel('dmai:online')
 
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const raw = channel.presenceState<PresencePayload>()
-        console.log('[PresenceSubscriber] sync raw:', raw)
-        const users = Object.values(raw).map((entries) => entries[entries.length - 1])
-        onSync(users)
-      })
-      .on('presence', { event: 'join' }, ({ newPresences }) => {
-        console.log('[PresenceSubscriber] join:', newPresences)
-      })
-      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
-        console.log('[PresenceSubscriber] leave:', leftPresences)
-      })
-
-    channel.subscribe((status) => {
-      console.log('[PresenceSubscriber] channel status:', status)
-    })
-
-    return () => {
-      supabase.removeChannel(channel)
+    const handleSync = () => {
+      const raw = channel.presenceState<PresencePayload>()
+      const users = Object.values(raw).map((entries) => entries[entries.length - 1])
+      onSyncRef.current(users)
     }
-  }, [onSync])
+
+    channel
+      .on('presence', { event: 'sync' }, handleSync)
+      .on('presence', { event: 'join' }, handleSync)
+      .on('presence', { event: 'leave' }, handleSync)
+      .subscribe((status) => {
+        // On first subscribe, immediately read whatever state is already there
+        // so we don't miss users who joined before this subscriber connected
+        if (status === 'SUBSCRIBED') handleSync()
+      })
+
+    return () => { supabase.removeChannel(channel) }
+  }, [])
 }

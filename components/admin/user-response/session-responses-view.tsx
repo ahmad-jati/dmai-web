@@ -223,19 +223,63 @@ function BodyMapPanel({ bm }: { bm: BodyMapResponse }) {
   )
 }
 
+// ─── Compact Answer Row ──────────────────────────────────────────────────────
+// One question per row instead of a label line + value block — this is what
+// actually keeps the dialog short. Short answers (emoji/slider) sit inline,
+// label left value right; long answers (text/chips) still stack since they
+// don't fit on one line cleanly.
+
+function isInlineAnswer(value: string | number | string[] | null) {
+  if (value === null || value === undefined || value === "") return true
+  if (Array.isArray(value)) return false
+  const num = Number(value)
+  return !isNaN(num) && String(value).trim() !== ""
+}
+
+function CompactAnswerRow({
+  label,
+  value,
+  type,
+  delta,
+}: {
+  label: string
+  value: string | number | string[] | null
+  type?: string
+  delta?: number | null
+}) {
+  if (isInlineAnswer(value)) {
+    return (
+      <div className="flex items-center justify-between gap-3 py-2 border-b border-border/60 last:border-0">
+        <span className="text-xs text-muted-foreground">{label}</span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {renderAnswerValue(value, type)}
+          {delta != null && delta !== 0 && (
+            <span className="text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded-full bg-foreground/8 text-foreground/60">
+              {delta > 0 ? `+${delta}` : delta}
+            </span>
+          )}
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="flex flex-col gap-1 py-2 border-b border-border/60 last:border-0">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      {renderAnswerValue(value, type)}
+    </div>
+  )
+}
+
 // ─── Form Step Panel ─────────────────────────────────────────────────────────
 
 function FormStepPanel({ step }: { step: FormStep }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col">
       {step.answers.length === 0 ? (
-        <p className="text-xs text-muted-foreground italic">Tidak ada response tersimpan.</p>
+        <p className="text-xs text-muted-foreground italic py-1">Tidak ada response tersimpan.</p>
       ) : (
         step.answers.map((ans, ai) => (
-          <div key={ai} className="flex flex-col gap-1">
-            <p className="text-xs font-medium text-foreground/70">{ans.label}</p>
-            {renderAnswerValue(ans.value, ans.type)}
-          </div>
+          <CompactAnswerRow key={ai} label={ans.label} value={ans.value} type={ans.type} />
         ))
       )}
     </div>
@@ -243,8 +287,8 @@ function FormStepPanel({ step }: { step: FormStep }) {
 }
 
 // ─── Response Stepper ────────────────────────────────────────────────────────
-// Renders the journey through a session — pre form, body map, post form — as
-// a single connected timeline instead of separate boxed sections.
+// For anything left over after the pre/post comparison — extra steps, body
+// map. A single leftover item just gets a titled card; 2+ get a timeline.
 
 type StepperNode = {
   title: string
@@ -253,6 +297,16 @@ type StepperNode = {
 
 function ResponseStepper({ nodes }: { nodes: StepperNode[] }) {
   if (nodes.length === 0) return null
+  if (nodes.length === 1) {
+    return (
+      <div className="flex flex-col gap-2.5">
+        <p className="text-sm font-semibold text-foreground">{nodes[0].title}</p>
+        <div className="rounded-xl border border-foreground/15 bg-background p-4">
+          {nodes[0].content}
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="flex flex-col">
       {nodes.map((node, i) => (
@@ -263,8 +317,8 @@ function ResponseStepper({ nodes }: { nodes: StepperNode[] }) {
             </div>
             {i < nodes.length - 1 && <div className="w-px flex-1 bg-border my-1" />}
           </div>
-          <div className={`flex-1 min-w-0 ${i < nodes.length - 1 ? "pb-6" : ""}`}>
-            <p className="text-sm font-semibold text-foreground mb-2.5">{node.title}</p>
+          <div className={`flex-1 min-w-0 ${i < nodes.length - 1 ? "pb-5" : ""}`}>
+            <p className="text-sm font-semibold text-foreground mb-2">{node.title}</p>
             <div className="rounded-xl border border-foreground/15 bg-background p-4">
               {node.content}
             </div>
@@ -275,49 +329,53 @@ function ResponseStepper({ nodes }: { nodes: StepperNode[] }) {
   )
 }
 
-// ─── Pre/Post Comparison Strip ───────────────────────────────────────────────
-// When the same question shows up in both a pre and a post step, surface the
-// before → after change at a glance, above the stepper.
+// ─── Pre/Post Compare — side by side ─────────────────────────────────────────
+// Pre on the left, post on the right, each column labeled. When a question
+// shows up in both with a numeric answer, the post side gets a small delta
+// badge so the change is visible without a separate summary block.
 
-type Answer = { label: string; value: string | number | string[] | null; type?: string }
-type CompareRow = { label: string; before: Answer; after: Answer; delta: number }
-
-function buildComparisonRows(preSteps: FormStep[], postSteps: FormStep[]): CompareRow[] {
-  const postAnswers = postSteps.flatMap((s) => s.answers)
-  const rows: CompareRow[] = []
-  for (const pre of preSteps.flatMap((s) => s.answers)) {
-    const post = postAnswers.find((a) => a.label === pre.label)
-    if (!post) continue
-    if (pre.value == null || post.value == null) continue
+function buildDeltaMap(preSteps: FormStep[], postSteps: FormStep[]): Map<string, number> {
+  const preAnswers = preSteps.flatMap((s) => s.answers)
+  const map = new Map<string, number>()
+  for (const post of postSteps.flatMap((s) => s.answers)) {
+    const pre = preAnswers.find((a) => a.label === post.label)
+    if (!pre || pre.value == null || post.value == null) continue
     if (Array.isArray(pre.value) || Array.isArray(post.value)) continue
     const before = Number(pre.value)
     const after = Number(post.value)
     if (isNaN(before) || isNaN(after)) continue
-    rows.push({ label: pre.label, before: pre, after: post, delta: after - before })
+    map.set(post.label, after - before)
   }
-  return rows
+  return map
 }
 
-function ComparisonStrip({ rows }: { rows: CompareRow[] }) {
-  if (rows.length === 0) return null
+function PrePostCompare({ preSteps, postSteps }: { preSteps: FormStep[]; postSteps: FormStep[] }) {
+  const deltaMap = buildDeltaMap(preSteps, postSteps)
+  const preAnswers = preSteps.flatMap((s) => s.answers)
+  const postAnswers = postSteps.flatMap((s) => s.answers)
+
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-foreground/15 bg-foreground/[0.02] p-4">
-      <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide">
-        Perubahan Pre → Post
-      </p>
-      <div className="flex flex-col gap-2.5">
-        {rows.map((row, i) => (
-          <div key={i} className="flex items-center justify-between gap-3">
-            <p className="text-xs font-medium text-foreground/70 truncate">{row.label}</p>
-            <div className="flex items-center gap-2 shrink-0">
-              {renderAnswerValue(row.before.value, row.before.type)}
-              <span className="text-muted-foreground/50 text-xs">→</span>
-              {renderAnswerValue(row.after.value, row.after.type)}
-              <span className="text-xs font-semibold tabular-nums px-1.5 py-0.5 rounded-full bg-foreground/8 text-foreground/70">
-                {row.delta > 0 ? `+${row.delta}` : row.delta}
-              </span>
-            </div>
-          </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="flex flex-col rounded-xl border border-foreground/15 bg-background p-4">
+        <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide mb-1">
+          {preSteps[0]?.step_title ?? "Pre Form"}
+        </p>
+        {preAnswers.map((ans, ai) => (
+          <CompactAnswerRow key={ai} label={ans.label} value={ans.value} type={ans.type} />
+        ))}
+      </div>
+      <div className="flex flex-col rounded-xl border border-foreground/15 bg-background p-4">
+        <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide mb-1">
+          {postSteps[0]?.step_title ?? "Post Form"}
+        </p>
+        {postAnswers.map((ans, ai) => (
+          <CompactAnswerRow
+            key={ai}
+            label={ans.label}
+            value={ans.value}
+            type={ans.type}
+            delta={deltaMap.get(ans.label) ?? null}
+          />
         ))}
       </div>
     </div>
@@ -337,7 +395,8 @@ function ResponseDetailDialog({
 }) {
   if (!record) return null
 
-  // Heuristic split: pre vs post, used only to power the comparison strip above.
+  // Heuristic split: pre vs post. Anything that isn't clearly one or the
+  // other falls through to "other" and still gets shown via the stepper.
   const preSteps = record.form_responses.filter((s) =>
     s.step_title?.toLowerCase().includes("pre") || s.step_number === 1
   )
@@ -345,12 +404,13 @@ function ResponseDetailDialog({
     s.step_title?.toLowerCase().includes("post")
   )
   const hasCompare = preSteps.length > 0 && postSteps.length > 0
-  const compareRows = hasCompare ? buildComparisonRows(preSteps, postSteps) : []
+  const otherSteps = hasCompare
+    ? record.form_responses.filter((s) => !preSteps.includes(s) && !postSteps.includes(s))
+    : record.form_responses
 
-  // The stepper itself just walks the steps in order, then the body map.
-  const sortedForms = [...record.form_responses].sort((a, b) => a.step_number - b.step_number)
+  const sortedOther = [...otherSteps].sort((a, b) => a.step_number - b.step_number)
   const nodes: StepperNode[] = [
-    ...sortedForms.map((step) => ({
+    ...sortedOther.map((step) => ({
       title: step.step_title ?? `Form ${step.step_number}`,
       content: <FormStepPanel step={step} />,
     })),
@@ -360,9 +420,11 @@ function ResponseDetailDialog({
     })),
   ]
 
+  const hasAnyData = hasCompare || nodes.length > 0
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <PersonIcon className="w-4 h-4 text-muted-foreground" />
@@ -370,32 +432,25 @@ function ResponseDetailDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-6 py-1">
+        <div className="flex flex-col gap-5 py-1">
 
-          {/* Info waktu */}
-          <div className="flex gap-6 p-4 bg-foreground/2 border border-foreground/10 rounded-xl text-sm">
-            <div className="flex flex-col gap-0.5">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Mulai</p>
-              <p className="font-medium">{fmtLocalTime(record.started_at)}</p>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Selesai</p>
-              <p className="font-medium">{fmtLocalTime(record.completed_at)}</p>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Durasi</p>
-              <p className="font-semibold tabular-nums">{fmtDuration(record.started_at, record.completed_at)}</p>
-            </div>
+          {/* Info waktu — satu baris, biar nggak makan tempat */}
+          <div className="flex items-center gap-3 px-1 text-xs text-muted-foreground flex-wrap">
+            <span>Mulai <span className="font-medium text-foreground">{fmtLocalTime(record.started_at)}</span></span>
+            <span className="text-muted-foreground/40">·</span>
+            <span>Selesai <span className="font-medium text-foreground">{fmtLocalTime(record.completed_at)}</span></span>
+            <span className="text-muted-foreground/40">·</span>
+            <span>Durasi <span className="font-semibold text-foreground tabular-nums">{fmtDuration(record.started_at, record.completed_at)}</span></span>
           </div>
 
-          {nodes.length === 0 ? (
+          {!hasAnyData ? (
             <p className="text-sm text-muted-foreground text-center py-8 italic">
               Tidak ada response yang tersimpan untuk sesi ini.
             </p>
           ) : (
             <>
-              <ComparisonStrip rows={compareRows} />
-              <ResponseStepper nodes={nodes} />
+              {hasCompare && <PrePostCompare preSteps={preSteps} postSteps={postSteps} />}
+              {nodes.length > 0 && <ResponseStepper nodes={nodes} />}
             </>
           )}
         </div>
