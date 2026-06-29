@@ -15,6 +15,8 @@ import { toast } from 'sonner'
 import { useBGMPlayer } from '@/lib/hooks/useBGMPlayer'
 import { useNarrationPlayback } from '@/lib/hooks/useNarrationPlayback'
 import { useExerciseFullscreen } from '@/lib/hooks/useExerciseFullscreen'
+import { usePresence } from '@/lib/hooks/usePresence'
+import type { PresencePayload } from '@/lib/hooks/usePresence'
 import { Spinner } from '@/components/ui/spinner'
 
 import { StepVideo } from './steps/step-video'
@@ -165,6 +167,20 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const narrationStartedRef = useRef(false)
   const isMutedRef = useRef(isMuted)
 
+  // ── Presence — user resolved once on mount ───────────────────────────────────
+  const [presenceUserId, setPresenceUserId] = useState<string | null>(null)
+  const [presenceEmail, setPresenceEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setPresenceUserId(data.user.id)
+        setPresenceEmail(data.user.email ?? '')
+      }
+    })
+  }, [])
+
   // Exclude post_form steps — they have a dedicated place outside the stepper
   const activeInstructions = instructions.filter((i) => i.step_type !== 'post_form')
 
@@ -191,6 +207,23 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const strokeDashoffset = circumference * (1 - progress / 100)
   const currentTrack = tracks[currentTrackIndex]
   const formResponsesRef = useRef<Record<string, Record<string, unknown>>>({})
+
+  // ── Presence payload — built after step is declared ───────────────────────────
+  const presencePayload: PresencePayload | null = presenceUserId && presenceEmail
+    ? {
+        user_id: presenceUserId,
+        email: presenceEmail,
+        status: 'in_session',
+        session_id: sessionId,
+        session_name: sessionName,
+        session_slug: sessionSlug,
+        step_index: currentStep,
+        step_type: step.step_type,
+        joined_at: new Date().toISOString(),
+      }
+    : null
+
+  usePresence(presencePayload)
 
   useEffect(() => {
     try {

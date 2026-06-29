@@ -3,22 +3,24 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  ArrowLeftIcon, EyeIcon, ClipboardTextIcon, CheckCircleIcon, CalendarCheckIcon,
+  ArrowLeftIcon, ClipboardTextIcon, CheckCircleIcon, CalendarCheckIcon, CaretRightIcon,
 } from "@phosphor-icons/react"
 import { BodyMapRegion } from "@/lib/body-map-region"
-import { fmtLocalTime, fmtDuration, groupByDay, fmtDate, fmtClock } from "@/lib/session-helper"
+import { fmtLocalTime, fmtDuration, groupByDay, fmtDate } from "@/lib/session-helper"
 import type { SessionHistoryRecord, UserProfile, FormStep, BodyMapResponse } from "@/lib/session-helper"
 
 // ─── Constants ───────────────────────────────────────────────────────────────
+
 const bodyPartLabelMap = new Map(BodyMapRegion.map((r) => [r.id, r.label_id]))
+
+// Shared row treatment — same card used everywhere data is listed in this app.
+const ROW_CARD =
+  "group flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-white hover:border-foreground/20 hover:shadow-sm transition-all cursor-pointer"
 
 const EMOJI_MAP: Record<number, { emoji: string; label: string }> = {
   1: { emoji: "😞", label: "Sangat buruk" },
@@ -28,15 +30,13 @@ const EMOJI_MAP: Record<number, { emoji: string; label: string }> = {
   5: { emoji: "😊", label: "Sangat baik" },
 }
 
-function renderAnswerValue(
-  value: string | number | string[] | null,
-  type?: string,
-): React.ReactNode {
+// ─── Answer renderer ─────────────────────────────────────────────────────────
+
+function renderAnswerValue(value: string | number | string[] | null, type?: string) {
   if (value === null || value === undefined || value === "") {
-    return <span className="text-muted-foreground italic">Tidak diisi</span>
+    return <span className="text-muted-foreground italic text-sm">Tidak diisi</span>
   }
 
-  // Deteksi explicit dari type field, fallback auto-detect kalau type undefined
   const num = Number(value)
   const isNumeric = !Array.isArray(value) && !isNaN(num) && String(value).trim() !== ""
   const isEmoji = type === "emoji_scale" || (!type && isNumeric && Number.isInteger(num) && num >= 1 && num <= 5)
@@ -99,22 +99,119 @@ function Skeleton() {
       </div>
       <div className="grid grid-cols-3 gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-24 border border-border bg-white rounded-sm" />
+          <div key={i} className="h-24 border border-border bg-white rounded-xl" />
         ))}
       </div>
       <div className="flex flex-col gap-3">
         <div className="h-4 bg-muted rounded w-36" />
-        <div className="border border-border">
+        <div className="flex flex-col gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-3.5 border-b border-border last:border-0">
-              <div className="w-8 h-3.5 bg-muted/60 rounded" />
-              <div className="flex-1 h-3.5 bg-muted rounded" />
-              <div className="w-32 h-3.5 bg-muted/60 rounded" />
-              <div className="w-20 h-7 bg-muted/40 rounded-sm ml-auto" />
-            </div>
+            <div key={i} className="h-[60px] bg-muted/50 rounded-xl" />
           ))}
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── Empty State ─────────────────────────────────────────────────────────────
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="flex items-center justify-center py-14 text-sm text-muted-foreground italic border border-dashed border-border rounded-xl">
+      {text}
+    </div>
+  )
+}
+
+// ─── Body Map Panel ──────────────────────────────────────────────────────────
+
+function BodyMapPanel({ bm }: { bm: BodyMapResponse }) {
+  return (
+    <div className="flex flex-col gap-3">
+      {bm.selected_parts.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-medium text-foreground/70">Bagian tubuh dipilih</p>
+          <div className="flex flex-wrap gap-1.5">
+            {bm.selected_parts.map((part, pi) => (
+              <span
+                key={pi}
+                className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-foreground/8 border border-foreground/15"
+              >
+                {bodyPartLabelMap.get(part) ?? part}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-medium text-foreground/70">Sensasi</p>
+        {bm.sensation ? (
+          <p className="text-sm font-medium text-foreground capitalize">{bm.sensation}</p>
+        ) : (
+          <span className="text-muted-foreground italic text-sm">Tidak diisi</span>
+        )}
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-medium text-foreground/70">Catatan</p>
+        {bm.note ? (
+          <div className="bg-foreground/4 rounded-lg px-3 py-2 text-sm text-foreground leading-relaxed">{bm.note}</div>
+        ) : (
+          <span className="text-muted-foreground italic text-sm">Tidak diisi</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Form Step Panel ─────────────────────────────────────────────────────────
+
+function FormStepPanel({ step }: { step: FormStep }) {
+  return (
+    <div className="flex flex-col gap-3">
+      {step.answers.length === 0 ? (
+        <p className="text-xs text-muted-foreground italic">Tidak ada response tersimpan.</p>
+      ) : (
+        step.answers.map((ans, ai) => (
+          <div key={ai} className="flex flex-col gap-1">
+            <p className="text-xs font-medium text-foreground/70">{ans.label}</p>
+            {renderAnswerValue(ans.value, ans.type)}
+          </div>
+        ))
+      )}
+    </div>
+  )
+}
+
+// ─── Response Stepper ────────────────────────────────────────────────────────
+// Same connected-timeline pattern used in the session detail view — keeps the
+// "open a record, see its journey" interaction identical across the app.
+
+type StepperNode = {
+  title: string
+  content: React.ReactNode
+}
+
+function ResponseStepper({ nodes }: { nodes: StepperNode[] }) {
+  if (nodes.length === 0) return null
+  return (
+    <div className="flex flex-col">
+      {nodes.map((node, i) => (
+        <div key={i} className="flex gap-4">
+          <div className="flex flex-col items-center shrink-0">
+            <div className="w-7 h-7 rounded-full border-2 border-foreground/20 bg-background flex items-center justify-center text-xs font-semibold text-foreground/70">
+              {i + 1}
+            </div>
+            {i < nodes.length - 1 && <div className="w-px flex-1 bg-border my-1" />}
+          </div>
+          <div className={`flex-1 min-w-0 ${i < nodes.length - 1 ? "pb-6" : ""}`}>
+            <p className="text-sm font-semibold text-foreground mb-2.5">{node.title}</p>
+            <div className="rounded-xl border border-foreground/15 bg-background p-4">
+              {node.content}
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -132,126 +229,51 @@ function SessionDetailDialog({
 }) {
   if (!record) return null
 
-  const hasNoData = record.form_responses.length === 0 && record.body_map_responses.length === 0
+  const sortedForms = [...record.form_responses].sort((a, b) => a.step_number - b.step_number)
+  const nodes: StepperNode[] = [
+    ...sortedForms.map((step) => ({
+      title: step.step_title ?? `Form ${step.step_number}`,
+      content: <FormStepPanel step={step} />,
+    })),
+    ...record.body_map_responses.map((bm, i) => ({
+      title: record.body_map_responses.length > 1 ? `Body Map ${i + 1}` : "Body Map",
+      content: <BodyMapPanel bm={bm} />,
+    })),
+  ]
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Detail — {record.session_name}</DialogTitle>
+          <DialogTitle>{record.session_name}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-6 py-1">
-          {/* Info sesi */}
-          <div className="flex flex-col gap-2 p-4 bg-foreground/2 border border-foreground/10 rounded-xl">
+
+          {/* Info waktu */}
+          <div className="flex gap-6 p-4 bg-foreground/2 border border-foreground/10 rounded-xl text-sm">
             {record.started_at && (
               <div className="flex flex-col gap-0.5">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Mulai</p>
-                <p className="text-sm font-medium">{fmtLocalTime(record.started_at)}</p>
+                <p className="font-medium">{fmtLocalTime(record.started_at)}</p>
               </div>
             )}
             <div className="flex flex-col gap-0.5">
               <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Selesai</p>
-              <p className="text-sm font-medium">{fmtLocalTime(record.completed_at)}</p>
+              <p className="font-medium">{fmtLocalTime(record.completed_at)}</p>
             </div>
             <div className="flex flex-col gap-0.5">
               <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Durasi</p>
-              <p className="text-sm font-semibold tabular-nums">{fmtDuration(record.started_at, record.completed_at)}</p>
+              <p className="font-semibold tabular-nums">{fmtDuration(record.started_at, record.completed_at)}</p>
             </div>
           </div>
 
-          {hasNoData && (
-            <p className="text-sm text-muted-foreground text-center py-6 italic">
-              Tidak ada response yang tersimpan untuk sesi ini
+          {nodes.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8 italic">
+              Tidak ada response yang tersimpan untuk sesi ini.
             </p>
-          )}
-
-          {/* Form Responses */}
-          {record.form_responses.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <ClipboardTextIcon className="w-4 h-4 text-muted-foreground" />
-                <p className="text-sm font-semibold text-foreground">Form</p>
-                {/* <span className="text-xs text-muted-foreground">
-                  ({record.form_responses.length} step)
-                </span> */}
-              </div>
-              <div className="flex flex-col gap-3">
-                {record.form_responses.map((step, si) => (
-                  <div key={si} className="flex flex-col gap-3 bg-background rounded-xl border border-foreground/15 p-4">
-                    <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide">
-                      {step.step_title ? `${step.step_title}` : ""}
-                    </p>
-                    {step.answers.length === 0 ? (
-                      <p className="text-xs text-muted-foreground italic">Tidak ada response tersimpan.</p>
-                    ) : (
-                      <div className="flex flex-col gap-3">
-                        {step.answers.map((ans, ai) => (
-                          <div key={ai} className="flex flex-col gap-1">
-                            <p className="text-xs font-medium text-foreground/70">{ans.label}</p>
-                            {renderAnswerValue(ans.value, ans.type)}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Body Map Responses */}
-          {record.body_map_responses.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <CheckCircleIcon className="w-4 h-4 text-muted-foreground" />
-                <p className="text-sm font-semibold text-foreground">Body Map</p>
-                {/* <span className="text-xs text-muted-foreground">
-                  ({record.body_map_responses.length} respons)
-                </span> */}
-              </div>
-              <div className="flex flex-col gap-3">
-                {record.body_map_responses.map((bm, i) => (
-                  <div key={i} className="flex flex-col gap-3 bg-background rounded-xl border border-foreground/15 p-4">
-                    <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide">
-                      Respons {i + 1}
-                    </p>
-                    {bm.selected_parts.length > 0 && (
-                      <div className="flex flex-col gap-1.5">
-                        <p className="text-xs font-medium text-foreground/70">Bagian tubuh dipilih</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {bm.selected_parts.map((part, pi) => (
-                            <span
-                              key={pi}
-                              className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-foreground/8 border border-foreground/15"
-                            >
-                              {bodyPartLabelMap.get(part) ?? part}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {bm.sensation && (
-                      <div className="flex flex-col gap-1">
-                        <p className="text-xs font-medium text-foreground/70">Sensasi</p>
-                        <p className="text-sm font-medium text-foreground capitalize">{bm.sensation}</p>
-                      </div>
-                    )}
-                    {bm.note && (
-                      <div className="flex flex-col gap-1">
-                        <p className="text-xs font-medium text-foreground/70">Catatan</p>
-                        <div className="bg-foreground/4 rounded-lg px-3 py-2 text-sm text-foreground leading-relaxed">
-                          {bm.note}
-                        </div>
-                      </div>
-                    )}
-                    {!bm.selected_parts.length && !bm.sensation && !bm.note && (
-                      <p className="text-xs text-muted-foreground italic">Tidak ada input body map.</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+          ) : (
+            <ResponseStepper nodes={nodes} />
           )}
         </div>
       </DialogContent>
@@ -261,13 +283,18 @@ function SessionDetailDialog({
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function UserOverviewView({ userId }: { userId: string }) {
+export function UserOverviewView({
+  userId,
+}: {
+  userId: string
+}) {
   const router = useRouter()
   const [user, setUser] = useState<UserProfile | null>(null)
   const [sessionHistory, setSessionHistory] = useState<SessionHistoryRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [detailRecord, setDetailRecord] = useState<SessionHistoryRecord | null>(null)
-  const [detailOpen, setDetailOpen] = useState(false)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [detailRecord, setDetailRecord] =
+  useState<SessionHistoryRecord | null>(null)
+  const [detailOpen, setDetailOpen] = useState<boolean>(false)
 
   useEffect(() => {
     if (!userId) return
@@ -303,9 +330,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
         .select("id, week_number")
         .in("id", sessionIds)
 
-      const sessionMeta = new Map(
-        (sessionsData ?? []).map((s) => [s.id, s])
-      )
+      const sessionMeta = new Map((sessionsData ?? []).map((s) => [s.id, s]))
 
       const { data: formResponsesData } = await supabase
         .from("session_form_responses")
@@ -331,9 +356,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
           .in("id", stepIds)
         : { data: [] }
 
-      const stepMap = new Map(
-        (stepsData ?? []).map((s) => [s.id, s])
-      )
+      const stepMap = new Map((stepsData ?? []).map((s) => [s.id, s]))
 
       const formByCompletion = new Map<string, FormStep[]>()
       for (const fr of formResponsesData ?? []) {
@@ -362,7 +385,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
         })
       }
 
-      const history: SessionHistoryRecord[] = completionsData.map((c) => ({
+      const history = completionsData.map((c) => ({
         id: c.id,
         session_id: c.session_id,
         session_name: c.session_name,
@@ -409,7 +432,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="flex flex-col gap-2 p-4 bg-white border border-border rounded-sm">
+        <div className="flex flex-col gap-2 p-4 bg-white border border-border rounded-xl">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <ClipboardTextIcon className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Sesi</span>
@@ -417,7 +440,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
           <p className="text-2xl font-bold">{uniqueSessions}</p>
           <p className="text-xs text-muted-foreground">telah diselesaikan</p>
         </div>
-        <div className="flex flex-col gap-2 p-4 bg-white border border-border rounded-sm">
+        <div className="flex flex-col gap-2 p-4 bg-white border border-border rounded-xl">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <CheckCircleIcon className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Total Selesai</span>
@@ -425,7 +448,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
           <p className="text-2xl font-bold">{sessionHistory.length}</p>
           <p className="text-xs text-muted-foreground">kali mengikuti sesi</p>
         </div>
-        <div className="flex flex-col gap-2 p-4 bg-white border border-border rounded-sm">
+        <div className="flex flex-col gap-2 p-4 bg-white border border-border rounded-xl">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <CalendarCheckIcon className="w-4 h-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Terakhir Aktif</span>
@@ -438,92 +461,53 @@ export function UserOverviewView({ userId }: { userId: string }) {
         </div>
       </div>
 
-      {/* Session History Table — grouped by day */}
+      {/* Session History — grouped by day, click a row to see its response */}
       <div className="flex flex-col gap-3">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
           Riwayat Sesi ({sessionHistory.length})
         </h3>
 
-        <div className="border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40">
-                <TableHead className="w-10 text-center">#</TableHead>
-                <TableHead>Nama Sesi</TableHead>
-                <TableHead className="w-20 text-center">Week</TableHead>
-                <TableHead className="w-40">Mulai</TableHead>
-                <TableHead className="w-40">Selesai</TableHead>
-                <TableHead className="w-20 text-center">Durasi</TableHead>
-                <TableHead className="w-16 text-center">Form</TableHead>
-                <TableHead className="w-20 text-center">Body Map</TableHead>
-                <TableHead className="w-20 text-center">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {grouped.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-14 text-sm">
-                    Belum ada riwayat sesi
-                  </TableCell>
-                </TableRow>
-              ) : (
-                grouped.map((group) => {
-                  return (
-                    <>
-                      <TableRow key={`day-${group.label}`} className="bg-muted/20 hover:bg-muted/20">
-                        <TableCell colSpan={9} className="py-1.5 px-4">
-                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                            {group.label}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                      {group.items.map((r, i) => {
-                        const globalIdx = sessionHistory.indexOf(r)
-                        return (
-                          <TableRow key={r.id}>
-                            <TableCell className="text-center text-muted-foreground text-sm">
-                              {globalIdx + 1}.
-                            </TableCell>
-                            <TableCell className="font-medium text-sm">{r.session_name}</TableCell>
-                            <TableCell className="text-center text-xs text-muted-foreground">
-                              {r.week_number != null ? `Week ${r.week_number}` : "—"}
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {fmtClock(r.started_at)}
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {fmtClock(r.completed_at)}
-                            </TableCell>
-                            <TableCell className="text-center text-xs text-muted-foreground">
-                              {fmtDuration(r.started_at, r.completed_at)}
-                            </TableCell>
-                            <TableCell className="text-center text-sm text-muted-foreground">
-                              {r.form_responses.length}
-                            </TableCell>
-                            <TableCell className="text-center text-sm text-muted-foreground">
-                              {r.body_map_responses.length}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="rounded-sm gap-1.5 bg-background hover:bg-lemon text-foreground [&_svg]:size-3.5"
-                                onClick={() => { setDetailRecord(r); setDetailOpen(true) }}
-                              >
-                                <EyeIcon className="w-3.5 h-3.5" />
-                                Lihat
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        {grouped.length === 0 ? (
+          <EmptyState text="Belum ada riwayat sesi" />
+        ) : (
+          <div className="flex flex-col gap-5">
+            {grouped.map((group) => (
+              <div key={`day-${group.label}`} className="flex flex-col gap-2">
+                <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wide px-1">
+                  {group.label}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {group.items.map((r) => {
+                    const hasResponse = r.form_responses.length > 0 || r.body_map_responses.length > 0
+                    return (
+                      <div
+                        key={r.id}
+                        onClick={() => { setDetailRecord(r); setDetailOpen(true) }}
+                        className={ROW_CARD}
+                      >
+                        <div className="flex items-center justify-center w-9 h-9 rounded-full bg-foreground/[0.06] text-xs font-semibold text-foreground/60 shrink-0">
+                          {r.session_name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{r.session_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {r.week_number != null ? `Week ${r.week_number}` : "Tanpa minggu"}
+                          </p>
+                        </div>
+                        <span className="text-xs text-muted-foreground/60 shrink-0 hidden sm:block">
+                          {hasResponse
+                            ? `${r.form_responses.length} form · ${r.body_map_responses.length} body map`
+                            : "Tidak ada response"}
+                        </span>
+                        <CaretRightIcon className="w-4 h-4 text-muted-foreground/50 group-hover:text-muted-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <SessionDetailDialog

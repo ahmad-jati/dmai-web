@@ -13,16 +13,12 @@ import {
   ChatCenteredTextIcon,
   MusicNotesIcon,
   ClipboardTextIcon,
+  WifiHighIcon,
 } from "@phosphor-icons/react"
 import { Route } from "next"
 import { Button } from "../ui/button"
 
-type AdminSidebarProps = {
-  activeTab?: string
-  onTabChange?: (tab: "users" | "sessions") => void
-}
-
-export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
+export function AdminSidebar() {
   const [adminEmail, setAdminEmail] = useState<string | null>(null)
   const [adminName, setAdminName] = useState<string | null>(null)
   const router = useRouter()
@@ -56,39 +52,46 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-2.5 px-3 py-4">
-        <div className="border-t border-border" />
+      <nav className="flex-1 flex flex-col px-3 py-4 gap-4">
 
-        <SidebarLink
-          href="/admin"
-          icon={<UsersIcon className="w-4 h-4" />}
-          label="User Info"
-          active={pathname === "/admin" || (pathname?.startsWith("/admin/users") ?? false)}
-        />
-        <SidebarLink
-          href="/admin/sessions"
-          icon={<DatabaseIcon className="w-4 h-4" />}
-          label="Sesi Terapi"
-          active={pathname?.startsWith("/admin/sessions") ?? false}
-        />
-        <SidebarLink
-          href="/admin/user-responses"
-          icon={<ClipboardTextIcon className="w-4 h-4" />}
-          label="Respons Sesi"
-          active={pathname?.startsWith("/admin/user-responses") ?? false}
-        />
-        <SidebarLink
-          href="/admin/feedback"
-          icon={<ChatCenteredTextIcon className="w-4 h-4" />}
-          label="Feedback Sesi"
-          active={pathname?.startsWith("/admin/feedback") ?? false}
-        />
-        <SidebarLink
-          href="/admin/music"
-          icon={<MusicNotesIcon className="w-4 h-4" />}
-          label="Musik Latar"
-          active={pathname?.startsWith("/admin/music") ?? false}
-        />
+        <SidebarGroup label="Pengguna">
+          <SidebarLink
+            href="/admin"
+            icon={<UsersIcon className="w-4 h-4" />}
+            label="User Info"
+            active={pathname === "/admin" || (pathname?.startsWith("/admin/users") ?? false)}
+          />
+          <SidebarLink
+            href="/admin/online"
+            icon={<WifiHighIcon className="w-4 h-4" />}
+            label="Aktivitas Online"
+            active={pathname?.startsWith("/admin/online") ?? false}
+          />
+        </SidebarGroup>
+
+        <SidebarGroup label="Sesi">
+          <SidebarLink
+            href="/admin/sessions"
+            icon={<DatabaseIcon className="w-4 h-4" />}
+            label="Sesi Terapi"
+            active={pathname?.startsWith("/admin/sessions") ?? false}
+          />
+          <SidebarLink
+            href="/admin/user-responses"
+            icon={<ClipboardTextIcon className="w-4 h-4" />}
+            label="Respons Sesi"
+            active={pathname?.startsWith("/admin/user-responses") ?? false}
+          />
+        </SidebarGroup>
+
+        <SidebarGroup label="Konten">
+          <SidebarLink
+            href="/admin/music"
+            icon={<MusicNotesIcon className="w-4 h-4" />}
+            label="Musik Latar"
+            active={pathname?.startsWith("/admin/music") ?? false}
+          />
+        </SidebarGroup>
 
         <div className="pt-2 border-t border-border">
           <Link
@@ -126,12 +129,18 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   )
 }
 
-function SidebarLink({
-  href,
-  icon,
-  label,
-  active,
-}: {
+function SidebarGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <p className="px-3 mb-1 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">
+        {label}
+      </p>
+      {children}
+    </div>
+  )
+}
+
+function SidebarLink({ href, icon, label, active }: {
   href: string
   icon: React.ReactNode
   label: string
