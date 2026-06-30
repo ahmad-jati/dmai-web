@@ -17,6 +17,7 @@ import { useNarrationPlayback } from '@/lib/hooks/useNarrationPlayback'
 import { useExerciseFullscreen } from '@/lib/hooks/useExerciseFullscreen'
 import { usePresence } from '@/lib/hooks/usePresence'
 import type { PresencePayload } from '@/lib/hooks/usePresence'
+import { markPresenceActive } from '@/lib/hooks/usePresence'
 import { Spinner } from '@/components/ui/spinner'
 
 import { StepVideo } from './steps/step-video'
@@ -364,6 +365,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     } else {
       setIsPlaying(false)
       bgmStop()
+      markPresenceActive() // explicit reset — don't rely on unmount, parent may keep this mounted
       const responseSnapshot = formResponsesRef.current
       let startedAt: string | null = null
       try {
