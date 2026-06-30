@@ -54,9 +54,6 @@ export function fmtDuration(startedAt: string | null, completedAt: string | null
 
   const formattedMinutes = String(minutes).padStart(2, "0");
   const formattedSeconds = String(seconds).padStart(2, "0");
-  console.log(totalSeconds)
-  console.log(formattedMinutes)
-
   return `${formattedMinutes}:${formattedSeconds}`;
 }
 

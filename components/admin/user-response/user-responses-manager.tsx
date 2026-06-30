@@ -95,8 +95,8 @@ function ResultsPagination({
   const to = Math.min(page * pageSize, total)
   return (
     <div className="flex items-center justify-between">
-      <p className="text-xs text-muted-foreground">
-        Menampilkan {from}–{to} dari {total} entri
+      <p className="text-sm text-muted-foreground">
+        Menampilkan {from}-{to} dari {total} entri
       </p>
       <Pagination className="justify-end w-auto">
         <PaginationContent>
@@ -109,7 +109,7 @@ function ResultsPagination({
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <PaginationItem key={p}>
               <Button
-                variant={p === page ? "default" : "ghost"}
+                variant={p === page ? "secondary" : "ghost"}
                 size="sm"
                 className="w-8 h-8 p-0 rounded-sm font-medium text-sm hover:bg-muted-foreground/20"
                 onClick={() => onPageChange(p)}
@@ -169,17 +169,19 @@ export function UserResponsesManager() {
         .from("session_completions")
         .select("session_id, user_id")
 
-      const completionMap = new Map<string, Set<string>>()
+      // Raw completion count per session — counts every completion row
+      // (including retakes by the same user), to match SessionResponsesView
+      // which lists all session_completions rows for a session without dedup.
+      const completionCountMap = new Map<string, number>()
       for (const c of completionsData ?? []) {
-        if (!completionMap.has(c.session_id)) completionMap.set(c.session_id, new Set())
-        completionMap.get(c.session_id)!.add(c.user_id)
+        completionCountMap.set(c.session_id, (completionCountMap.get(c.session_id) ?? 0) + 1)
       }
 
       const sessionList: SessionSummary[] = (sessionsData ?? []).map((s) => ({
         id: s.id,
         session_name: s.session_name,
         week_number: s.week_number,
-        total_completed: completionMap.get(s.id)?.size ?? 0,
+        total_completed: completionCountMap.get(s.id) ?? 0,
       }))
 
       const { data: recent } = await supabase
@@ -202,7 +204,7 @@ export function UserResponsesManager() {
       const recentList: RecentCompletion[] = (recent ?? []).map((r) => ({
         id: r.id,
         user_id: r.user_id,
-        session_id: r.session_id,
+        session_id: r.session_id, 
         session_name: r.session_name,
         started_at: r.started_at ?? null,
         completed_at: r.completed_at ?? null,
@@ -269,10 +271,6 @@ export function UserResponsesManager() {
                 onClick={() => router.push(`/admin/user-responses/session/${s.id}`)}
                 className={ROW_CARD}
               >
-                {/* Week order is a real sequence, so a numbered badge earns its place here */}
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-foreground/[0.06] text-xs font-semibold text-foreground/60 shrink-0">
-                  {i + 1}
-                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{s.session_name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -314,6 +312,7 @@ export function UserResponsesManager() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/40 border-b border-border">
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground w-fit">#</th>
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[35%]">User</th>
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[30%]">Sesi</th>
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[18%] hidden sm:table-cell">Waktu Selesai</th>
@@ -325,19 +324,22 @@ export function UserResponsesManager() {
                 {pagedGrouped.map((group) => (
                   <>
                     <tr key={`header-${group.label}`} className="bg-muted/20 border-b border-border/50">
-                      <td colSpan={5} className="px-4 py-1.5">
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">{group.label}</span>
+                      <td colSpan={6} className="px-4 py-1.5">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">{group.label}</span>
                       </td>
                     </tr>
-                    {group.items.map((c) => (
+                    {group.items.map((c, i) => (
                       <tr
                         key={c.id}
                         onClick={() => router.push(`/admin/user-responses/${c.user_id}`)}
                         className="border-b border-border/40 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors group"
                       >
                         <td className="px-4 py-3">
+                          <p className="text-sm truncate text-foreground/80">{(recentPage - 1) * PAGE_SIZE + paginated.findIndex(item => item.id === c.id) +1}</p>
+                        </td>
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full bg-foreground/8 flex items-center justify-center text-[10px] font-bold text-foreground/60 shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-foreground/8 flex items-center justify-center text-2xs font-bold text-foreground/60 shrink-0">
                               {getInitials(c.full_name, c.email)}
                             </div>
                             <div className="min-w-0">

@@ -79,11 +79,11 @@ function CompactAnswerRow({
   if (isInlineAnswer(value)) {
     return (
       <div className="flex flex-col items-start justify-between gap-2 py-1.5 border-b border-border/50 last:border-0">
-        <span className="text-xs text-muted-foreground shrink-0 leading-tight">{label}</span>
+        <span className="text-sm font-medium text-muted-foreground shrink-0 leading-tight">{label}</span>
         <div className="flex items-center gap-1 shrink-0">
           {renderAnswerValue(value, type)}
           {delta != null && delta !== 0 && (
-            <span className="text-[10px] font-semibold px-1 py-0.5 rounded bg-foreground/8 text-foreground/60 tabular-nums">
+            <span className="text-xs font-semibold px-1 py-0.5 rounded bg-foreground/8 text-foreground/60 tabular-nums">
               {delta > 0 ? `+${delta}` : delta}
             </span>
           )}
@@ -92,7 +92,7 @@ function CompactAnswerRow({
     )
   }
   return (
-    <div className="flex flex-col gap-1 py-1.5 border-b border-border/50 last:border-0">
+    <div className="flex flex-col gap-1 py-1.5 border-b border-border/50 last:border-0 font-medium">
       <span className="text-xs text-muted-foreground">{label}</span>
       {renderAnswerValue(value, type)}
     </div>
@@ -121,7 +121,7 @@ function PrePostColumns({ preSteps, postSteps }: { preSteps: FormStep[]; postSte
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="flex flex-col rounded-lg border border-foreground/12 p-3">
-        <p className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1">
+        <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-1">
           {preSteps[0]?.step_title ?? "Pre Form"}
         </p>
         {preAnswers.map((ans, i) => (
@@ -129,7 +129,7 @@ function PrePostColumns({ preSteps, postSteps }: { preSteps: FormStep[]; postSte
         ))}
       </div>
       <div className="flex flex-col rounded-lg border border-foreground/12 p-3">
-        <p className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1">
+        <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-1">
           {postSteps[0]?.step_title ?? "Post Form"}
         </p>
         {postAnswers.map((ans, i) => (
@@ -148,7 +148,7 @@ function PrePostColumns({ preSteps, postSteps }: { preSteps: FormStep[]; postSte
 function BodyMapSection({ bm }: { bm: BodyMapResponse }) {
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-foreground/12 p-3">
-      <p className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">Body Map</p>
+      <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider">Body Map</p>
       {bm.selected_parts.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {bm.selected_parts.map((part, i) => (
@@ -185,7 +185,7 @@ function ResponsePanel({ record }: { record: SessionHistoryRecord }) {
 
   if (!hasAny) {
     return (
-      <div className="flex items-center justify-center h-full text-sm text-muted-foreground italic">
+      <div className="flex py-4 items-center justify-center h-full text-sm text-muted-foreground italic">
         Tidak ada response tersimpan
       </div>
     )
@@ -195,8 +195,8 @@ function ResponsePanel({ record }: { record: SessionHistoryRecord }) {
     <div className="grid grid-cols-2 gap-3 p-4">
       {hasCompare && <PrePostColumns preSteps={preSteps} postSteps={postSteps} />}
       {sortedOther.map((step, i) => (
-        <div key={i} className="flex flex-col rounded-lg border border-foreground/12 p-3">
-          <p className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1">
+        <div key={i} className="flex flex-col rounded-lg bg-white border border-foreground/12 p-3">
+          <p className="text-sm font-semibold text-foreground uppercase tracking-wider mb-1">
             {step.step_title ?? `Form ${step.step_number}`}
           </p>
           {step.answers.map((ans, ai) => (
@@ -241,6 +241,14 @@ function Skeleton() {
       </div>
     </div>
   )
+}
+
+function getInitials(fullName: string | null, email: string) {
+  const source = (fullName ?? "").trim() || email
+  const parts = source.split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return "?"
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
@@ -349,57 +357,38 @@ export function UserOverviewView({ userId }: { userId: string }) {
     <div className="flex flex-col gap-4">
 
       {/* Header */}
-      <div className="flex items-start gap-3">
-        <Button
-          variant="outline" size="sm"
-          className="rounded-sm gap-1.5 [&_svg]:size-3.5 mt-0.5 shrink-0"
-          onClick={() => router.push("/admin/user-responses")}
-        >
-          <ArrowLeftIcon />
-          Kembali
-        </Button>
-        <div className="flex-1 min-w-0">
-          <h2 className="text-base font-semibold leading-tight truncate">{user?.full_name ?? "—"}</h2>
-          <p className="text-xs text-muted-foreground">
-            {user?.email}{user?.created_at ? ` · Terdaftar ${fmtDate(user.created_at)}` : ""}
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start gap-3">
+          <Button
+            variant="link" 
+            size="sm"
+            className="rounded-sm gap-1.5 [&_svg]:size-3.5 mt-0.5 shrink-0"
+            onClick={() => router.push("/admin/user-responses")}
+          >
+            <ArrowLeftIcon />
+            Kembali
+          </Button>
         </div>
-      </div>
-
-      {/* Stats — compact 3-col */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="flex items-center gap-2.5 p-3 bg-white border border-border rounded-xl">
-          <ClipboardTextIcon className="w-4 h-4 text-muted-foreground shrink-0" />
-          <div>
-            <p className="text-xl font-bold leading-none">{uniqueSessions}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">sesi selesai</p>
+        <div className="pl-7 min-w-0 flex flex-row-reverse items-center gap-4">
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-muted text-background`}>
+            {getInitials(user?.full_name ?? null, user?.email ?? '')}
           </div>
-        </div>
-        <div className="flex items-center gap-2.5 p-3 bg-white border border-border rounded-xl">
-          <CheckCircleIcon className="w-4 h-4 text-muted-foreground shrink-0" />
           <div>
-            <p className="text-xl font-bold leading-none">{sessionHistory.length}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">total sesi</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2.5 p-3 bg-white border border-border rounded-xl">
-          <CalendarCheckIcon className="w-4 h-4 text-muted-foreground shrink-0" />
-          <div>
-            <p className="text-sm font-semibold leading-none mt-0.5">
-              {sessionHistory[0]?.completed_at ? fmtDate(sessionHistory[0].completed_at) : "—"}
+            <h2 className="text-xl text-right font-semibold leading-tight truncate">{user?.full_name ?? "—"}</h2>
+            <p className="text-xs text-muted-foreground">
+              {user?.email}{user?.created_at ? ` · Terdaftar ${fmtDate(user.created_at)}` : ""}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">terakhir aktif</p>
           </div>
         </div>
       </div>
 
       {/* 3-column panel */}
-      <div className="flex border border-border rounded-xl overflow-hidden bg-background" style={{ height: "calc(100vh - 180px)", minHeight: 440 }}>
+      <div className="flex border border-border rounded-xl overflow-hidden bg-background" style={{ height: "calc(100vh - 124px)", minHeight: 440 }}>
 
         {/* ── Col 1: Session list ───────────────────────────────────────── */}
-        <div className="w-56 shrink-0 border-r border-border flex flex-col overflow-hidden">
+        <div className="w-66 shrink-0 border-r border-border flex flex-col overflow-hidden">
           <div className="px-3 py-2 border-b border-border bg-muted/30">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Riwayat ({sessionHistory.length})
             </p>
           </div>
@@ -409,8 +398,8 @@ export function UserOverviewView({ userId }: { userId: string }) {
             ) : (
               grouped.map((group) => (
                 <div key={group.label}>
-                  <div className="px-3 py-1.5 bg-muted/20 border-b border-border/50 sticky top-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">{group.label}</p>
+                  <div className="px-3 py-1.5 bg-muted border-b border-border/50 sticky top-0">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group.label}</p>
                   </div>
                   {group.items.map((r) => {
                     const isActive = r.id === selectedId
@@ -418,16 +407,13 @@ export function UserOverviewView({ userId }: { userId: string }) {
                       <button
                         key={r.id}
                         onClick={() => setSelectedId(r.id)}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left border-b border-border/40 transition-colors hover:bg-muted/40 ${isActive ? "bg-foreground text-background hover:bg-foreground" : ""}`}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left border-b border-border/40 transition-colors hover:bg-muted/40 ${isActive ? "bg-muted/40" : ""}`}
                       >
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${isActive ? "bg-background/20 text-background" : "bg-foreground/8 text-foreground/60"}`}>
-                          {r.session_name.slice(0, 2).toUpperCase()}
-                        </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-medium truncate ${isActive ? "text-background" : "text-foreground"}`}>
+                          <p className={`text-sm font-medium truncate text-foreground`}>
                             {r.session_name}
                           </p>
-                          <p className={`text-[10px] truncate ${isActive ? "text-background/60" : "text-muted-foreground"}`}>
+                          <p className={`text-xs truncate text-muted-foreground`}>
                             {fmtLocalTime(r.completed_at)}
                           </p>
                         </div>
@@ -440,61 +426,59 @@ export function UserOverviewView({ userId }: { userId: string }) {
           </div>
         </div>
 
-        {/* ── Col 2: Session meta ───────────────────────────────────────── */}
-        <div className="w-48 shrink-0 border-r border-border flex flex-col overflow-hidden">
+        {/* ── Col 2: Response content ───────────────────────────────────── */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
           <div className="px-3 py-2 border-b border-border bg-muted/30">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Detail Sesi</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Detail Sesi</p>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="h-fit">
             {!selected ? (
               <p className="text-xs text-muted-foreground italic text-center py-8">Pilih sesi</p>
             ) : (
               <div className="p-3 flex flex-col gap-3">
                 <div className="pt-1">
-                  <p className="text-sm font-semibold leading-tight">{selected.session_name}</p>
-                  {selected.week_number != null && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Week {selected.week_number}</p>
-                  )}
+                  <p className="text-xl font-semibold leading-tight">{selected.session_name}</p>
                 </div>
-                <div className="flex flex-col gap-1.5 rounded-lg bg-muted/30 p-2.5 text-xs">
+                <div className={`flex gap-10 rounded-lg text-sm`}>
                   {selected.started_at && (
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5">
                       <span className="text-muted-foreground shrink-0">Mulai</span>
                       <span className="font-medium text-right">{fmtLocalTime(selected.started_at)}</span>
                     </div>
                   )}
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-0.5">
                     <span className="text-muted-foreground shrink-0">Selesai</span>
                     <span className="font-medium text-right">{fmtLocalTime(selected.completed_at)}</span>
                   </div>
-                  <div className="flex justify-between gap-1 border-t border-border/50 pt-1.5 mt-0.5">
-                    <span className="text-muted-foreground flex items-center gap-1 shrink-0">
-                      <ClockIcon className="w-3 h-3" />Durasi
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-muted-foreground shrink-0">
+                      Durasi
                     </span>
-                    <span className="font-semibold tabular-nums">{fmtDuration(selected.started_at, selected.completed_at)}</span>
+                    <span className="font-medium tabular-nums">{fmtDuration(selected.started_at, selected.completed_at)}</span>
                   </div>
-                </div>
-                <div className="flex flex-col gap-1 text-xs">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Form responses</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-muted-foreground shrink-0">
+                      Form Response
+                    </span>
                     <span className="font-medium text-foreground">{selected.form_responses.length}</span>
                   </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Body maps</span>
-                    <span className="font-medium text-foreground">{selected.body_map_responses.length}</span>
-                  </div>
+                  {
+                    selected.body_map_responses.length>0 && (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-muted-foreground">Body maps</span>
+                        <span className="">{selected.body_map_responses.length}</span>
+                      </div>
+                    )
+                  }
                 </div>
               </div>
             )}
           </div>
-        </div>
 
-        {/* ── Col 3: Response content ───────────────────────────────────── */}
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
           <div className="px-3 py-2 border-b border-border bg-muted/30">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Response</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Response</p>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="">
             {!selected ? (
               <div className="flex items-center justify-center h-full text-sm text-muted-foreground italic">
                 Pilih sesi untuk melihat response
