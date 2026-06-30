@@ -13,6 +13,7 @@ import {
   UsersIcon,
   MagnifyingGlassIcon,
   CaretRightIcon,
+  ArrowSquareOutIcon,
 } from "@phosphor-icons/react"
 import { fmtLocalTime, fmtDuration, groupByDay } from "@/lib/session-helper"
 import type { SessionSummary, RecentCompletion } from "@/lib/session-helper"
@@ -261,7 +262,7 @@ export function UserResponsesManager() {
         {sessions.length === 0 ? (
           <EmptyState text="Belum ada sesi" />
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-3 gap-2">
             {sessions.map((s, i) => (
               <div
                 key={s.id}
@@ -287,7 +288,7 @@ export function UserResponsesManager() {
         )}
       </div>
 
-      {/* ── Penyelesaian Terakhir — grouped by day ──────────────────────── */}
+      {/* ── Penyelesaian Terakhir — grouped table ───────────────────────── */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
@@ -309,44 +310,62 @@ export function UserResponsesManager() {
         {pagedGrouped.length === 0 ? (
           <EmptyState text={search ? "Tidak ada hasil pencarian" : "Belum ada penyelesaian"} />
         ) : (
-          <div className="flex flex-col gap-5">
-            {pagedGrouped.map((group) => (
-              <div key={`day-${group.label}`} className="flex flex-col gap-2">
-                <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wide px-1">
-                  {group.label}
-                </p>
-                <div className="flex flex-col gap-2">
-                  {group.items.map((c) => (
-                    <div
-                      key={c.id}
-                      onClick={() => router.push(`/admin/user-responses/${c.user_id}`)}
-                      className={ROW_CARD}
-                    >
-                      <div className="flex items-center justify-center w-9 h-9 rounded-full bg-foreground/[0.06] text-xs font-semibold text-foreground/60 shrink-0">
-                        {getInitials(c.full_name, c.email)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-sm font-medium truncate">
-                            {c.full_name ?? <span className="italic text-muted-foreground">Tanpa nama</span>}
-                          </span>
-                          <span className="text-xs text-muted-foreground truncate">{c.email}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground/80 mt-0.5 truncate">
-                          {c.session_name}
-                          <span className="text-muted-foreground/40"> · </span>
-                          {fmtDuration(c.started_at, c.completed_at)} tes
-                        </p>
-                      </div>
-                      <span className="text-xs text-muted-foreground tabular-nums shrink-0 hidden sm:block">
-                        {fmtLocalTime(c.completed_at)}
-                      </span>
-                      <CaretRightIcon className="w-4 h-4 text-muted-foreground/50 group-hover:text-muted-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <div className="rounded-xl border border-border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/40 border-b border-border">
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[35%]">User</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[30%]">Sesi</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[18%] hidden sm:table-cell">Waktu Selesai</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[10%] hidden md:table-cell">Durasi</th>
+                  <th className="w-[7%]" />
+                </tr>
+              </thead>
+              <tbody>
+                {pagedGrouped.map((group) => (
+                  <>
+                    <tr key={`header-${group.label}`} className="bg-muted/20 border-b border-border/50">
+                      <td colSpan={5} className="px-4 py-1.5">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">{group.label}</span>
+                      </td>
+                    </tr>
+                    {group.items.map((c) => (
+                      <tr
+                        key={c.id}
+                        onClick={() => router.push(`/admin/user-responses/${c.user_id}`)}
+                        className="border-b border-border/40 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors group"
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-foreground/8 flex items-center justify-center text-[10px] font-bold text-foreground/60 shrink-0">
+                              {getInitials(c.full_name, c.email)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm truncate leading-tight">
+                                {c.full_name ?? <span className="italic text-muted-foreground">Tanpa nama</span>}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">{c.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="text-sm truncate text-foreground/80">{c.session_name}</p>
+                        </td>
+                        <td className="px-4 py-3 hidden sm:table-cell">
+                          <p className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">{fmtLocalTime(c.completed_at)}</p>
+                        </td>
+                        <td className="px-4 py-3 hidden md:table-cell">
+                          <p className="text-xs text-muted-foreground tabular-nums">{fmtDuration(c.started_at, c.completed_at)}</p>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <ArrowSquareOutIcon className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-muted-foreground inline transition-colors" />
+                        </td>
+                      </tr>
+                    ))}
+                  </>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 

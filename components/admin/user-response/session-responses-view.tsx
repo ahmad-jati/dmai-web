@@ -1,16 +1,15 @@
 'use client'
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious,
-} from "@/components/ui/pagination"
-import { ArrowLeftIcon, ClipboardTextIcon, PersonIcon, CaretRightIcon } from "@phosphor-icons/react"
+  ArrowLeftIcon,
+  ArrowSquareOutIcon,
+  ClockIcon,
+  UserIcon,
+} from "@phosphor-icons/react"
 import { BodyMapRegion } from "@/lib/body-map-region"
 import { fmtLocalTime, fmtDuration, groupByDay } from "@/lib/session-helper"
 import type { CompletionRecord, SessionInfo, FormStep, BodyMapResponse } from "@/lib/session-helper"
@@ -18,13 +17,6 @@ import type { CompletionRecord, SessionInfo, FormStep, BodyMapResponse } from "@
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const bodyPartLabelMap = new Map(BodyMapRegion.map((r) => [r.id, r.label_id]))
-const PAGE_SIZE = 10
-
-// Shared row treatment — identical card used for every clickable item on this page.
-const ROW_CARD =
-  "group flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-white hover:border-foreground/20 hover:shadow-sm transition-all cursor-pointer"
-
-// ─── Emoji Map ───────────────────────────────────────────────────────────────
 
 const EMOJI_MAP: Record<number, { emoji: string; label: string }> = {
   1: { emoji: "😞", label: "Sangat buruk" },
@@ -44,13 +36,12 @@ function getInitials(fullName: string | null, email: string) {
   return (parts[0][0] + parts[1][0]).toUpperCase()
 }
 
-// ─── Answer renderer (matches user-overview-view pattern) ─────────────────
+// ─── Answer renderers ─────────────────────────────────────────────────────────
 
 function renderAnswerValue(value: string | number | string[] | null, type?: string) {
   if (value === null || value === undefined || value === "") {
-    return <span className="text-muted-foreground italic text-sm">Tidak diisi</span>
+    return <span className="text-muted-foreground italic text-xs">—</span>
   }
-
   const num = Number(value)
   const isNumeric = !Array.isArray(value) && !isNaN(num) && String(value).trim() !== ""
   const isEmoji = type === "emoji_scale" || (!type && isNumeric && Number.isInteger(num) && num >= 1 && num <= 5)
@@ -58,189 +49,36 @@ function renderAnswerValue(value: string | number | string[] | null, type?: stri
 
   if (isEmoji) {
     const entry = EMOJI_MAP[num]
-    if (entry) {
-      return (
-        <span className="inline-flex items-center gap-2 text-sm font-medium">
-          <span className="text-xl">{entry.emoji}</span>
-          <span className="text-foreground">{entry.label}</span>
-        </span>
-      )
-    }
-  }
-
-  if (isSlider) {
-    return (
-      <span className="text-sm font-semibold text-foreground">
-        {String(value)}
-        <span className="text-xs font-normal text-muted-foreground ml-1">/ 100</span>
+    if (entry) return (
+      <span className="inline-flex items-center gap-1.5 text-sm font-medium">
+        <span className="text-lg leading-none">{entry.emoji}</span>
+        <span>{entry.label}</span>
       </span>
     )
   }
-
-  if (Array.isArray(value)) {
-    return (
-      <div className="flex flex-wrap gap-1.5 mt-0.5">
-        {value.map((v) => (
-          <span
-            key={v}
-            className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-foreground/8 border border-foreground/15"
-          >
-            {v}
-          </span>
-        ))}
-      </div>
-    )
-  }
-
-  return (
-    <div className="bg-foreground/4 rounded-lg px-3 py-2 text-sm text-foreground leading-relaxed">
-      {String(value)}
+  if (isSlider) return (
+    <span className="text-sm font-semibold">
+      {String(value)}<span className="text-xs font-normal text-muted-foreground ml-1">/ 100</span>
+    </span>
+  )
+  if (Array.isArray(value)) return (
+    <div className="flex flex-wrap gap-1 mt-0.5">
+      {value.map((v) => (
+        <span key={v} className="px-2 py-0.5 rounded-full text-xs bg-foreground/8 border border-foreground/12">{v}</span>
+      ))}
     </div>
   )
+  return <p className="text-sm leading-relaxed">{String(value)}</p>
 }
-
-// ─── Skeleton ───────────────────────────────────────────────────────────────
-
-function Skeleton() {
-  return (
-    <div className="flex flex-col gap-10 animate-pulse">
-      <div className="flex items-start gap-3">
-        <div className="w-24 h-8 bg-muted rounded-sm mt-0.5" />
-        <div className="flex flex-col gap-1.5 pt-1">
-          <div className="h-5 bg-muted rounded w-52" />
-          <div className="h-3.5 bg-muted/60 rounded w-40" />
-        </div>
-      </div>
-      <div className="flex flex-col gap-2">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <div key={i} className="h-[60px] bg-muted/50 rounded-xl" />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── Empty State ─────────────────────────────────────────────────────────────
-
-function EmptyState({ text }: { text: string }) {
-  return (
-    <div className="flex items-center justify-center py-14 text-sm text-muted-foreground italic border border-dashed border-border rounded-xl">
-      {text}
-    </div>
-  )
-}
-
-// ─── Pagination UI ───────────────────────────────────────────────────────────
-
-function ResultsPagination({
-  page,
-  totalPages,
-  onPageChange,
-  total,
-}: {
-  page: number
-  totalPages: number
-  onPageChange: (page: number) => void
-  total: number
-}) {
-  if (totalPages <= 1) return null
-  const from = (page - 1) * PAGE_SIZE + 1
-  const to = Math.min(page * PAGE_SIZE, total)
-  return (
-    <div className="flex items-center justify-between">
-      <p className="text-xs text-muted-foreground">
-        Menampilkan {from}–{to} dari {total} entri
-      </p>
-      <Pagination className="justify-end w-auto">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={() => onPageChange(Math.max(1, page - 1))}
-              className={page === 1 ? "pointer-events-none opacity-40 rounded-sm" : "cursor-pointer rounded-sm hover:bg-muted-foreground/20"}
-            />
-          </PaginationItem>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <PaginationItem key={p}>
-              <Button
-                variant={p === page ? "default" : "ghost"}
-                size="sm"
-                className="w-8 h-8 p-0 rounded-sm font-medium text-sm hover:bg-muted-foreground/20"
-                onClick={() => onPageChange(p)}
-              >
-                {p}
-              </Button>
-            </PaginationItem>
-          ))}
-          <PaginationItem>
-            <PaginationNext
-              onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-              className={page === totalPages ? "pointer-events-none opacity-40 rounded-sm" : "cursor-pointer rounded-sm hover:bg-muted-foreground/20"}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
-    </div>
-  )
-}
-
-// ─── Body Map Panel ──────────────────────────────────────────────────────────
-
-function BodyMapPanel({ bm }: { bm: BodyMapResponse }) {
-  return (
-    <div className="flex flex-col gap-3">
-      {bm.selected_parts.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          <p className="text-xs font-medium text-foreground/70">Bagian tubuh dipilih</p>
-          <div className="flex flex-wrap gap-1.5">
-            {bm.selected_parts.map((part, pi) => (
-              <span
-                key={pi}
-                className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-foreground/8 border border-foreground/15"
-              >
-                {bodyPartLabelMap.get(part) ?? part}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="flex flex-col gap-1">
-        <p className="text-xs font-medium text-foreground/70">Sensasi</p>
-        {bm.sensation ? (
-          <p className="text-sm font-medium capitalize">{bm.sensation}</p>
-        ) : (
-          <span className="text-muted-foreground italic text-sm">Tidak diisi</span>
-        )}
-      </div>
-      <div className="flex flex-col gap-1">
-        <p className="text-xs font-medium text-foreground/70">Catatan</p>
-        {bm.note ? (
-          <div className="bg-foreground/4 rounded-lg px-3 py-2 text-sm leading-relaxed">{bm.note}</div>
-        ) : (
-          <span className="text-muted-foreground italic text-sm">Tidak diisi</span>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ─── Compact Answer Row ──────────────────────────────────────────────────────
-// One question per row instead of a label line + value block — this is what
-// actually keeps the dialog short. Short answers (emoji/slider) sit inline,
-// label left value right; long answers (text/chips) still stack since they
-// don't fit on one line cleanly.
 
 function isInlineAnswer(value: string | number | string[] | null) {
   if (value === null || value === undefined || value === "") return true
   if (Array.isArray(value)) return false
-  const num = Number(value)
-  return !isNaN(num) && String(value).trim() !== ""
+  return !isNaN(Number(value)) && String(value).trim() !== ""
 }
 
 function CompactAnswerRow({
-  label,
-  value,
-  type,
-  delta,
+  label, value, type, delta,
 }: {
   label: string
   value: string | number | string[] | null
@@ -249,12 +87,12 @@ function CompactAnswerRow({
 }) {
   if (isInlineAnswer(value)) {
     return (
-      <div className="flex items-center justify-between gap-3 py-2 border-b border-border/60 last:border-0">
-        <span className="text-xs text-muted-foreground">{label}</span>
-        <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center justify-between gap-2 py-1.5 border-b border-border/50 last:border-0">
+        <span className="text-xs text-muted-foreground shrink-0 max-w-[45%] leading-tight">{label}</span>
+        <div className="flex items-center gap-1 shrink-0">
           {renderAnswerValue(value, type)}
           {delta != null && delta !== 0 && (
-            <span className="text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded-full bg-foreground/8 text-foreground/60">
+            <span className="text-[10px] font-semibold px-1 py-0.5 rounded bg-foreground/8 text-foreground/60 tabular-nums">
               {delta > 0 ? `+${delta}` : delta}
             </span>
           )}
@@ -263,76 +101,14 @@ function CompactAnswerRow({
     )
   }
   return (
-    <div className="flex flex-col gap-1 py-2 border-b border-border/60 last:border-0">
+    <div className="flex flex-col gap-1 py-1.5 border-b border-border/50 last:border-0">
       <span className="text-xs text-muted-foreground">{label}</span>
       {renderAnswerValue(value, type)}
     </div>
   )
 }
 
-// ─── Form Step Panel ─────────────────────────────────────────────────────────
-
-function FormStepPanel({ step }: { step: FormStep }) {
-  return (
-    <div className="flex flex-col">
-      {step.answers.length === 0 ? (
-        <p className="text-xs text-muted-foreground italic py-1">Tidak ada response tersimpan.</p>
-      ) : (
-        step.answers.map((ans, ai) => (
-          <CompactAnswerRow key={ai} label={ans.label} value={ans.value} type={ans.type} />
-        ))
-      )}
-    </div>
-  )
-}
-
-// ─── Response Stepper ────────────────────────────────────────────────────────
-// For anything left over after the pre/post comparison — extra steps, body
-// map. A single leftover item just gets a titled card; 2+ get a timeline.
-
-type StepperNode = {
-  title: string
-  content: React.ReactNode
-}
-
-function ResponseStepper({ nodes }: { nodes: StepperNode[] }) {
-  if (nodes.length === 0) return null
-  if (nodes.length === 1) {
-    return (
-      <div className="flex flex-col gap-2.5">
-        <p className="text-sm font-semibold text-foreground">{nodes[0].title}</p>
-        <div className="rounded-xl border border-foreground/15 bg-background p-4">
-          {nodes[0].content}
-        </div>
-      </div>
-    )
-  }
-  return (
-    <div className="flex flex-col">
-      {nodes.map((node, i) => (
-        <div key={i} className="flex gap-4">
-          <div className="flex flex-col items-center shrink-0">
-            <div className="w-7 h-7 rounded-full border-2 border-foreground/20 bg-background flex items-center justify-center text-xs font-semibold text-foreground/70">
-              {i + 1}
-            </div>
-            {i < nodes.length - 1 && <div className="w-px flex-1 bg-border my-1" />}
-          </div>
-          <div className={`flex-1 min-w-0 ${i < nodes.length - 1 ? "pb-5" : ""}`}>
-            <p className="text-sm font-semibold text-foreground mb-2">{node.title}</p>
-            <div className="rounded-xl border border-foreground/15 bg-background p-4">
-              {node.content}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ─── Pre/Post Compare — side by side ─────────────────────────────────────────
-// Pre on the left, post on the right, each column labeled. When a question
-// shows up in both with a numeric answer, the post side gets a small delta
-// badge so the change is visible without a separate summary block.
+// ─── Pre/Post side-by-side ────────────────────────────────────────────────────
 
 function buildDeltaMap(preSteps: FormStep[], postSteps: FormStep[]): Map<string, number> {
   const preAnswers = preSteps.flatMap((s) => s.answers)
@@ -341,39 +117,33 @@ function buildDeltaMap(preSteps: FormStep[], postSteps: FormStep[]): Map<string,
     const pre = preAnswers.find((a) => a.label === post.label)
     if (!pre || pre.value == null || post.value == null) continue
     if (Array.isArray(pre.value) || Array.isArray(post.value)) continue
-    const before = Number(pre.value)
-    const after = Number(post.value)
-    if (isNaN(before) || isNaN(after)) continue
-    map.set(post.label, after - before)
+    const before = Number(pre.value), after = Number(post.value)
+    if (!isNaN(before) && !isNaN(after)) map.set(post.label, after - before)
   }
   return map
 }
 
-function PrePostCompare({ preSteps, postSteps }: { preSteps: FormStep[]; postSteps: FormStep[] }) {
+function PrePostColumns({ preSteps, postSteps }: { preSteps: FormStep[]; postSteps: FormStep[] }) {
   const deltaMap = buildDeltaMap(preSteps, postSteps)
   const preAnswers = preSteps.flatMap((s) => s.answers)
   const postAnswers = postSteps.flatMap((s) => s.answers)
-
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div className="flex flex-col rounded-xl border border-foreground/15 bg-background p-4">
-        <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide mb-1">
+    <div className="grid grid-cols-2 gap-3">
+      <div className="flex flex-col rounded-lg border border-foreground/12 p-3">
+        <p className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1">
           {preSteps[0]?.step_title ?? "Pre Form"}
         </p>
-        {preAnswers.map((ans, ai) => (
-          <CompactAnswerRow key={ai} label={ans.label} value={ans.value} type={ans.type} />
+        {preAnswers.map((ans, i) => (
+          <CompactAnswerRow key={i} label={ans.label} value={ans.value} type={ans.type} />
         ))}
       </div>
-      <div className="flex flex-col rounded-xl border border-foreground/15 bg-background p-4">
-        <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide mb-1">
+      <div className="flex flex-col rounded-lg border border-foreground/12 p-3">
+        <p className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1">
           {postSteps[0]?.step_title ?? "Post Form"}
         </p>
-        {postAnswers.map((ans, ai) => (
+        {postAnswers.map((ans, i) => (
           <CompactAnswerRow
-            key={ai}
-            label={ans.label}
-            value={ans.value}
-            type={ans.type}
+            key={i} label={ans.label} value={ans.value} type={ans.type}
             delta={deltaMap.get(ans.label) ?? null}
           />
         ))}
@@ -382,21 +152,34 @@ function PrePostCompare({ preSteps, postSteps }: { preSteps: FormStep[]; postSte
   )
 }
 
-// ─── Response Detail Dialog ──────────────────────────────────────────────────
+// ─── Body Map section ────────────────────────────────────────────────────────
 
-function ResponseDetailDialog({
-  record,
-  open,
-  onClose,
-}: {
-  record: CompletionRecord | null
-  open: boolean
-  onClose: () => void
-}) {
-  if (!record) return null
+function BodyMapSection({ bm }: { bm: BodyMapResponse }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-foreground/12 p-3">
+      <p className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">Body Map</p>
+      {bm.selected_parts.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {bm.selected_parts.map((part, i) => (
+            <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-foreground/8 border border-foreground/12">
+              {bodyPartLabelMap.get(part) ?? part}
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-4 text-xs">
+        {bm.sensation && (
+          <span><span className="text-muted-foreground">Sensasi </span><span className="font-medium capitalize">{bm.sensation}</span></span>
+        )}
+      </div>
+      {bm.note && <p className="text-xs text-foreground/80 bg-foreground/4 rounded px-2 py-1.5 leading-relaxed">{bm.note}</p>}
+    </div>
+  )
+}
 
-  // Heuristic split: pre vs post. Anything that isn't clearly one or the
-  // other falls through to "other" and still gets shown via the stepper.
+// ─── Response Panel — right column ───────────────────────────────────────────
+
+function ResponsePanel({ record }: { record: CompletionRecord }) {
   const preSteps = record.form_responses.filter((s) =>
     s.step_title?.toLowerCase().includes("pre") || s.step_number === 1
   )
@@ -409,70 +192,70 @@ function ResponseDetailDialog({
     : record.form_responses
 
   const sortedOther = [...otherSteps].sort((a, b) => a.step_number - b.step_number)
-  const nodes: StepperNode[] = [
-    ...sortedOther.map((step) => ({
-      title: step.step_title ?? `Form ${step.step_number}`,
-      content: <FormStepPanel step={step} />,
-    })),
-    ...record.body_map_responses.map((bm, i) => ({
-      title: record.body_map_responses.length > 1 ? `Body Map ${i + 1}` : "Body Map",
-      content: <BodyMapPanel bm={bm} />,
-    })),
-  ]
+  const hasAny = hasCompare || sortedOther.length > 0 || record.body_map_responses.length > 0
 
-  const hasAnyData = hasCompare || nodes.length > 0
+  if (!hasAny) {
+    return (
+      <div className="flex items-center justify-center h-full text-sm text-muted-foreground italic">
+        Tidak ada response tersimpan
+      </div>
+    )
+  }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <PersonIcon className="w-4 h-4 text-muted-foreground" />
-            {record.full_name ?? record.email}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="flex flex-col gap-5 py-1">
-
-          {/* Info waktu — satu baris, biar nggak makan tempat */}
-          <div className="flex items-center gap-3 px-1 text-xs text-muted-foreground flex-wrap">
-            <span>Mulai <span className="font-medium text-foreground">{fmtLocalTime(record.started_at)}</span></span>
-            <span className="text-muted-foreground/40">·</span>
-            <span>Selesai <span className="font-medium text-foreground">{fmtLocalTime(record.completed_at)}</span></span>
-            <span className="text-muted-foreground/40">·</span>
-            <span>Durasi <span className="font-semibold text-foreground tabular-nums">{fmtDuration(record.started_at, record.completed_at)}</span></span>
-          </div>
-
-          {!hasAnyData ? (
-            <p className="text-sm text-muted-foreground text-center py-8 italic">
-              Tidak ada response yang tersimpan untuk sesi ini.
-            </p>
-          ) : (
-            <>
-              {hasCompare && <PrePostCompare preSteps={preSteps} postSteps={postSteps} />}
-              {nodes.length > 0 && <ResponseStepper nodes={nodes} />}
-            </>
-          )}
+    <div className="flex flex-col gap-3 p-4">
+      {hasCompare && <PrePostColumns preSteps={preSteps} postSteps={postSteps} />}
+      {sortedOther.map((step, i) => (
+        <div key={i} className="flex flex-col rounded-lg border border-foreground/12 p-3">
+          <p className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1">
+            {step.step_title ?? `Form ${step.step_number}`}
+          </p>
+          {step.answers.map((ans, ai) => (
+            <CompactAnswerRow key={ai} label={ans.label} value={ans.value} type={ans.type} />
+          ))}
         </div>
-      </DialogContent>
-    </Dialog>
+      ))}
+      {record.body_map_responses.map((bm, i) => (
+        <BodyMapSection key={i} bm={bm} />
+      ))}
+    </div>
+  )
+}
+
+// ─── Skeleton ────────────────────────────────────────────────────────────────
+
+function Skeleton() {
+  return (
+    <div className="flex flex-col gap-4 animate-pulse">
+      <div className="flex items-center gap-3">
+        <div className="h-8 w-20 bg-muted rounded-sm" />
+        <div className="h-5 bg-muted rounded w-48" />
+      </div>
+      <div className="flex border border-border rounded-xl overflow-hidden h-[600px]">
+        <div className="w-60 border-r border-border flex flex-col gap-2 p-3">
+          {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-12 bg-muted/50 rounded-lg" />)}
+        </div>
+        <div className="w-56 border-r border-border p-3 flex flex-col gap-3">
+          <div className="h-4 bg-muted rounded w-3/4" />
+          <div className="h-3 bg-muted/60 rounded w-1/2" />
+        </div>
+        <div className="flex-1 p-3 flex flex-col gap-3">
+          <div className="h-32 bg-muted/40 rounded-lg" />
+          <div className="h-20 bg-muted/40 rounded-lg" />
+        </div>
+      </div>
+    </div>
   )
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function SessionResponsesView({
-  sessionId,
-}: {
-  sessionId: string
-}) {
+export function SessionResponsesView({ sessionId }: { sessionId: string }) {
   const router = useRouter()
   const [session, setSession] = useState<SessionInfo | null>(null)
   const [completions, setCompletions] = useState<CompletionRecord[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [page, setPage] = useState<number>(1)
-  const [detailRecord, setDetailRecord] = useState<CompletionRecord | null>(null)
-  const [detailOpen, setDetailOpen] = useState<boolean>(false)
+  const [loading, setLoading] = useState(true)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!sessionId) return
@@ -485,7 +268,6 @@ export function SessionResponsesView({
         .select("id, session_name, week_number")
         .eq("id", sessionId)
         .single()
-
       setSession(sessionData)
 
       const { data: completionsData } = await supabase
@@ -494,42 +276,24 @@ export function SessionResponsesView({
         .eq("session_id", sessionId)
         .order("completed_at", { ascending: false })
 
-      if (!completionsData || completionsData.length === 0) {
-        setCompletions([])
-        setLoading(false)
-        return
-      }
+      if (!completionsData?.length) { setCompletions([]); setLoading(false); return }
 
       const userIds = [...new Set(completionsData.map((c) => c.user_id))]
       const completionIds = completionsData.map((c) => c.id)
 
-      const { data: profiles } = await supabase
-        .from("user_profiles")
-        .select("id, email, full_name")
-        .in("id", userIds)
+      const [{ data: profiles }, { data: formResponsesData }, { data: bodyMapData }] = await Promise.all([
+        supabase.from("user_profiles").select("id, email, full_name").in("id", userIds),
+        supabase.from("session_form_responses").select("id, step_id, step_number, session_id, responses, completion_id").in("completion_id", completionIds),
+        supabase.from("session_body_map_responses").select("id, step_id, selected_parts, sensation, note, completion_id").in("completion_id", completionIds),
+      ])
 
-      const { data: formResponsesData } = await supabase
-        .from("session_form_responses")
-        .select("id, step_id, step_number, session_id, responses, completion_id")
-        .in("completion_id", completionIds)
-
-      const { data: bodyMapData } = await supabase
-        .from("session_body_map_responses")
-        .select("id, step_id, selected_parts, sensation, note, completion_id")
-        .in("completion_id", completionIds)
-
-      const stepIds = [
-        ...new Set([
-          ...(formResponsesData ?? []).map((r) => r.step_id),
-          ...(bodyMapData ?? []).map((r) => r.step_id),
-        ])
-      ]
+      const stepIds = [...new Set([
+        ...(formResponsesData ?? []).map((r) => r.step_id),
+        ...(bodyMapData ?? []).map((r) => r.step_id),
+      ])]
 
       const { data: stepsData } = stepIds.length > 0
-        ? await supabase
-          .from("session_steps")
-          .select("id, title, step_config")
-          .in("id", stepIds)
+        ? await supabase.from("session_steps").select("id, title, step_config").in("id", stepIds)
         : { data: [] }
 
       const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]))
@@ -540,15 +304,14 @@ export function SessionResponsesView({
         if (!formByCompletion.has(fr.completion_id)) formByCompletion.set(fr.completion_id, [])
         const step = stepMap.get(fr.step_id)
         const questions: { _key: string; label: string; type?: string }[] = step?.step_config?.questions ?? []
-        const answers = questions.map((q) => ({
-          label: q.label,
-          value: (fr.responses as Record<string, string | number | string[] | null>)?.[q._key] ?? null,
-          type: q.type,
-        }))
         formByCompletion.get(fr.completion_id)!.push({
           step_number: fr.step_number,
           step_title: step?.title ?? null,
-          answers,
+          answers: questions.map((q) => ({
+            label: q.label,
+            value: (fr.responses as Record<string, string | number | string[] | null>)?.[q._key] ?? null,
+            type: q.type,
+          })),
         })
       }
 
@@ -562,7 +325,7 @@ export function SessionResponsesView({
         })
       }
 
-      const merged = completionsData.map((c) => ({
+      const merged: CompletionRecord[] = completionsData.map((c) => ({
         id: c.id,
         user_id: c.user_id,
         started_at: c.started_at,
@@ -574,105 +337,152 @@ export function SessionResponsesView({
       }))
 
       setCompletions(merged)
+      // Auto-select first record
+      if (merged.length > 0) setSelectedId(merged[0].id)
       setLoading(false)
     }
-
     load()
   }, [sessionId])
 
-  const handleOpenDetail = useCallback((record: CompletionRecord) => {
-    setDetailRecord(record)
-    setDetailOpen(true)
-  }, [])
-
+  const selected = completions.find((c) => c.id === selectedId) ?? null
   const grouped = groupByDay(completions, "completed_at")
-  const flat = grouped.flatMap((g) => g.items)
-  const totalPages = Math.ceil(flat.length / PAGE_SIZE) || 1
-  const paginated = flat.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-  const pagedGrouped = groupByDay(paginated, "completed_at")
 
   if (loading) return <Skeleton />
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4">
+
       {/* Header */}
-      <div className="flex items-start gap-4">
+      <div className="flex items-center gap-3">
         <Button
-          variant="outline"
-          size="sm"
-          className="rounded-sm gap-1.5 [&_svg]:size-3.5 mt-0.5 shrink-0"
+          variant="outline" size="sm"
+          className="rounded-sm gap-1.5 [&_svg]:size-3.5 shrink-0"
           onClick={() => router.push("/admin/user-responses")}
         >
-          <ArrowLeftIcon className="w-3.5 h-3.5" />
+          <ArrowLeftIcon />
           Kembali
         </Button>
-        <div className="flex flex-col gap-0.5">
-          <h2 className="text-xl font-semibold">{session?.session_name ?? "Sesi"}</h2>
-          <p className="text-sm text-muted-foreground">
-            {completions.length} penyelesaian · klik untuk lihat detail response
-          </p>
+        <div>
+          <h2 className="text-base font-semibold leading-tight">{session?.session_name ?? "Sesi"}</h2>
+          <p className="text-xs text-muted-foreground">{completions.length} penyelesaian</p>
         </div>
       </div>
 
-      {/* List — grouped by day, click a row to see its response */}
-      <div className="flex flex-col gap-3">
-        {pagedGrouped.length === 0 ? (
-          <EmptyState text="Belum ada penyelesaian untuk sesi ini" />
-        ) : (
-          <div className="flex flex-col gap-5">
-            {pagedGrouped.map((group) => {
-              return (
-                <div key={`day-${group.label}`} className="flex flex-col gap-2">
-                  <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wide px-1">
-                    {group.label}
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    {group.items.map((c) => {
-                      const hasResponse = c.form_responses.length > 0 || c.body_map_responses.length > 0
-                      return (
-                        <div
-                          key={c.id}
-                          onClick={() => handleOpenDetail(c)}
-                          className={ROW_CARD}
-                        >
-                          <div className="flex items-center justify-center w-9 h-9 rounded-full bg-foreground/[0.06] text-xs font-semibold text-foreground/60 shrink-0">
-                            {getInitials(c.full_name, c.email)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">
-                              {c.full_name ?? <span className="italic text-muted-foreground">Tanpa nama</span>}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">{c.email}</p>
-                          </div>
-                          <span className="text-xs text-muted-foreground/60 shrink-0 hidden sm:block">
-                            {hasResponse
-                              ? `${c.form_responses.length} form · ${c.body_map_responses.length} body map`
-                              : "Tidak ada response"}
-                          </span>
-                          <CaretRightIcon className="w-4 h-4 text-muted-foreground/50 group-hover:text-muted-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
+      {/* 3-column panel */}
+      <div className="flex border border-border rounded-xl overflow-hidden bg-background" style={{ height: "calc(100vh - 220px)", minHeight: 480 }}>
+
+        {/* ── Col 1: User list ─────────────────────────────────────────── */}
+        <div className="w-60 shrink-0 border-r border-border flex flex-col overflow-hidden">
+          <div className="px-3 py-2 border-b border-border bg-muted/30">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Peserta ({completions.length})
+            </p>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {grouped.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic text-center py-8">Belum ada penyelesaian</p>
+            ) : (
+              grouped.map((group) => (
+                <div key={group.label}>
+                  <div className="px-3 py-1.5 bg-muted/20 border-b border-border/50 sticky top-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">{group.label}</p>
+                  </div>
+                  {group.items.map((c) => {
+                    const isActive = c.id === selectedId
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedId(c.id)}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left border-b border-border/40 transition-colors hover:bg-muted/40 ${isActive ? "bg-foreground text-background hover:bg-foreground" : ""}`}
+                      >
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${isActive ? "bg-background/20 text-background" : "bg-foreground/8 text-foreground/60"}`}>
+                          {getInitials(c.full_name, c.email)}
                         </div>
-                      )
-                    })}
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs font-medium truncate ${isActive ? "text-background" : "text-foreground"}`}>
+                            {c.full_name ?? <span className="italic opacity-60">Tanpa nama</span>}
+                          </p>
+                          <p className={`text-[10px] truncate ${isActive ? "text-background/60" : "text-muted-foreground"}`}>
+                            {fmtLocalTime(c.completed_at)}
+                          </p>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* ── Col 2: Selected user info ─────────────────────────────────── */}
+        <div className="w-52 shrink-0 border-r border-border flex flex-col overflow-hidden">
+          <div className="px-3 py-2 border-b border-border bg-muted/30">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Info Peserta</p>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {!selected ? (
+              <p className="text-xs text-muted-foreground italic text-center py-8">Pilih peserta</p>
+            ) : (
+              <div className="p-3 flex flex-col gap-3">
+                {/* Avatar + name */}
+                <div className="flex flex-col items-center gap-2 pt-2 pb-1">
+                  <div className="w-12 h-12 rounded-full bg-foreground/8 flex items-center justify-center text-sm font-bold text-foreground/60">
+                    {getInitials(selected.full_name, selected.email)}
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-semibold leading-tight">{selected.full_name ?? "—"}</p>
+                    <p className="text-[10px] text-muted-foreground break-all">{selected.email}</p>
                   </div>
                 </div>
-              )
-            })}
+
+                {/* Time meta */}
+                <div className="flex flex-col gap-1.5 rounded-lg bg-muted/30 p-2.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Mulai</span>
+                    <span className="font-medium">{fmtLocalTime(selected.started_at)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Selesai</span>
+                    <span className="font-medium">{fmtLocalTime(selected.completed_at)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-border/50 pt-1.5 mt-0.5">
+                    <span className="text-muted-foreground flex items-center gap-1"><ClockIcon className="w-3 h-3" />Durasi</span>
+                    <span className="font-semibold tabular-nums">{fmtDuration(selected.started_at, selected.completed_at)}</span>
+                  </div>
+                </div>
+
+                {/* Link to user overview */}
+                <Button
+                  variant="outline" size="sm"
+                  className="w-full rounded-sm gap-1.5 text-xs [&_svg]:size-3"
+                  onClick={() => router.push(`/admin/user-responses/${selected.user_id}`)}
+                >
+                  <UserIcon />
+                  Lihat Profil User
+                  <ArrowSquareOutIcon className="ml-auto" />
+                </Button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
-        <ResultsPagination
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          total={flat.length}
-        />
+        {/* ── Col 3: Response content ───────────────────────────────────── */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+          <div className="px-3 py-2 border-b border-border bg-muted/30">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Response</p>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {!selected ? (
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground italic">
+                Pilih peserta untuk melihat response
+              </div>
+            ) : (
+              <ResponsePanel record={selected} />
+            )}
+          </div>
+        </div>
       </div>
-
-      <ResponseDetailDialog
-        record={detailRecord}
-        open={detailOpen}
-        onClose={() => { setDetailOpen(false); setDetailRecord(null) }}
-      />
     </div>
   )
 }
