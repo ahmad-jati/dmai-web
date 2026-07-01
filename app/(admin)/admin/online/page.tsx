@@ -344,7 +344,7 @@ export default function OnlineActivityPage() {
         </div>
       )}
 
-      <div className="flex flex-col items-end gap-2 shrink-0">
+      {/* <div className="flex flex-col items-end gap-2 shrink-0">
         <button
           onClick={() => setShowDummy((v) => !v)}
           className={cn(
@@ -357,7 +357,7 @@ export default function OnlineActivityPage() {
           <FlaskIcon weight="bold" className="w-3.5 h-3.5" />
           {showDummy ? '400 dummy aktif' : 'Tampilkan dummy'}
         </button>
-      </div>
+      </div> */}
     </div>
   )
 }
