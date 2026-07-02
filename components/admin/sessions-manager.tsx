@@ -26,10 +26,12 @@ export function SessionsManager() {
             `id, slug, session_name, detail_short, detail_full, image_cover_url,
              sort_order, week_number, duration, total_instruction, is_locked,
              session_steps (id, step_number, title, description, duration_seconds,
-               image_url, audio_url, step_type, step_config)`
+             step_type, step_config)`
           )
           .order('sort_order', { ascending: true })
           .returns<SessionRaw[]>()
+
+          console.log(data)
 
         if (error) {
           console.error('Failed to load sessions:', error)
@@ -109,16 +111,15 @@ export function SessionsManager() {
           <h2 className="text-xl font-semibold">Kelola Sesi Terapi</h2>
           <p className="text-sm text-muted-foreground mt-0.5">{sessions.length} sesi tersedia</p>
         </div>
-        <Button
-          asChild
-          size="sm"
-          className="rounded-sm gap-1.5 [&_svg]:size-3.5 bg-background hover:bg-lemon text-foreground"
-        >
-          <Link href="/admin/sessions/new">
+        <Link href="/admin/sessions/new">
+          <Button
+            size="sm"
+            className="rounded-sm gap-1.5 [&_svg]:size-3.5 bg-background hover:bg-lemon text-foreground flex items-center"
+          >
             <PlusIcon className="w-3.5 h-3.5" />
             Tambah Sesi
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-3 gap-3">

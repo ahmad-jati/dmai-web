@@ -348,8 +348,6 @@ export function SessionDetailView({
         title: updated.title,
         description: updated.description,
         duration_seconds: updated.duration_seconds,
-        image_url: updated.image_url ?? '',
-        audio_url: updated.audio_url ?? '',
         step_type: updated.step_type,
         step_config: finalConfig,
       })
@@ -529,17 +527,14 @@ export function SessionDetailView({
             {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
           </Button>
 
-          {/* ── Delete Session ── */}
-          <div className="pt-2 border-t border-border">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteSessionOpen(true)}
-              className="rounded-sm gap-2 [&_svg]:size-4 w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
-            >
-              <TrashIcon className="w-4 h-4" />
-              Hapus Sesi Ini
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => setDeleteSessionOpen(true)}
+            className="rounded-sm gap-2 [&_svg]:size-4 w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
+          >
+            <TrashIcon className="w-4 h-4" />
+            Hapus Sesi Ini
+          </Button>
         </div>
 
         {/* ── Steps Table ── */}
@@ -563,7 +558,7 @@ export function SessionDetailView({
               <TableHeader>
                 <TableRow className="bg-muted/40">
                   <TableHead className="w-12 text-center">No</TableHead>
-                  <TableHead>Judul</TableHead>
+                  <TableHead className='w-40 max-w-40'>Judul</TableHead>
                   <TableHead className="w-36">Tipe</TableHead>
                   <TableHead className="w-20 text-center">Durasi</TableHead>
                   <TableHead className="text-center w-28">Aksi</TableHead>
@@ -575,7 +570,7 @@ export function SessionDetailView({
                     <TableCell className="text-center font-semibold text-sm text-muted-foreground">
                       {step.step_number}
                     </TableCell>
-                    <TableCell className="font-medium text-sm">{step.title}</TableCell>
+                    <TableCell className="font-medium text-sm w-40 max-w-40 wrap-break-word whitespace-normal">{step.title}</TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-sm border text-xs font-medium ${

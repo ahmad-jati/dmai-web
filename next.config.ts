@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
         hostname: "zgvybfxgvexsuutrekpq.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      { hostname: 'img.youtube.com' }
     ],
   },
 };

@@ -23,9 +23,9 @@ import {
 } from '@phosphor-icons/react'
 import Image from 'next/image'
 import { StepTypeForm, BodyPart, newKey, FormQuestion } from './step-type-form'
-import { SessionMeta, StepType, STEP_TYPE_LABELS, STEP_TYPE_COLORS } from './types'
+import { SessionMeta, StepType, STEP_TYPE_LABELS, STEP_TYPE_COLORS, NarrationSubStep } from './types'
 
-// ─── Constants ─────────────────────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────────────────────
 type DraftStep = {
   _key: string
   step_number: number
@@ -66,12 +66,10 @@ function emptyDraftStep(num: number): DraftStep {
   }
 }
 
-/** Sum all step durations → total seconds */
 function calcTotalDurationSec(steps: DraftStep[]) {
   return steps.reduce((acc, s) => acc + (s.duration_seconds || 0), 0)
 }
 
-/** Format seconds → "X menit Y detik" or "X menit" */
 function formatDuration(totalSec: number) {
   const mins = Math.floor(totalSec / 60)
   const secs = totalSec % 60
@@ -139,7 +137,6 @@ function SessionInfoStep({
   setCoverFile: React.Dispatch<React.SetStateAction<File | null>>
   coverPreview: string
   setCoverPreview: React.Dispatch<React.SetStateAction<string>>
-  /** Computed from steps: { totalSteps, durationLabel } */
   autoStats: { totalSteps: number; durationLabel: string }
 }) {
   const coverRef = useRef<HTMLInputElement>(null!)
@@ -204,7 +201,6 @@ function SessionInfoStep({
             <Input id="week" type="number" value={form.week_number}
               onChange={(e) => setForm((f) => ({ ...f, week_number: e.target.value }))} placeholder="1" />
           </div>
-          {/* Duration & total instruction: auto-derived, shown read-only with override */}
           <div className="flex flex-col gap-1.5">
             <Label>Durasi <span className="text-muted-foreground font-normal">(otomatis)</span></Label>
             <div className="flex items-center h-9 px-3 rounded-sm border border-border bg-muted text-sm text-muted-foreground">
@@ -267,8 +263,6 @@ function StepBuilderCard({
   bodyParts: BodyPart[]
   bodyPartsLoading: boolean
 }) {
-  // Keep a local SessionStep-shaped state so StepTypeForm has stable, owned state.
-  // Sync back to parent DraftStep via onChange on every change.
   const [localForm, setLocalForm] = useState({
     id: step._key,
     step_number: step.step_number,
@@ -281,9 +275,11 @@ function StepBuilderCard({
     audio_url: '',
   })
 
-  // Sync incoming step prop → localForm when the step identity changes (e.g. type reset)
+  // Only reset localForm when the step identity (_key) changes — never on config/prop changes.
+  // Resetting on step_config would wipe NarrationStepConfig's sub_steps on every parent re-render.
   const prevKeyRef = useRef(step._key)
-  if (prevKeyRef.current !== step._key) {
+  useEffect(() => {
+    if (prevKeyRef.current === step._key) return
     prevKeyRef.current = step._key
     setLocalForm({
       id: step._key,
@@ -296,10 +292,9 @@ function StepBuilderCard({
       image_url: step.image_preview ?? '',
       audio_url: '',
     })
-  }
+  }, [step._key])
 
   const handleChange = (patch: Partial<typeof localForm>) => {
-    // When step_type changes, reset step_config
     const next = patch.step_type !== undefined && patch.step_type !== localForm.step_type
       ? { ...localForm, ...patch, step_config: {} }
       : { ...localForm, ...patch }
@@ -466,9 +461,8 @@ function ReviewStep({
           <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{steps.length} Step</p>
           <div className="flex flex-col gap-2">
             {steps.map((step) => {
-              // Config summary per type
               let configSummary: React.ReactNode = null
-              if (step.step_type === 'form') {
+              if (step.step_type === 'pre_form' || step.step_type === 'post_form') {
                 const qs = (step.step_config.questions as FormQuestion[]) ?? []
                 configSummary = qs.length > 0
                   ? <p className="text-xs text-muted-foreground">{qs.length} pertanyaan: {qs.map(q => q.label || '(kosong)').join(' · ')}</p>
@@ -488,6 +482,11 @@ function ReviewStep({
                 configSummary = url
                   ? <p className="text-xs text-muted-foreground truncate">{url}</p>
                   : <p className="text-xs text-destructive italic">URL embed belum diisi</p>
+              } else if (step.step_type === 'narration') {
+                const subs = (step.step_config.sub_steps as NarrationSubStep[]) ?? []
+                configSummary = subs.length > 0
+                  ? <p className="text-xs text-muted-foreground">{subs.length} sub-step · {subs.filter(s => s.audio_file || s.audio_url).length} audio</p>
+                  : <p className="text-xs text-muted-foreground italic">Belum ada sub-step</p>
               }
 
               return (
@@ -541,6 +540,12 @@ export function NewSessionStepper() {
   const [coverPreview, setCoverPreview] = useState('')
   const [draftSteps, setDraftSteps] = useState<DraftStep[]>([emptyDraftStep(1)])
 
+  // ─── FIX: useRef agar handleSave selalu baca draftSteps terbaru (anti stale closure) ───
+  const draftStepsRef = useRef(draftSteps)
+  useEffect(() => {
+    draftStepsRef.current = draftSteps
+  }, [draftSteps])
+
   // Body parts — fetched once on mount
   const [bodyParts, setBodyParts] = useState<BodyPart[]>([])
   const [bodyPartsLoading, setBodyPartsLoading] = useState(true)
@@ -558,7 +563,6 @@ export function NewSessionStepper() {
     fetchBodyParts()
   }, [])
 
-  // Auto-compute stats from steps
   const totalSec = calcTotalDurationSec(draftSteps)
   const autoStats = {
     totalSteps: draftSteps.length,
@@ -572,11 +576,14 @@ export function NewSessionStepper() {
   }
 
   const handleSave = async () => {
+    // Baca dari ref — selalu dapat nilai terbaru, tidak stale
+    const currentDraftSteps = draftStepsRef.current
+
     if (!info.session_name.trim() || !info.slug.trim()) {
       toast.error('Nama sesi dan slug wajib diisi')
       return
     }
-    const emptyTitles = draftSteps.filter((s) => !s.title.trim())
+    const emptyTitles = currentDraftSteps.filter((s) => !s.title.trim())
     if (emptyTitles.length > 0) {
       toast.error(`${emptyTitles.length} step belum memiliki nama`)
       return
@@ -588,6 +595,7 @@ export function NewSessionStepper() {
     try {
       const { count } = await supabase.from('sessions').select('id', { count: 'exact', head: true })
       const cleanedDetailFull = info.detail_full.filter((p) => p.trim() !== '')
+      const totalSecAtSave = calcTotalDurationSec(currentDraftSteps)
 
       const { data: newSession, error: sessionErr } = await supabase
         .from('sessions')
@@ -597,8 +605,8 @@ export function NewSessionStepper() {
           detail_short: info.detail_short,
           detail_full: cleanedDetailFull,
           week_number: info.week_number ? Number(info.week_number) : null,
-          duration: formatDuration(totalSec),
-          total_instruction: draftSteps.length,
+          duration: formatDuration(totalSecAtSave),
+          total_instruction: currentDraftSteps.length,
           is_locked: true,
           sort_order: (count ?? 0) + 1,
           image_cover_url: '',
@@ -624,59 +632,63 @@ export function NewSessionStepper() {
         }
       }
 
-      for (const draft of draftSteps) {
-        // Build the clean step_config — upload narration sub-step files, strip runtime fields
-        let cleanConfig: Record<string, unknown> = {}
+      for (const draft of currentDraftSteps) {
+        const descriptionValue = draft.description.trim() || null
 
         if (draft.step_type === 'narration' && Array.isArray(draft.step_config?.sub_steps)) {
-          // We need the step ID first — insert with empty config, then update
           const { data: insertedStep, error: stepErr } = await supabase
             .from('session_steps')
             .insert({
               session_id: sessionId,
               step_number: draft.step_number,
               title: draft.title,
-              description: draft.description,
+              description: descriptionValue,
               duration_seconds: draft.duration_seconds,
               step_type: draft.step_type,
-              step_config: {},
-              image_url: '',
-              audio_url: '',
+              step_config: {}
             })
             .select()
             .single()
 
           if (stepErr || !insertedStep) { console.error('Step insert error:', stepErr); continue }
 
-          const stepId = insertedStep.id
-          const uploadedSubSteps = await Promise.all(
-            (draft.step_config.sub_steps as Record<string, unknown>[]).map(async (sub, i) => {
-              const s = sub as { _key?: string; audio_file?: File; image_file?: File; audio_url?: string; image_url?: string; audio_preview?: string; image_preview?: string; [k: string]: unknown }
-              let audioUrl = s.audio_url ?? ''
-              let imageUrl = s.image_url ?? ''
+          const stepId = insertedStep.id as string
+          const rawSubSteps = draft.step_config.sub_steps as NarrationSubStep[]
 
-              if (s.audio_file instanceof File) {
-                const ext = s.audio_file.name.split('.').pop()
+          const uploadedSubSteps = await Promise.all(
+            rawSubSteps.map(async (sub, i) => {
+              let audioUrl = sub.audio_url ?? ''
+              let imageUrl = sub.image_url ?? ''
+
+              if (sub.audio_file instanceof File) {
+                const ext = sub.audio_file.name.split('.').pop()
                 const path = `steps/${stepId}/sub_${i}_audio.${ext}`
-                const { error } = await supabase.storage.from('session-assets').upload(path, s.audio_file, { upsert: true })
+                const { error } = await supabase.storage.from('session-assets').upload(path, sub.audio_file, { upsert: true })
                 if (!error) {
                   const { data } = supabase.storage.from('session-assets').getPublicUrl(path)
                   audioUrl = data.publicUrl
                 }
               }
 
-              if (s.image_file instanceof File) {
-                const ext = s.image_file.name.split('.').pop()
+              if (sub.image_file instanceof File) {
+                const ext = sub.image_file.name.split('.').pop()
                 const path = `steps/${stepId}/sub_${i}_image.${ext}`
-                const { error } = await supabase.storage.from('session-assets').upload(path, s.image_file, { upsert: true })
+                const { error } = await supabase.storage.from('session-assets').upload(path, sub.image_file, { upsert: true })
                 if (!error) {
                   const { data } = supabase.storage.from('session-assets').getPublicUrl(path)
                   imageUrl = data.publicUrl
                 }
               }
 
-              const { audio_file, image_file, image_preview, audio_preview, ...rest } = s
-              return { ...rest, audio_url: audioUrl, image_url: imageUrl }
+              const { audio_file: _af, image_file: _if, audio_preview: _ap, image_preview: _ip, ...rest } = sub
+              const cleanSub: Record<string, unknown> = { ...rest, audio_url: audioUrl, image_url: imageUrl }
+              for (const k of Object.keys(cleanSub)) {
+                const v = cleanSub[k]
+                if (v instanceof File || (typeof v === 'string' && v.startsWith('blob:'))) {
+                  delete cleanSub[k]
+                }
+              }
+              return cleanSub
             })
           )
 
@@ -685,35 +697,33 @@ export function NewSessionStepper() {
             .update({ step_config: { sub_steps: uploadedSubSteps } })
             .eq('id', stepId)
 
-          continue // already handled
+          continue
         }
 
-        // Non-narration steps: sanitize config (strip any accidental File refs) then insert
-        cleanConfig = JSON.parse(JSON.stringify(draft.step_config ?? {}, (_, v) =>
-          v instanceof File || v instanceof Blob ? undefined : v
-        ))
+        // Non-narration steps
+        const cleanConfig: Record<string, unknown> = JSON.parse(
+          JSON.stringify(draft.step_config ?? {}, (_, v) =>
+            v instanceof File || v instanceof Blob ? undefined : v
+          )
+        )
 
-        const { data: insertedStep, error: stepErr } = await supabase
+        const { error: stepErr } = await supabase
           .from('session_steps')
           .insert({
             session_id: sessionId,
             step_number: draft.step_number,
             title: draft.title,
-            description: draft.description,
+            description: descriptionValue,
             duration_seconds: draft.duration_seconds,
             step_type: draft.step_type,
-            step_config: cleanConfig,
-            image_url: '',
-            audio_url: '',
+            step_config: cleanConfig
           })
-          .select()
-          .single()
 
-        if (stepErr || !insertedStep) { console.error('Step insert error:', stepErr); continue }
+        if (stepErr) { console.error('Step insert error:', stepErr); continue }
       }
 
       toast.success('Sesi berhasil dibuat!', {
-        description: `${info.session_name} · ${draftSteps.length} step · ${formatDuration(totalSec)}`,
+        description: `${info.session_name} · ${currentDraftSteps.length} step · ${formatDuration(totalSecAtSave)}`,
       })
       router.push('/admin/sessions')
     } catch (err) {
