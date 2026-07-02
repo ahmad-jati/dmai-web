@@ -38,21 +38,21 @@ function EmojiScale({ field, value, onChange }: {
   field: FormField; value: number | undefined; onChange: (v: number) => void
 }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-1.5 w-full">
       <label className="text-base sm:text-sm font-medium text-foreground flex gap-2">{field.label} <span className='text-destructive text-xl'>*</span></label>
       <div className="flex justify-between gap-2">
         {EMOJIS.map((e, i) => (
           <button key={i} type="button" onClick={() => onChange(i + 1)}
             className={cn(
-              'flex flex-col items-center gap-1.5 flex-1 py-3 rounded-xl border transition-all',
+              'flex flex-col items-center gap-1.5 flex-1 py-3 border rounded-xl transition-all hover:cursor-pointer group',
               value === i + 1
-                ? 'border-foreground bg-foreground/5 shadow-sm'
-                : 'border-border hover:border-foreground/30 hover:bg-muted/50'
+                ? 'border-foreground/40 bg-celeste shadow-sm'
+                : 'hover:bg-celeste bg-celeste/20'
             )}>
-            <span className={cn('text-xl transition-transform duration-150', value === i + 1 ? 'scale-115' : '')}>
+            <span className={cn('text-xl transition-transform duration-150', value === i + 1 ? 'scale-115' : 'group-hover:scale-115')}>
               {e.emoji}
             </span>
-            <span className="text-xs text-muted-foreground hidden sm:block">{e.label}</span>
+            <span className="text-xs text-foreground hidden sm:block font-medium">{e.label}</span>
           </button>
         ))}
       </div>
@@ -68,7 +68,7 @@ function SliderField({ field, value, onChange }: {
   const current = value ?? 0
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-1.5 w-full">
       <div className="flex justify-between items-center">
         <label className="text-base sm:text-sm font-medium text-foreground flex gap-2">{field.label} <span className='text-destructive text-xl'>*</span></label>
         <span className="text-sm font-bold tabular-nums bg-muted px-2.5 py-0.5 rounded-lg min-w-10 text-center"> 
@@ -92,12 +92,12 @@ function TextInputField({ field, value, onChange }: {
   field: FormField; value: string | undefined; onChange: (v: string) => void
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <label className="text-base sm:text-sm font-medium text-foreground flex gap-2">{field.label} <span className='text-destructive text-xl'>*</span></label>
       <textarea
         value={value ?? ''} onChange={(e) => onChange(e.target.value)}
         rows={3} placeholder="Tulis jawabanmu di sini..."
-        className="w-full rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-foreground/40 transition-colors"
+        className="w-full rounded-xl border border-border bg-white text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-foreground/10 focus:border-foreground/40 transition-colors"
       />
     </div>
   )
@@ -196,13 +196,13 @@ export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLa
         return null
       })}
 
-      <div className={cn('flex gap-3 mt-2', showPrev ? 'justify-between' : 'justify-end')}>
+      <div className={cn('flex gap-1.5 mt-2 w-full justify-center')}>
         {showPrev && onPrev && (
           <Button 
             type="button" 
             variant="outline" 
             onClick={onPrev} 
-            className="hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg"
+            className="hover:bg-foreground dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-foreground rounded-lg"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
             Kembali
@@ -213,7 +213,7 @@ export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLa
           onClick={() => onNext(responses)}
           disabled={!allAnswered}
           variant={'ghost'}
-          className="bg-lemon hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg"
+          className="bg-foreground hover:bg-foreground dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-foreground rounded-lg"
         >
           {isLastForm ? 'Selesai' : 'Lanjut'}
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
