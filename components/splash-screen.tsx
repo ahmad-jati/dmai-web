@@ -31,7 +31,7 @@ export function SplashScreen() {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6 bg-celeste dark:bg-card"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6 bg-background dark:bg-card"
       style={{
         transform: fading ? 'translateY(-100%)' : 'translateY(0)',
         transition: 'transform 600ms ease-in-out',

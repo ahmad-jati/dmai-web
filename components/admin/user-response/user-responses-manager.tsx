@@ -3,9 +3,6 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -24,6 +21,31 @@ import type { SessionSummary, RecentCompletion } from "@/lib/session-helper"
 // ─── Constants ───────────────────────────────────────────────────────────────
 const PAGE_SIZE = 25
 
+// Shared row treatment — every clickable list item across this page looks
+// and behaves the same way: full row click, same hover, same trailing caret.
+const ROW_CARD =
+  "group flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-white hover:border-foreground/20 hover:shadow-sm transition-all cursor-pointer"
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getInitials(fullName: string | null, email: string) {
+  const source = (fullName ?? "").trim() || email
+  const parts = source.split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return "?"
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
+}
+
+// ─── Empty State ─────────────────────────────────────────────────────────────
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="flex items-center justify-center py-10 text-sm text-muted-foreground italic border border-dashed border-border rounded-xl">
+      {text}
+    </div>
+  )
+}
+
 // ─── Skeleton ───────────────────────────────────────────────────────────────
 
 function PageSkeleton() {
@@ -35,29 +57,17 @@ function PageSkeleton() {
       </div>
       <div className="flex flex-col gap-3">
         <div className="h-4 bg-muted rounded w-32" />
-        <div className="border border-border">
+        <div className="flex flex-col gap-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-3.5 border-b border-border last:border-0">
-              <div className="w-8 h-3.5 bg-muted/60 rounded" />
-              <div className="flex-1 h-3.5 bg-muted rounded" />
-              <div className="w-16 h-3.5 bg-muted/60 rounded" />
-              <div className="w-24 h-3.5 bg-muted/60 rounded" />
-              <div className="w-10 h-3.5 bg-muted/40 rounded" />
-            </div>
+            <div key={i} className="h-[60px] bg-muted/50 rounded-xl" />
           ))}
         </div>
       </div>
       <div className="flex flex-col gap-3">
         <div className="h-4 bg-muted rounded w-44" />
-        <div className="border border-border">
+        <div className="flex flex-col gap-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-3.5 border-b border-border last:border-0">
-              <div className="w-8 h-3.5 bg-muted/60 rounded" />
-              <div className="flex-1 h-3.5 bg-muted rounded" />
-              <div className="w-32 h-3.5 bg-muted/60 rounded" />
-              <div className="w-36 h-3.5 bg-muted/60 rounded" />
-              <div className="w-20 h-7 bg-muted/40 rounded-sm" />
-            </div>
+            <div key={i} className="h-[60px] bg-muted/50 rounded-xl" />
           ))}
         </div>
       </div>
@@ -67,7 +77,7 @@ function PageSkeleton() {
 
 // ─── Pagination UI ───────────────────────────────────────────────────────────
 
-function TablePagination({
+function ResultsPagination({
   page,
   totalPages,
   onPageChange,
@@ -85,8 +95,8 @@ function TablePagination({
   const to = Math.min(page * pageSize, total)
   return (
     <div className="flex items-center justify-between">
-      <p className="text-xs text-muted-foreground">
-        Menampilkan {from}–{to} dari {total} entri
+      <p className="text-sm text-muted-foreground">
+        Menampilkan {from}-{to} dari {total} entri
       </p>
       <Pagination className="justify-end w-auto">
         <PaginationContent>
@@ -99,7 +109,7 @@ function TablePagination({
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <PaginationItem key={p}>
               <Button
-                variant={p === page ? "default" : "ghost"}
+                variant={p === page ? "secondary" : "ghost"}
                 size="sm"
                 className="w-8 h-8 p-0 rounded-sm font-medium text-sm hover:bg-muted-foreground/20"
                 onClick={() => onPageChange(p)}
@@ -159,17 +169,19 @@ export function UserResponsesManager() {
         .from("session_completions")
         .select("session_id, user_id")
 
-      const completionMap = new Map<string, Set<string>>()
+      // Raw completion count per session — counts every completion row
+      // (including retakes by the same user), to match SessionResponsesView
+      // which lists all session_completions rows for a session without dedup.
+      const completionCountMap = new Map<string, number>()
       for (const c of completionsData ?? []) {
-        if (!completionMap.has(c.session_id)) completionMap.set(c.session_id, new Set())
-        completionMap.get(c.session_id)!.add(c.user_id)
+        completionCountMap.set(c.session_id, (completionCountMap.get(c.session_id) ?? 0) + 1)
       }
 
       const sessionList: SessionSummary[] = (sessionsData ?? []).map((s) => ({
         id: s.id,
         session_name: s.session_name,
         week_number: s.week_number,
-        total_completed: completionMap.get(s.id)?.size ?? 0,
+        total_completed: completionCountMap.get(s.id) ?? 0,
       }))
 
       const { data: recent } = await supabase
@@ -192,7 +204,7 @@ export function UserResponsesManager() {
       const recentList: RecentCompletion[] = (recent ?? []).map((r) => ({
         id: r.id,
         user_id: r.user_id,
-        session_id: r.session_id,
+        session_id: r.session_id, 
         session_name: r.session_name,
         started_at: r.started_at ?? null,
         completed_at: r.completed_at ?? null,
@@ -241,7 +253,7 @@ export function UserResponsesManager() {
         </p>
       </div>
 
-      {/* ── Session List Table ─────────────────────────────── */}
+      {/* ── Daftar Sesi ─────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <ClipboardTextIcon className="w-4 h-4 text-muted-foreground" />
@@ -249,56 +261,32 @@ export function UserResponsesManager() {
           <span className="text-sm text-muted-foreground ml-1">({sessions.length})</span>
         </div>
 
-        <div className="border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40">
-                <TableHead className="w-10 text-center">#</TableHead>
-                <TableHead>Nama Sesi</TableHead>
-                <TableHead className="w-28 text-center">Week</TableHead>
-                <TableHead className="w-44 text-center">Total Selesai</TableHead>
-                <TableHead className="w-16 text-center">Detail</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sessions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-10 text-sm">
-                    Belum ada sesi
-                  </TableCell>
-                </TableRow>
-              ) : (
-                sessions.map((s, i) => (
-                  <TableRow
-                    key={s.id}
-                    className="cursor-pointer hover:bg-muted/30 transition-colors"
-                    onClick={() => router.push(`/admin/user-responses/session/${s.id}`)}
-                  >
-                    <TableCell className="text-center text-muted-foreground text-sm">{i + 1}.</TableCell>
-                    <TableCell className="font-medium text-sm">{s.session_name}</TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">
-                      {s.week_number != null
-                        ? `Week ${s.week_number}`
-                        : <span className="italic">—</span>}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
-                        <UsersIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                        {s.total_completed} user
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <CaretRightIcon className="w-4 h-4 text-muted-foreground mx-auto" />
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        {sessions.length === 0 ? (
+          <EmptyState text="Belum ada sesi" />
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {sessions.map((s, i) => (
+              <div
+                key={s.id}
+                onClick={() => router.push(`/admin/user-responses/session/${s.id}`)}
+                className={ROW_CARD}
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{s.session_name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {s.week_number != null ? `Week ${s.week_number}` : "Tanpa minggu"}
+                    <span className="text-muted-foreground/40"> · </span>
+                    {s.total_completed} selesai
+                  </p>
+                </div>
+                <CaretRightIcon className="w-4 h-4 text-muted-foreground/50 group-hover:text-muted-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* ── Recent Completions Table — grouped by day ──────── */}
+      {/* ── Penyelesaian Terakhir — grouped table ───────────────────────── */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
@@ -317,87 +305,73 @@ export function UserResponsesManager() {
           </div>
         </div>
 
-        <div className="border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40">
-                <TableHead className="w-10 text-center">#</TableHead>
-                <TableHead>Nama User</TableHead>
-                <TableHead>Sesi</TableHead>
-                <TableHead className="w-44">Mulai</TableHead>
-                <TableHead className="w-44">Selesai</TableHead>
-                <TableHead className="w-20 text-center">Durasi</TableHead>
-                <TableHead className="w-20 text-center">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pagedGrouped.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-10 text-sm">
-                    {search ? "Tidak ada hasil pencarian" : "Belum ada penyelesaian"}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                pagedGrouped.map((group) => {
-                  const groupStartIdx = filteredCompletions.indexOf(group.items[0])
-                  const pageOffset = (recentPage - 1) * PAGE_SIZE
-                  return (
-                    <>
-                      <TableRow key={`day-${group.label}`} className="bg-muted/20 hover:bg-muted/20">
-                        <TableCell colSpan={7} className="py-1.5 px-4">
-                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                            {group.label}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                      {group.items.map((c, i) => {
-                        const absoluteIdx = paginated.indexOf(c) + pageOffset
-                        return (
-                          <TableRow key={c.id}>
-                            <TableCell className="text-center text-muted-foreground text-sm">
-                              {absoluteIdx + 1}.
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span className="font-medium text-sm">
-                                  {c.full_name ?? <span className="italic text-muted-foreground">—</span>}
-                                </span>
-                                <span className="text-xs text-muted-foreground">{c.email}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">{c.session_name}</TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {fmtLocalTime(c.started_at)}
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {fmtLocalTime(c.completed_at)}
-                            </TableCell>
-                            <TableCell className="text-center text-xs text-muted-foreground tabular-nums">
-                              {fmtDuration(c.started_at, c.completed_at)} tes
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="rounded-sm gap-1.5 bg-background hover:bg-lemon text-foreground [&_svg]:size-3.5"
-                                onClick={() => router.push(`/admin/user-responses/${c.user_id}`)}
-                              >
-                                <ArrowSquareOutIcon className="w-3.5 h-3.5" />
-                                Detail
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        {pagedGrouped.length === 0 ? (
+          <EmptyState text={search ? "Tidak ada hasil pencarian" : "Belum ada penyelesaian"} />
+        ) : (
+          <div className="rounded-xl border border-border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/40 border-b border-border">
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground w-fit">#</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[35%]">User</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[30%]">Sesi</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[18%] hidden sm:table-cell">Waktu Selesai</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-[10%] hidden md:table-cell">Durasi</th>
+                  <th className="w-[7%]" />
+                </tr>
+              </thead>
+              <tbody>
+                {pagedGrouped.map((group) => (
+                  <>
+                    <tr key={`header-${group.label}`} className="bg-muted/20 border-b border-border/50">
+                      <td colSpan={6} className="px-4 py-1.5">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">{group.label}</span>
+                      </td>
+                    </tr>
+                    {group.items.map((c, i) => (
+                      <tr
+                        key={c.id}
+                        onClick={() => router.push(`/admin/user-responses/${c.user_id}`)}
+                        className="border-b border-border/40 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors group"
+                      >
+                        <td className="px-4 py-3">
+                          <p className="text-sm truncate text-foreground/80">{(recentPage - 1) * PAGE_SIZE + paginated.findIndex(item => item.id === c.id) +1}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-foreground/8 flex items-center justify-center text-2xs font-bold text-foreground/60 shrink-0">
+                              {getInitials(c.full_name, c.email)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm truncate leading-tight">
+                                {c.full_name ?? <span className="italic text-muted-foreground">Tanpa nama</span>}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">{c.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="text-sm truncate text-foreground/80">{c.session_name}</p>
+                        </td>
+                        <td className="px-4 py-3 hidden sm:table-cell">
+                          <p className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">{fmtLocalTime(c.completed_at)}</p>
+                        </td>
+                        <td className="px-4 py-3 hidden md:table-cell">
+                          <p className="text-xs text-muted-foreground tabular-nums">{fmtDuration(c.started_at, c.completed_at)}</p>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <ArrowSquareOutIcon className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-muted-foreground inline transition-colors" />
+                        </td>
+                      </tr>
+                    ))}
+                  </>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-        <TablePagination
+        <ResultsPagination
           page={recentPage}
           totalPages={totalPages}
           onPageChange={setRecentPage}
