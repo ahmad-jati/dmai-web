@@ -2,14 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { fetchAllSessions } from "@/lib/data-detail-session";
 import {
-  ArrowUpRightIcon,
-  PersonSimpleTaiChiIcon,
   TimerIcon,
   LockSimpleIcon,
   LightbulbIcon
 } from "@phosphor-icons/react/dist/ssr";
 import { Route } from "next";
-import { Button } from "@/components/ui/button";
 
 const BLUR_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9HQAI8gMBfTQ1BQAAAABJRU5ErkJggg==";
