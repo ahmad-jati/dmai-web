@@ -28,8 +28,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
           {/* Mobile title + meta */}
           <div className="lg:hidden flex flex-col gap-2 items-center">
-            <p className="text-p font-medium text-muted-foreground -mb-3 block lg:hidden">Session</p>
-            <h1 className="sm:text-h1/8 2xs:text-[1.8rem]/8 text-[1.6rem]/7 md:text-left text-center font-semibold">
+            <p className="md:text-xl text-base font-medium text-muted-foreground -mb-2 block lg:hidden">Session</p>
+            <h1 className="lg:text-h1/8 md:text-[1.8rem]/6.5 text-[1.6rem]/6.5 lg:text-left text-center font-semibold md:max-w-160 w-full">
               {session.session_name.toUpperCase()}
             </h1>
             <div className="flex flex-col gap-1 items-center">
@@ -48,7 +48,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           </div>
 
           {/* Mobile image */}
-          <div className="sm:h-60 h-40 sm:w-100 w-70 lg:hidden block">
+          <div className="2xs:h-60 sm:w-120 2xs:w-100 w-full h-40 lg:hidden block">
             <div className="w-full h-full overflow-hidden md:rounded-3xl rounded-xl">
               <Image
                 src={session.image_cover}
@@ -70,9 +70,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               {session.session_name}
             </h1>
 
-            <div className="flex flex-col gap-1 lg:max-w-120 w-full lg:px-0 px-6">
+            <div className="flex flex-col gap-2 md:max-w-160 w-full">
               {(session.detail_full as string[]).map((para, i) => (
-                <p key={i} className="font-medium sm:text-p/5 text-sm/4 lg:text-left text-center text-pretty 2md:px-0 px-6">
+                <p key={i} className="font-medium sm:text-p/5 text-sm/4 lg:text-left text-center text-pretty 2md:px-0 px-0">
                   {para}
                 </p>
               ))}

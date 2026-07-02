@@ -19,6 +19,7 @@ import { usePresence } from '@/lib/hooks/usePresence'
 import type { PresencePayload } from '@/lib/hooks/usePresence'
 import { markPresenceActive } from '@/lib/hooks/usePresence'
 import { Spinner } from '@/components/ui/spinner'
+import { SessionLoadingCard } from '@/components/session-loading-card'
 
 import { StepVideo } from './steps/step-video'
 import { StepForm } from './steps/step-form'
@@ -98,31 +99,6 @@ const STEP_TYPE_LABEL: Record<StepType, string> = {
 
 // ─── Loading Screen ─────────────────────────────────────────────────────────────
 
-function LoadingScreen({ sessionName, sessionImageCover }: { sessionName: string; sessionImageCover: string }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="flex flex-col items-center gap-3 px-6 lg:py-12 py-8 bg-white border border-muted-foreground rounded-2xl sm:w-fit w-full shadow-sm">
-        <p className="text-p text-muted-foreground -mb-2 text-center font-semibold">DMAI - Session</p>
-        <h1 className="md:text-h1/8 text-2xl/7 text-center font-semibold">{sessionName}</h1>
-        <div className="relative sm:w-100 w-full xs:h-60 h-40 2xs:rounded-3xl rounded-xl overflow-hidden mt-3 bg-muted-foreground/10">
-          <Image
-            src={sessionImageCover}
-            alt={sessionName}
-            fill
-            unoptimized
-            priority
-            className="object-cover object-center w-full h-full"
-          />
-        </div>
-        <div className="flex items-center gap-2 mt-3 rounded-full border border-muted-foreground/20 bg-muted-foreground/10 px-4 py-2 text-muted-foreground">
-          <Spinner className="text-muted-foreground w-4 h-4" />
-          <p className="text-sm font-medium tracking-wide">Mempersiapkan sesi…</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ─── Main Component ─────────────────────────────────────────────────────────────
 
 export function StepperExercise({ instructions, sessionName, sessionSlug, sessionId, sessionImageCover, onDone, onBack }: Props) {
@@ -182,8 +158,8 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     })
   }, [])
 
-  // Exclude post_form steps — they have a dedicated place outside the stepper
-  const activeInstructions = instructions.filter((i) => i.step_type !== 'post_form')
+  // post_form is now included as a regular step inside the stepper
+  const activeInstructions = instructions
 
   const step = activeInstructions[currentStep]
   const totalSteps = activeInstructions.length
@@ -530,7 +506,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     setShowMusicTray((v) => !v)
   }
 
-  if (!isReady) return <LoadingScreen sessionName={sessionName} sessionImageCover={sessionImageCover} />
+  if (!isReady) return <SessionLoadingCard sessionName={sessionName} sessionImageCover={sessionImageCover} label="Mempersiapkan sesi…" />
 
   // ── Music Tray ───────────────────────────────────────────────────────────────
   const MusicTray = () => {
@@ -730,28 +706,34 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           <div className="flex flex-col w-full rounded-4xl bg-background border border-border flex-1 overflow-hidden">
 
             {/* Top bar */}
-            <div className="flex items-center justify-between w-full gap-4 px-8 pt-8 pb-6 shrink-0">
-              <Button onClick={handleBack} variant="ghost" size="sm"
-                className="[&_svg]:size-4 gap-1.5 rounded-full px-3 text-foreground hover:bg-foreground/10">
-                <ArrowLeftIcon weight="bold" /> Kembali
+            <div className="flex items-center justify-between w-full gap-2 py-2">
+              <Button 
+                onClick={handleBack} 
+                variant="link" 
+                size="sm"
+                className="[&_svg]:size-4 gap-1.5 px-3 text-foreground "
+              >
+                <ArrowLeftIcon weight="bold" /> 
+                Kembali
               </Button>
-              <div className="flex flex-col items-center justify-center gap-2.5 flex-1">
-                <span className="text-xs font-semibold tracking-wide text-muted-foreground">
-                  Tahap {currentStep + 1} / {totalSteps} · {STEP_TYPE_LABEL[step.step_type]}
-                </span>
-                <StepDots />
+              <div className="flex-1 truncate w-full flex justify-center">
+                <h3 className="text-p text-foreground font-semibold text-right uppercase">DMAI SESI - {sessionName}</h3>
               </div>
-              {/* BGM pill */}
-              <button ref={bgmButtonRef} onClick={() => openMusicTray(bgmButtonRef, false)}
-                className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-muted/50 text-foreground/80 hover:bg-muted border border-border hover:cursor-pointer transition-all duration-150 ease-out w-52 shrink-0">
-                <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
-                <div className="flex flex-1 flex-col min-w-0 text-left">
-                  <span className="text-xs font-semibold leading-tight truncate">{bgmLabel}</span>
-                  {bgmSublabel && <span className="text-xs leading-tight truncate font-medium text-muted-foreground">{bgmSublabel}</span>}
-                </div>
-                <CaretDownIcon weight="bold" className={cn('w-4 h-4 shrink-0 transition-transform duration-200', showMusicTray && !trayMobile && 'rotate-180')} />
-              </button>
+              <div className="bg-muted-foreground/10 border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
+                <span className="text-sm font-semibold text-muted-foreground">
+                  Tahap {currentStep + 1} / {totalSteps}
+                </span>
+              </div>
             </div>
+            <button ref={bgmButtonRef} onClick={() => openMusicTray(bgmButtonRef, false)}
+              className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-muted/50 text-foreground/80 hover:bg-muted border border-border hover:cursor-pointer transition-all duration-150 ease-out w-52 shrink-0">
+              <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
+              <div className="flex flex-1 flex-col min-w-0 text-left">
+                <span className="text-xs font-semibold leading-tight truncate">{bgmLabel}</span>
+                {bgmSublabel && <span className="text-xs leading-tight truncate font-medium text-muted-foreground">{bgmSublabel}</span>}
+              </div>
+              <CaretDownIcon weight="bold" className={cn('w-4 h-4 shrink-0 transition-transform duration-200', showMusicTray && !trayMobile && 'rotate-180')} />
+            </button>
 
             {/* Two-column body */}
             <div className="flex flex-1 gap-0 overflow-hidden">
@@ -909,7 +891,6 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
         return (
           <StepExternalEmbed
             url={(config.url as string) ?? (config.embed_url as string) ?? ''}
-            label={(config.label as string) ?? 'Buka Aktivitas'}
             onNext={goNext}
             onPrev={showPrev ? goPrev : undefined}
           />
@@ -930,71 +911,78 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   return (
     <>
       {/* MOBILE non-narration */}
-      <div className="2md:hidden fixed inset-0 z-55 flex flex-col bg-background p-4 gap-3 overflow-y-auto">
+      <div className="2md:hidden fixed inset-0 p-4 overflow-y-auto flex flex-col">
         {/* Top bar */}
-        <div className="flex items-center justify-between gap-3 shrink-0">
-          <Button onClick={handleBack} variant="ghost" size="sm"
-            className="[&_svg]:size-4 gap-1.5 rounded-full px-3 text-foreground hover:bg-foreground/10">
-            <ArrowLeftIcon weight="bold" /> Kembali
+        <div className="flex items-center justify-between w-full gap-2 py-2">
+          <Button 
+            onClick={handleBack} 
+            variant="link" 
+            size="sm"
+            className="[&_svg]:size-4 gap-1.5 px-3 text-foreground "
+          >
+            <ArrowLeftIcon weight="bold" /> 
+            Kembali
           </Button>
-          <StepDots />
-          <div className="flex flex-col items-center gap-0.5">
-            <span className="text-xs font-semibold tracking-wide text-muted-foreground">
+          <div className="bg-muted-foreground/10 border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
+            <span className="sm:text-sm text-xs font-semibold text-muted-foreground">
               Tahap {currentStep + 1} / {totalSteps}
             </span>
-            <span className="text-xs font-bold text-foreground">{STEP_TYPE_LABEL[step.step_type]}</span>
           </div>
-          {/* <div className="w-20" /> */}
         </div>
 
+        <div className='flex w-full md:rounded-4xl rounded-2xl bg-white border border-border shadow-sm flex-1'>
+         <div className='flex flex-col items-center w-full p-6 gap-2'>
+            {/* Step title */}
+            {step.title && (
+              <div className="flex flex-col items-center gap-1.5 w-full text-center xs:max-w-2xl">
+                <p className="text-base/4.5 font-semibold text-foreground">{step.title}</p>
+                {step.description && (
+                  <p className="text-sm/4 text-muted-foreground">{step.description}</p>
+                )}
+              </div>
+            )}
 
-        {/* Step title */}
-        {step.title && (
-          <p className="text-base font-semibold text-foreground text-center shrink-0">{step.title}</p>
-        )}
-        {step.description && (
-          <p className="text-sm text-muted-foreground text-center shrink-0">{step.description}</p>
-        )}
-
-        {/* Content */}
-        <div className="flex-1 flex flex-col justify-center py-2">
-          <NonNarrationContent />
+            {/* Content */}
+            <div className="flex-1 flex flex-col justify-start w-full">
+              <NonNarrationContent />
+            </div>
+          </div>
         </div>
 
-        <p className="text-xs text-muted-foreground/40 text-center font-semibold shrink-0">DMAI - {sessionName} Session</p>
+        <div className="w-full flex justify-center mt-3">
+          <h3 className="text-sm text-muted-foreground font-semibold text-right uppercase">DMAI SESI - {sessionName}</h3>
+        </div>
       </div>
 
       {/* DESKTOP non-narration */}
       <div className="hidden 2md:flex flex-col gap-2 fixed inset-0 lg:px-28 px-12 py-8 overflow-y-auto">
         {/* Top bar */}
-        <div className="flex items-center justify-between w-full gap-16 py-2">
+        <div className="flex items-center justify-between w-full gap-2 py-2">
           <Button 
             onClick={handleBack} 
             variant="link" 
             size="sm"
-            className="[&_svg]:size-4 gap-1.5 px-3 text-foreground"
+            className="[&_svg]:size-4 gap-1.5 px-3 text-foreground "
           >
             <ArrowLeftIcon weight="bold" /> 
             Kembali
           </Button>
-          <div className="flex-1 flex justify-end">
-            <div className="bg-muted-foreground/10 border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
-              <span className="text-sm font-semibold text-muted-foreground">
-                Tahap {currentStep + 1}: {STEP_TYPE_LABEL[step.step_type]}
-              </span>
-            </div>
-            {/* <div className="bg-muted-foreground/10 border border-foreground/20 px-2 py-1 rounded-sm w-fit truncate">
-              <h3 className="text-xl text-muted-foreground/70 font-semibold text-right">DMAI SESI - {sessionName}</h3>
-            </div> */}
+          <div className="flex-1 truncate w-full flex justify-center">
+            <h3 className="text-p text-foreground font-semibold text-right uppercase">DMAI SESI - {sessionName}</h3>
+          </div>
+          <div className="bg-muted-foreground/10 border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
+            <span className="text-sm font-semibold text-muted-foreground">
+              Tahap {currentStep + 1} / {totalSteps}
+            </span>
           </div>
         </div>
-        <div className="flex flex-col items-center justify-center w-full rounded-4xl bg-white border border-border overflow-y-auto shadow-sm h-full flex-1">
-          <div className="flex flex-col items-start w-full h-full justify-between p-6 gap-6">
+        <div className="flex w-full rounded-4xl bg-white border border-border shadow-sm flex-1">
+          <div className="flex flex-col items-start w-full p-6 gap-6 flex-1">
             
             {/* Step title */}
             {step.title && (
               <div className="flex flex-col items-center gap-1.5 w-full text-center">
-                <p className="sm:text-3xl/7 text-xl/5.5 font-semibold text-foreground max-w-2xl">{step.title}
+                <p className="sm:text-2xl/6.5 text-xl/5.5 font-semibold text-foreground max-w-2xl">{step.title}
                 </p>
                 {step.description && (
                   <p className="sm:text-p/5 xs:text-sm/4 text-xs/3.5 text-muted-foreground max-w-3xl">{step.description}</p>
@@ -1003,7 +991,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             )}
    
             {/* Content */}
-            <div className=" h-full flex items-start justify-start w-full">
+            <div className="flex items-start justify-start w-full flex-1">
               <NonNarrationContent />
             </div>
 

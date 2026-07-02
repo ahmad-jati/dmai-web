@@ -39,7 +39,7 @@ function SessionGridLayout({ sessions }: { sessions: SessionData[] }) {
           className={`
             group flex 2xs:flex-row flex-col items-start 2xs:gap-6 gap-3
             2md:rounded-[20px] rounded-lg w-full overflow-hidden transition-shadow p-3
-            2xs:bg-transparent bg-background
+            lg:bg-transparent bg-background
             ${session.is_locked 
               ? "cursor-not-allowed opacity-70" 
               : "hover:bg-background hover:dark:bg-secondary hover:shadow-md"

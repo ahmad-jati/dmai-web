@@ -63,83 +63,81 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
   }
 
   return (
-    <div className="flex flex-col gap-5 w-full max-w-lg mx-auto">
-      {/* <div className="flex flex-col gap-1">
-        <p className="text-lg/3.5 sm:text-sm font-medium text-foreground">Bagian tubuh mana yang terasa tidak nyaman? Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quae enim obcaecati exercitationem aliquam aperiam alias, quam sequi, laborum quos vitae numquam esse itaque, dicta ut tenetur inventore consequatur beatae necessitatibus.</p>
-        <p className="text-xs font-medium text-muted-foreground">Pilih semua yang relevan. Boleh dikosongkan jika tidak ada.</p>
-      </div> */}
+    <div className="flex flex-col gap-5 w-full max-w-lg mx-auto flex-1">
 
-      <div className="flex flex-col gap-4">
-        {REGIONS.map((region) => (
-          <div key={region.key} className="flex flex-col gap-2">
-            <span className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">
-              {region.label}
-            </span>
-            <div className="grid grid-cols-3 gap-1.5">
-              {region.parts.map((part) => (
+      <div className='flex flex-col gap-5 h-fit pr-1'>
+        <div className="flex flex-col gap-4">
+          {REGIONS.map((region) => (
+            <div key={region.key} className="flex flex-col gap-2">
+              <span className="2xs:text-sm text-xs font-semibold uppercase text-muted-foreground">
+                {region.label}
+              </span>
+              <div className="grid 2xs:grid-cols-4 xs:grid-cols-3 grid-cols-2 gap-1.5">
+                {region.parts.map((part) => (
+                  <button
+                    key={part.key}
+                    type="button"
+                    onClick={() => toggle(part.key)}                  
+                    className={cn(
+                      'px-2 py-2 rounded-lg text-xs font-medium border transition-all text-center hover:cursor-pointer',
+                      selected.includes(part.key)
+                        ? 'border-foreground/40 bg-celeste shadow-sm font-semibold'
+                        : 'hover:bg-celeste bg-celeste/20'
+                    )}
+                  >
+                    {part.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {selected.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-foreground">Sensasi yang dirasakan:</p>
+            <div className="flex flex-wrap gap-2">
+              {SENSATIONS.map((s) => (
                 <button
-                  key={part.key}
+                  key={s}
                   type="button"
-                  onClick={() => toggle(part.key)}                  className={cn(
-                    'px-2 py-2 rounded-lg text-xs font-medium border transition-all text-center',
-                    selected.includes(part.key)
-                      ? 'bg-foreground text-background border-foreground'
-                      : 'bg-background border-border text-foreground hover:border-foreground/40 hover:bg-muted/50'
+                  onClick={() => handleSensation(s)}
+                  className={cn(
+                    'px-3 py-1.5 2md:rounded-full rounded-lg 2xs:text-sm text-xs font-medium border transition-all hover:cursor-pointer',
+                    sensation === s
+                      ? 'border-foreground/40 bg-celeste shadow-sm'
+                      : 'hover:bg-celeste bg-celeste/20'
                   )}
                 >
-                  {part.label}
+                  {s}
                 </button>
               ))}
             </div>
           </div>
-        ))}
+        )}
+
+        {selected.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-foreground">
+              Catatan tambahan <span className="font-normal text-muted-foreground">(opsional)</span>
+            </label>
+            <textarea
+              value={note}
+              onChange={(e) => handleNote(e.target.value)}
+              rows={2}
+              placeholder="Deskripsikan lebih lanjut jika perlu..."
+              className="w-full rounded-xl border border-border bg-white text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-colors"
+            />
+          </div>
+        )}
       </div>
 
-      {selected.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-foreground">Sensasi yang dirasakan:</p>
-          <div className="flex flex-wrap gap-2">
-            {SENSATIONS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => handleSensation(s)}
-                className={cn(
-                  'px-3 py-1.5 rounded-full text-sm font-medium border transition-all',
-                  sensation === s
-                    ? 'bg-foreground text-background border-foreground'
-                    : 'bg-background border-border text-foreground hover:border-foreground/40'
-                )}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {selected.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-foreground">
-            Catatan tambahan <span className="font-normal text-muted-foreground">(opsional)</span>
-          </label>
-          <textarea
-            value={note}
-            onChange={(e) => handleNote(e.target.value)}
-            rows={2}
-            placeholder="Deskripsikan lebih lanjut jika perlu..."
-            className="w-full rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-colors"
-          />
-        </div>
-      )}
-
-      <div className={cn('flex gap-3 mt-1', onPrev ? 'justify-between' : 'justify-end')}>
+      <div className={cn('flex gap-3 justify-center')}>
         {onPrev && (
           <Button
             type="button"
-            variant="outline"
             onClick={onPrev}
-            className="hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg"
+            className="hover:bg-foreground/96 hover:text-background dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
             Kembali
@@ -148,9 +146,10 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
         <Button
           type="button"
           onClick={() => onNext({ selected_parts: selected, sensation, note })}
-          className="bg-lemon hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg"
+          variant={'ghost'}
+          className="bg-foreground hover:bg-foreground/96 dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
         >
-          {selected.length === 0 ? 'Tidak ada, lanjutkan' : 'Lanjutkan'}
+          {selected.length === 0 ? 'Lanjutkan' : 'Lanjutkan'}
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
         </Button>
       </div>
