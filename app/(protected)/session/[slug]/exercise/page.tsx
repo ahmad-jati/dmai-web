@@ -114,7 +114,7 @@ type PostFormScreenProps = {
 
 function PostFormScreen({ session, postFormStepId: _, postFormFields, initialValues, onSubmit }: PostFormScreenProps) {
   return (
-    <div className="fixed inset-0 z-55 flex items-center justify-center lg:px-28 px-4 lg:py-14 py-8 bg-background overflow-y-auto">
+    <div className="fixed inset-0 z-55 flex items-center justify-center lg:px-28 px-4 lg:py-14 py-8 bg-white  overflow-y-auto">
       <div className="flex flex-col items-center w-full max-w-lg rounded-4xl bg-background border border-border overflow-y-auto flex-1 py-8 px-6 gap-6 my-auto">
         <div className="flex flex-col items-center gap-2 text-center">
           <p className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">Form Setelah Sesi</p>
@@ -182,12 +182,12 @@ function ResultScreen({
       <div className="w-full md:rounded-5xl rounded-xl border border-foreground md:p-8 xs:p-6 p-4 bg-celeste">
         <div className="flex flex-col items-center gap-7">
           {/* Hero */}
-          <div className="flex flex-col items-center gap-3 text-center max-w-lg">
-            <p className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">Sesi Selesai 🎉</p>
+          <div className="flex flex-col items-center gap-1 text-center max-w-lg">
+            <p className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">Kamu telah menyelesaikan sesi</p>
             <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>
           </div>
 
-          <div className="2xs:rounded-3xl rounded-xl border border-foreground bg-background dark:border-none dark:p-0 p-2 sm:w-80 xs:h-56 w-full h-36">
+          <div className="2xs:rounded-3xl rounded-xl border border-foreground bg-background dark:border-none dark:p-0 p-2 sm:w-100 sm:h-60 xs:h-56 w-full h-36">
             <Image
               src={session.image_cover}
               alt=""
@@ -202,12 +202,12 @@ function ResultScreen({
           {/* Timestamp card */}
           <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full max-w-2xl">
             {[
-              { icon: <CalendarCheckIcon className="w-4 h-4" weight="fill" />, label: 'Mulai', val: fmtLocalTime(startedAt) },
-              { icon: <CalendarCheckIcon className="w-4 h-4" weight="fill" />, label: 'Selesai', val: fmtLocalTime(completedAt) },
-              { icon: <ClockCountdownIcon className="w-4 h-4" weight="fill" />, label: 'Durasi', val: duration !== '—' ? duration : 'Tidak diketahui' },
-            ].map(({ icon, label, val }) => (
+              {label: 'Mulai', val: fmtLocalTime(startedAt) },
+              {label: 'Selesai', val: fmtLocalTime(completedAt) },
+              {label: 'Durasi', val: duration !== '—' ? `${duration} menit` : 'Tidak diketahui' },
+            ].map(({label, val }) => (
               <div key={label} className="flex flex-col gap-1 flex-1 bg-foreground/4 rounded-2xl p-4 border border-foreground/10">
-                <div className="flex items-center gap-1.5 text-muted-foreground">{icon}<span className="text-xs font-semibold uppercase tracking-wide">{label}</span></div>
+                <div className="flex items-center gap-1.5 text-muted-foreground"><span className="text-xs font-semibold uppercase tracking-wide">{label}</span></div>
                 <p className="text-sm font-medium text-foreground">{val}</p>
               </div>
             ))}
@@ -221,7 +221,7 @@ function ResultScreen({
               className="w-full flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5"
             >
               <RepeatIcon weight="fill" />
-              Ulangi Sesi
+              Ulangi sesi ini
             </Button>
 
             <Link href={"/homepage" as Route}>

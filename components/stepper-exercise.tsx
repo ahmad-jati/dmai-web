@@ -100,24 +100,24 @@ const STEP_TYPE_LABEL: Record<StepType, string> = {
 
 function LoadingScreen({ sessionName, sessionImageCover }: { sessionName: string; sessionImageCover: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 lg:px-28 px-12 lg:py-14 py-8 bg-background">
-      <p className="text-p text-muted-foreground -mb-2 text-center font-semibold">DMAI - Session</p>
-      <h1 className="md:text-h1/8 text-2xl/7 text-center font-semibold">{sessionName}</h1>
-      <div className="relative md:w-100 w-60 h-60 2xs:rounded-3xl rounded-xl overflow-hidden">
-        <Image 
-          src={sessionImageCover} 
-          alt={sessionName} 
-          fill 
-          unoptimized 
-          priority 
-          className="object-cover object-center w-full h-full" 
-        />
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/60 to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-14 bg-linear-to-b from-black/50 to-transparent" />
-      </div>
-      <div className="flex flex-col items-center gap-2 text-muted-foreground">
-        <Spinner className="text-muted-foreground" />
-        <p className="text-sm font-medium tracking-wide">Mempersiapkan sesi…</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="flex flex-col items-center gap-3 px-6 lg:py-12 py-8 bg-white border border-muted-foreground rounded-2xl sm:w-fit w-full shadow-sm">
+        <p className="text-p text-muted-foreground -mb-2 text-center font-semibold">DMAI - Session</p>
+        <h1 className="md:text-h1/8 text-2xl/7 text-center font-semibold">{sessionName}</h1>
+        <div className="relative sm:w-100 w-full xs:h-60 h-40 2xs:rounded-3xl rounded-xl overflow-hidden mt-3 bg-muted-foreground/10">
+          <Image
+            src={sessionImageCover}
+            alt={sessionName}
+            fill
+            unoptimized
+            priority
+            className="object-cover object-center w-full h-full"
+          />
+        </div>
+        <div className="flex items-center gap-2 mt-3 rounded-full border border-muted-foreground/20 bg-muted-foreground/10 px-4 py-2 text-muted-foreground">
+          <Spinner className="text-muted-foreground w-4 h-4" />
+          <p className="text-sm font-medium tracking-wide">Mempersiapkan sesi…</p>
+        </div>
       </div>
     </div>
   )
@@ -965,46 +965,50 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
       </div>
 
       {/* DESKTOP non-narration */}
-      <div className="hidden 2md:flex fixed inset-0 z-55 items-stretch justify-stretch lg:px-28 px-12 lg:py-14 py-8 bg-muted/30 overflow-y-auto">
-        <div className="flex flex-col items-center w-full rounded-4xl bg-background border border-border overflow-y-auto h-fit flex-1">
-          <div className="flex flex-col items-center justify-between h-full w-full py-8 px-8 gap-6">
-            {/* Top bar */}
-            <div className="flex items-center justify-between w-full gap-4 shrink-0">
-              <Button 
-                onClick={handleBack} 
-                variant="ghost" 
-                size="sm"
-                className="[&_svg]:size-4 gap-1.5 rounded-full px-3 text-foreground hover:bg-foreground/10"
-              >
-                <ArrowLeftIcon weight="bold" /> 
-                Kembali
-              </Button>
-              <div className="flex flex-col items-center justify-center gap-2.5 w-full">
-                <span className="text-xs font-semibold tracking-wide text-muted-foreground">
-                  Tahap {currentStep + 1} / {totalSteps} · {STEP_TYPE_LABEL[step.step_type]}
-                </span>
-                <StepDots />
-              </div>
-              <div className="w-24" />
+      <div className="hidden 2md:flex flex-col gap-2 fixed inset-0 lg:px-28 px-12 py-8 overflow-y-auto">
+        {/* Top bar */}
+        <div className="flex items-center justify-between w-full gap-16 py-2">
+          <Button 
+            onClick={handleBack} 
+            variant="link" 
+            size="sm"
+            className="[&_svg]:size-4 gap-1.5 px-3 text-foreground"
+          >
+            <ArrowLeftIcon weight="bold" /> 
+            Kembali
+          </Button>
+          <div className="flex-1 flex justify-end">
+            <div className="bg-muted-foreground/10 border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
+              <span className="text-sm font-semibold text-muted-foreground">
+                Tahap {currentStep + 1}: {STEP_TYPE_LABEL[step.step_type]}
+              </span>
             </div>
-
+            {/* <div className="bg-muted-foreground/10 border border-foreground/20 px-2 py-1 rounded-sm w-fit truncate">
+              <h3 className="text-xl text-muted-foreground/70 font-semibold text-right">DMAI SESI - {sessionName}</h3>
+            </div> */}
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center w-full rounded-4xl bg-white border border-border overflow-y-auto shadow-sm h-full flex-1">
+          <div className="flex flex-col items-start w-full h-full justify-between p-6 gap-6">
+            
             {/* Step title */}
             {step.title && (
-              <div className="flex flex-col items-center gap-1 shrink-0">
-                <p className="sm:text-h2/7 text-xl/5.5 font-semibold text-foreground text-center max-w-2xl">{step.title}</p>
+              <div className="flex flex-col items-center gap-1.5 w-full text-center">
+                <p className="sm:text-3xl/7 text-xl/5.5 font-semibold text-foreground max-w-2xl">{step.title}
+                </p>
                 {step.description && (
-                  <p className="sm:text-p/5 xs:text-sm/4 text-xs/3.5text-muted-foreground text-center max-w-lg">{step.description} </p>
+                  <p className="sm:text-p/5 xs:text-sm/4 text-xs/3.5 text-muted-foreground max-w-3xl">{step.description}</p>
                 )}
               </div>
             )}
    
             {/* Content */}
-            <div className="flex-1 w-full flex items-start justify-center overflow-y-auto min-h-96">
+            <div className=" h-full flex items-start justify-start w-full">
               <NonNarrationContent />
             </div>
 
-            <p className="text-sm text-muted-foreground/40 font-semibold shrink-0">DMAI - {sessionName} Session</p>
           </div>
+          
         </div>
       </div>
     </>

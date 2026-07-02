@@ -25,7 +25,7 @@ export function CompletionCount({ slug }: { slug: string }) {
 
   return (
     <div className="flex items-center gap-1">
-      <HeartIcon className="w-5 h-5" weight="fill" />
+      <HeartIcon className="w-4 h-4" weight="fill" />
       {count === null
         ? <div className="h-4 w-40 bg-foreground/10 rounded animate-pulse" />
         : <p className="font-medium xs:text-p/5 text-xs/3.5">
@@ -62,7 +62,7 @@ export function CompletionCountMobile({ slug }: { slug: string }) {
       <HeartIcon className="w-4 h-4" weight="fill" />
       {count === null
         ? <div className="h-3.5 w-32 bg-foreground/10 rounded animate-pulse" />
-        : <p className="font-medium xs:text-p/5 text-xs/3.5">
+        : <p className="font-medium 2xs:text-p/5 text-xs/3.5">
             {count === 0
               ? "Belum mengikuti sesi ini"
               : `Sesi diikuti ${count} kali`}
