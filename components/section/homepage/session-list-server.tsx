@@ -24,7 +24,9 @@ export async function SessionListServer({ excludeSlug }: Props) {
     ? sessions.filter((s) => s.slug !== excludeSlug)
     : sessions;
 
-  return <SessionGridLayout sessions={filtered} />
+  const sorted = [...filtered].sort((a, b) => (a.week_number ?? 0) - (b.week_number ?? 0))
+
+  return <SessionGridLayout sessions={sorted} />
 }
 
 // ---------- Layout: semua unlocked → grid 3 kolom ----------

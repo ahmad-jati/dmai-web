@@ -67,7 +67,7 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
         <Link
           key={session.slug}
           href={session.is_locked ? "#" : (`/session/${session.slug}` as Route)}
-          scroll={false}
+          scroll={true}
           className={`
             group flex flex-col items-start lg:gap-6 gap-3
             2md:rounded-[20px] rounded-lg w-full overflow-hidden transition-shadow p-3
