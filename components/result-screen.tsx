@@ -165,7 +165,7 @@ export function ResultScreen({
                 className="w-full flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5"
               >
                 <HouseIcon weight="fill" />
-                Homepage
+                Beranda
               </Button>
             </Link>
           </div>

@@ -14,7 +14,7 @@ type Props = {
 
 export function StepExternalEmbed({ url, onNext, onPrev }: Props) {
   return (
-    <div className="w-full max-w-xl mx-auto h-full flex-1 gap-10 flex justify-between items-center flex-col">
+    <div className="w-full max-w-xl mx-auto h-full flex-1 gap-5 flex justify-between items-center flex-col">
 
       <div className="flex flex-col items-center justify-center gap-6 w-full h-full bg-celeste rounded-xl group hover:bg-celeste/80 hover:cursor-pointer">
         <div className="relative w-full h-full flex flex-col items-center justify-center rounded-xl">

@@ -101,7 +101,7 @@ export function AdminSidebar() {
             className="flex items-center gap-3 px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors rounded-md"
           >
             <HouseIcon className="w-4 h-4" />
-            Lihat Homepage
+            Lihat Beranda
             <ArrowSquareOutIcon className="w-3 h-3 ml-auto opacity-60" />
           </Link>
         </div>

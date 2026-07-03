@@ -24,7 +24,7 @@ export default function SessionLocked() {
               className="[&_svg]:size-4 xs:text-p/5 text-xs/4 rounded-xl hover:bg-background/80 dark:bg-primary"
             >
               <ArrowLeftIcon/>
-              Kembali ke Homepage
+              Kembali ke Beranda
             </Button>
           </Link>
         </div>

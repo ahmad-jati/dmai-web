@@ -171,11 +171,11 @@ function ResultScreen({
           </div>
 
           {/* Actions */}
-          <div className="flex flex-row items-center justify-center xs:gap-3 gap-2 w-full max-w-xs">
+          <div className="flex xs:flex-row flex-col-reverse items-center justify-center xs:gap-3 gap-2 w-full max-w-xs">
             <Button
               onClick={onRepeat}
-              variant="ghost"
-              className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5 bg-background text-foreground border border-muted-foreground rounded-lg"
+              variant="link"
+              className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5"
             >
               <RepeatIcon weight="fill" />
               Ulangi sesi ini
@@ -184,10 +184,10 @@ function ResultScreen({
             <Link href={"/beranda" as Route}>
               <Button 
                 variant="ghost" 
-                className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5 bg-foreground text-background hover:bg-foreground/80 rounded-lg"
+                className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5 bg-foreground text-background hover:bg-foreground/80 rounded-lg h-8"
               >
                 <HouseIcon weight="fill" />
-                Homepage
+                Beranda
               </Button>
             </Link>
           </div>

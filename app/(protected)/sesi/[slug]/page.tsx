@@ -68,7 +68,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             </div>
 
             <div className="flex flex-col lg:items-start items-center gap-6 w-full">
-              <p className="text-lg font-medium text-muted-foreground -mb-6 lg:block hidden">Session</p>
+              <p className="text-lg font-medium text-muted-foreground -mb-6 lg:block hidden">Sesi</p>
               <h1 className="sm:text-h1/8 xs:text-[1.8rem]/8 text-h2/7 md:text-left text-center font-semibold lg:block hidden uppercase">
                 {session.session_name}
               </h1>
@@ -122,7 +122,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 href={"/beranda" as Route}
                 className="xs:text-sm text-2xs underline-offset-2 hover:underline hover:cursor-pointer text-muted-foreground"
               >
-                  Kembali ke homepage
+                  Kembali ke Beranda
               </Link>
             </div>
           </div>

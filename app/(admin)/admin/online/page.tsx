@@ -192,7 +192,7 @@ export default function OnlineActivityPage() {
             <h1 className="text-xl font-bold text-foreground">Aktivitas Online</h1>
           </div>
           <p className="text-sm text-muted-foreground">
-            Realtime activity semua user yang sedang online
+            Realtime aktivitas semua user yang sedang online
           </p>
         </div>
 
@@ -235,13 +235,13 @@ export default function OnlineActivityPage() {
 
       {/* Filter tabs + search + refresh */}
       <div className="flex w-full justify-between items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-1 bg-muted/50 border border-border rounded-xl p-1 w-fit">
+        <div className="flex items-center gap-1 bg-muted/20 border border-border rounded-lg p-1 w-fit">
           {(['all', 'in_session', 'active'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
+                'px-3 py-1.5 rounded-md text-xs font-semibold transition-all',
                 filter === f
                   ? 'bg-background text-foreground shadow-sm border border-border'
                   : 'text-muted-foreground hover:text-foreground'

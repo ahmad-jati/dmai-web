@@ -6,7 +6,7 @@ import { hasEnvVars } from "@/lib/utils";
 
 const PROTECTED_ROUTES = [
   "/beranda",
-  "/session",
+  "/sesi",
   "/riwayat",
   "/profile",
 ];

@@ -13,7 +13,7 @@ export function SessionLoadingCard({ sessionName, sessionImageCover, label = 'Me
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-background grid-bg">
       <div className="flex flex-col items-center gap-3 px-6 lg:py-12 py-8 bg-white border border-muted-foreground rounded-2xl sm:w-fit w-full shadow-sm">
-        <p className="text-p text-muted-foreground -mb-2 text-center font-semibold">DMAI - Session</p>
+        <p className="text-p text-muted-foreground -mb-2 text-center font-semibold">DMAI - Sesi</p>
         <h1 className="md:text-h1/8 text-2xl/7 text-center font-semibold">
           {sessionName ?? 'Memuat sesi…'}
         </h1>
