@@ -16,6 +16,7 @@ import {
 import { SessionDetailModal } from "./session-detail-modal"
 import Link from "next/link"
 import { Route } from "next"
+import { fmtClock } from "@/lib/session-helper"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -43,8 +44,8 @@ function toDateKey(iso: string): string {
 }
 
 function dayLabel(dateKey: string, todayKey: string, yesterdayKey: string): string {
-  if (dateKey === todayKey) return "Hari ini"
-  if (dateKey === yesterdayKey) return "Kemarin"
+  // if (dateKey === todayKey) return "Hari ini"
+  // if (dateKey === yesterdayKey) return "Kemarin"
   const d = new Date(dateKey + "T00:00:00")
   return d.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "short" })
 }
@@ -173,20 +174,20 @@ function CompletionCard({
         className="font-semibold xs:text-p/5 text-xs/3.5 flex items-center gap-2 group-hover:underline underline-offset-3"
       >
         {item.session_name}
-        <ArrowUpRightIcon className="w-5 h-5 group-hover:inline-block hidden"/>
+        {/* <ArrowUpRightIcon className="w-5 h-5 group-hover:inline-block hidden"/> */}
       </Link>
 
       {/* Time row */}
-      <div className="flex flex-col items-start gap-1">
+      <div className="flex flex-col items-start">
         {item.started_at && (
           <div className="flex items-center gap-1 text-muted-foreground">
             <ClockIcon className="w-3 h-3 shrink-0" />
-            <span className="text-xs font-medium">Mulai: {formatWITA(item.started_at)}</span>
+            <span className="text-xs font-medium">Mulai: {fmtClock(item.started_at)}</span>
           </div>
         )}
         <div className="flex items-center gap-1 text-muted-foreground">
           <CheckCircleIcon className="w-3 h-3 shrink-0 text-muted-foreground" />
-          <span className="text-xs font-medium">Selesai: {formatWITA(item.completed_at)}</span>
+          <span className="text-xs font-medium">Selesai: {fmtClock(item.completed_at)}</span>
         </div>
         {duration !== "—" && (
           <div className="flex items-center gap-1 text-muted-foreground">
