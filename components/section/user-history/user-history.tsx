@@ -10,8 +10,12 @@ import {
   ArrowDownIcon,
   ChartLineUpIcon,
   TimerIcon,
+  ArrowUpLeftIcon,
+  ArrowUpRightIcon
 } from "@phosphor-icons/react"
 import { SessionDetailModal } from "./session-detail-modal"
+import Link from "next/link"
+import { Route } from "next"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -105,8 +109,8 @@ function DashboardSkeleton() {
         {Array.from({ length: 2 }).map((_, gi) => (
           <div key={gi} className="flex flex-col gap-3">
             <div className="h-3.5 bg-foreground/10 rounded w-24" />
-            <div className="grid 2xs:grid-cols-2 grid-cols-1 xs:gap-3 gap-2">
-              {Array.from({ length: 2 }).map((_, i) => (
+            <div className="grid lg:grid-cols-4 md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-2">
+              {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="h-20 bg-background rounded-xl border border-foreground/10" />
               ))}
             </div>
@@ -142,46 +146,44 @@ function StatCard({
 // ─── Completion Card ──────────────────────────────────────────────────────────
 
 function CompletionCard({
-  item,
-  onSelect,
+  item
 }: {
   item: CompletionRecord
-  onSelect: (item: CompletionRecord) => void
 }) {
   const duration = calcDuration(item.started_at, item.completed_at)
 
   return (
     <div
-      className="flex flex-col gap-2 bg-background rounded-xl border border-foreground/15 px-4 py-3 hover:border-foreground/40 hover:shadow-sm transition-all text-left w-full cursor-pointer group" 
+      className="flex flex-col gap-2 bg-background rounded-xl border border-foreground/15 px-4 py-3 hover:border-foreground/40 hover:shadow-sm transition-all text-left w-full group hover:cursor-pointer" 
     >
       {/* Session name */}
-      <p className="font-semibold xs:text-p/5 text-xs/3.5 truncate group-hover:text-foreground/80 transition-colors">
+      <Link
+        href={item.session_slug as Route}
+        className="font-semibold xs:text-p/5 text-xs/3.5 flex items-center gap-2 group-hover:underline underline-offset-3"
+      >
         {item.session_name}
-      </p>
+        <ArrowUpRightIcon className="w-5 h-5 group-hover:inline-block hidden"/>
+      </Link>
 
       {/* Time row */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex flex-col items-start gap-1">
         {item.started_at && (
           <div className="flex items-center gap-1 text-muted-foreground">
             <ClockIcon className="w-3 h-3 shrink-0" />
-            <span className="text-2xs font-medium">{formatWITA(item.started_at)}</span>
+            <span className="text-xs font-medium">Mulai: {formatWITA(item.started_at)}</span>
           </div>
         )}
         <div className="flex items-center gap-1 text-muted-foreground">
-          <CheckCircleIcon className="w-3 h-3 shrink-0 text-green-500" />
-          <span className="text-2xs font-medium">{formatWITA(item.completed_at)}</span>
+          <CheckCircleIcon className="w-3 h-3 shrink-0 text-muted-foreground" />
+          <span className="text-xs font-medium">Selesai: {formatWITA(item.completed_at)}</span>
         </div>
         {duration !== "—" && (
           <div className="flex items-center gap-1 text-muted-foreground">
             <TimerIcon className="w-3 h-3 shrink-0" />
-            <span className="text-2xs font-medium">{duration}</span>
+            <span className="text-xs font-medium">Durasi: {duration}</span>
           </div>
         )}
       </div>
-
-      <p className="text-2xs text-muted-foreground/60 font-medium group-hover:text-muted-foreground/80 transition-colors">
-        Klik untuk lihat detail →
-      </p>
     </div>
   )
 }
@@ -204,9 +206,9 @@ function DayGroup({
           ({group.items.length} sesi)
         </span>
       </div>
-      <div className="grid 2xs:grid-cols-2 grid-cols-1 gap-2 pl-1">
+      <div className="grid lg:grid-cols-4 md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-2">
         {group.items.map((item) => (
-          <CompletionCard key={item.id} item={item} onSelect={onSelect} />
+          <CompletionCard key={item.id} item={item} />
         ))}
       </div>
     </div>
