@@ -49,7 +49,7 @@ async function SessionDetail({ slug }: { slug: string }) {
 
           {/* Mobile title + meta */}
           <div className="lg:hidden flex flex-col gap-2 items-center">
-            {/* <p className="md:text-xl text-base font-medium text-muted-foreground -mb-2 block lg:hidden">Sesi</p> */}
+            <p className="md:text-xl text-sm font-medium text-muted-foreground -mb-2 block lg:hidden uppercase">Sesi</p>
             <h1 className="md:text-3xl/6.5 2xs:text-3xl/6.5 text-2xl/6 text-center font-semibold md:max-w-160 w-full mb-2">
               {session.session_name}
             </h1>

@@ -100,22 +100,33 @@ function groupByDay(items: CompletionRecord[]): GroupedDay[] {
 
 function DashboardSkeleton() {
   return (
-    <div className="flex lg:gap-6 gap-3 items-start w-full lg:items-center animate-pulse">
-      <div className="flex flex-col lg:gap-6 gap-4 w-full min-h-90 h-full overflow-hidden">
-        <div className="flex gap-3">
-          <div className="h-16 bg-foreground/8 rounded-xl flex-1" />
-          <div className="h-16 bg-foreground/8 rounded-xl flex-1" />
-        </div>
-        {Array.from({ length: 2 }).map((_, gi) => (
-          <div key={gi} className="flex flex-col gap-3">
-            <div className="h-3.5 bg-foreground/10 rounded w-24" />
-            <div className="grid lg:grid-cols-4 md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-20 bg-background rounded-xl border border-foreground/10" />
-              ))}
-            </div>
+    <div className="flex flex-col gap-4 items-start w-full min-h-90 h-full">
+      <div className="flex flex-col w-full 2md:items-start items-center gap-2 sm:max-w-180 2md:max-w-80 mb-2">
+        <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold sm:text-left text-center">
+          History Session
+        </h2>
+        <p className="xs:text-p/5 text-sm/4 sm:max-w-140 font-medium sm:text-left text-center text-pretty">
+          Semua sesi yang telah kamu selesaikan tersimpan di sini.
+        </p>
+      </div>
+
+      <div className="flex lg:gap-6 gap-3 items-start w-full lg:items-center animate-pulse">
+        <div className="flex flex-col lg:gap-6 gap-4 w-full min-h-90 h-full overflow-hidden">
+          <div className="flex gap-3">
+            <div className="h-16 bg-foreground/8 rounded-xl flex-1" />
+            <div className="h-16 bg-foreground/8 rounded-xl flex-1" />
           </div>
-        ))}
+          {Array.from({ length: 2 }).map((_, gi) => (
+            <div key={gi} className="flex flex-col gap-3">
+              <div className="h-3.5 bg-foreground/10 rounded w-24" />
+              <div className="grid lg:grid-cols-4 md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-20 bg-background rounded-xl border border-foreground/10" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -192,10 +203,8 @@ function CompletionCard({
 
 function DayGroup({
   group,
-  onSelect,
 }: {
   group: GroupedDay
-  onSelect: (item: CompletionRecord) => void
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -229,7 +238,6 @@ export function UserHistory() {
   const [loadingOlder, setLoadingOlder] = useState(false)
   const [olderFetched, setOlderFetched] = useState(false)
   const [hasOlderData, setHasOlderData] = useState(false)
-  const [selectedCompletion, setSelectedCompletion] = useState<CompletionRecord | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -272,11 +280,6 @@ export function UserHistory() {
     fetchData()
   }, [])
 
-  useEffect(() => {
-    console.log(selectedCompletion)
-  }, [selectedCompletion])
-
-
   const handleLoadOlder = async () => {
     if (olderFetched) { setShowOlder(true); return }
 
@@ -315,7 +318,14 @@ export function UserHistory() {
     <>
       <div className="flex items-start gap-1 w-full">
         <div className="flex flex-col gap-4 items-start w-full min-h-90 h-full">
-          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">Riwayat Sesi</h2>
+          <div className="flex flex-col w-full 2md:items-start items-center gap-2 sm:max-w-180 2md:max-w-80 mb-2">
+            <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold sm:text-left text-center">
+              History Session
+            </h2>
+            <p className="xs:text-p/5 text-sm/4 sm:max-w-140 font-medium sm:text-left text-center text-pretty">
+              Semua sesi yang telah kamu selesaikan tersimpan di sini.
+            </p>
+          </div>
 
           <div className="grid xs:grid-cols-2 grid-cols-1 gap-3 w-full">
             <StatCard
@@ -345,7 +355,7 @@ export function UserHistory() {
               <div className="flex flex-col gap-5">
                 <div className="flex flex-col gap-5">
                   {recentGroups.map((group) => (
-                    <DayGroup key={group.date} group={group} onSelect={setSelectedCompletion} />
+                    <DayGroup key={group.date} group={group} />
                   ))}
                 </div>
 
@@ -355,7 +365,7 @@ export function UserHistory() {
                       {OLDER_DAYS} hari sebelumnya
                     </p>
                     {olderGroups.map((group) => (
-                      <DayGroup key={group.date} group={group} onSelect={setSelectedCompletion} />
+                      <DayGroup key={group.date} group={group} />
                     ))}
                   </div>
                 )}
@@ -387,13 +397,6 @@ export function UserHistory() {
           </div>
         </div>
       </div>
-
-      {selectedCompletion && (
-        <SessionDetailModal
-          completion={selectedCompletion}
-          onClose={() => setSelectedCompletion(null)}
-        />
-      )}
     </>
   )
 }
