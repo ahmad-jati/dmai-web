@@ -2,14 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { fetchAllSessions } from "@/lib/data-detail-session";
 import {
-  ArrowUpRightIcon,
-  PersonSimpleTaiChiIcon,
   TimerIcon,
   LockSimpleIcon,
   LightbulbIcon
 } from "@phosphor-icons/react/dist/ssr";
 import { Route } from "next";
-import { Button } from "@/components/ui/button";
 
 const BLUR_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9HQAI8gMBfTQ1BQAAAABJRU5ErkJggg==";
@@ -27,7 +24,9 @@ export async function SessionListServer({ excludeSlug }: Props) {
     ? sessions.filter((s) => s.slug !== excludeSlug)
     : sessions;
 
-  return <SessionGridLayout sessions={filtered} />
+  const sorted = [...filtered].sort((a, b) => (a.week_number ?? 0) - (b.week_number ?? 0))
+
+  return <SessionGridLayout sessions={sorted} />
 }
 
 // ---------- Layout: semua unlocked → grid 3 kolom ----------
@@ -37,12 +36,12 @@ function SessionGridLayout({ sessions }: { sessions: SessionData[] }) {
       {sessions.map((session) => (
         <Link
           key={session.slug}
-          href={session.is_locked ? "#" : (`/session/${session.slug}` as Route)}
+          href={session.is_locked ? "#" : (`/sesi/${session.slug}` as Route)}
           scroll={false}
           className={`
             group flex 2xs:flex-row flex-col items-start 2xs:gap-6 gap-3
             2md:rounded-[20px] rounded-lg w-full overflow-hidden transition-shadow p-3
-            2xs:bg-transparent bg-background
+            lg:bg-transparent bg-background
             ${session.is_locked 
               ? "cursor-not-allowed opacity-70" 
               : "hover:bg-background hover:dark:bg-secondary hover:shadow-md"
@@ -74,12 +73,12 @@ function SessionGridLayout({ sessions }: { sessions: SessionData[] }) {
               />
 
               {session.is_locked && (
-                <div className="absolute inset-0 flex 2xs:flex-row flex-col  items-center gap-3 justify-center bg-background/40 dark:bg-black/40 backdrop-blur-sm z-10 animate-fade-in rounded-sm">
-                  <div className="bg-background dark:bg-secondary p-3 rounded-full shadow-lg border border-border/40">
-                    <LockSimpleIcon className="h-6 w-6 text-foreground" weight="fill" />
+                <div className="absolute inset-0 flex flex-col items-center gap-3 justify-center dark:bg-black/40 bg-background/20 backdrop-blur-sm z-10 animate-fade-in rounded-sm">
+                  <div className="w-16 h-16 rounded-full bg-foreground/10 flex items-center justify-center">
+                    <LockSimpleIcon className="w-8 h-8 text-foreground" weight="fill" />
                   </div>
                   <div>
-                    <p className="2xs:text-p/5 text-xs/4">Sesi berikutnya segera hadir</p>
+                    <p className="2xs:text-sm/4 text-xs/4 text-foreground font-medium">Sesi berikutnya segera hadir.</p>
                   </div>
                 </div>
               )}

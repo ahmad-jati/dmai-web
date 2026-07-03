@@ -6,7 +6,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { StepperExercise } from "@/components/stepper-exercise"
-import { StepForm } from "@/components/steps/step-form"
 import { fetchSessionBySlug, type SessionData } from "@/lib/data-detail-session.client"
 import { notFound } from "next/navigation"
 import {
@@ -16,11 +15,12 @@ import {
 } from "@phosphor-icons/react"
 import { Route } from "next"
 import { createClient } from "@/lib/supabase/client"
-import { Spinner } from "@/components/ui/spinner"
+import { SessionLoadingCard } from "@/components/session-loading-card"
 import { toast } from 'sonner'
 import { fmtLocalTime, fmtDuration } from "@/lib/session-helper"
 import { BodyMapRegion } from "@/lib/body-map-region"
 import type { FormField } from "@/components/steps/step-form"
+import { cn } from "@/lib/utils"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -85,55 +85,6 @@ function renderAnswerValue(value: unknown, field?: FormField): React.ReactNode {
   return <p className="text-sm bg-foreground/4 rounded-lg px-3 py-2 leading-relaxed">{String(value)}</p>
 }
 
-// ─── Loading Skeleton ──────────────────────────────────────────────────────────
-
-function ExerciseLoadingSkeleton() {
-  return (
-    <div className="w-full">
-      <div className="fixed inset-0 z-50 flex items-stretch justify-stretch lg:px-28 2md:px-12 lg:py-14 py-8 px-8 bg-background">
-        <div className="flex-1 md:rounded-4xl rounded-xl overflow-hidden relative">
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-            <Spinner className="text-muted-foreground"/>
-            <p className="text-sm text-muted-foreground">Mempersiapkan sesi...</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Post Form Screen ──────────────────────────────────────────────────────────
-
-type PostFormScreenProps = {
-  session: SessionData
-  postFormStepId: string
-  postFormFields: FormField[]
-  initialValues?: Record<string, unknown>
-  onSubmit: (responses: Record<string, unknown>) => void
-}
-
-function PostFormScreen({ session, postFormStepId: _, postFormFields, initialValues, onSubmit }: PostFormScreenProps) {
-  return (
-    <div className="fixed inset-0 z-55 flex items-center justify-center lg:px-28 px-4 lg:py-14 py-8 bg-background overflow-y-auto">
-      <div className="flex flex-col items-center w-full max-w-lg rounded-4xl bg-background border border-border overflow-y-auto flex-1 py-8 px-6 gap-6 my-auto">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <p className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">Form Setelah Sesi</p>
-          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>
-          <p className="text-sm text-muted-foreground">Bagaimana perasaanmu setelah menyelesaikan sesi ini?</p>
-        </div>
-        <div className="w-full">
-          <StepForm
-            fields={postFormFields}
-            onNext={onSubmit}
-            showPrev={false}
-            initialValues={initialValues}
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ─── Result Screen ─────────────────────────────────────────────────────────────
 
 type ResultScreenProps = {
@@ -180,14 +131,14 @@ function ResultScreen({
   return (
     <>
       <div className="w-full md:rounded-5xl rounded-xl border border-foreground md:p-8 xs:p-6 p-4 bg-celeste">
-        <div className="flex flex-col items-center gap-7">
+        <div className="flex flex-col items-center justify-center gap-7  w-full">
           {/* Hero */}
-          <div className="flex flex-col items-center gap-3 text-center max-w-lg">
-            <p className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground">Sesi Selesai 🎉</p>
+          <div className="flex flex-col items-center gap-1 text-center max-w-lg">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Kamu telah menyelesaikan sesi</p>
             <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>
           </div>
 
-          <div className="2xs:rounded-3xl rounded-xl border border-foreground bg-background dark:border-none dark:p-0 p-2 sm:w-80 xs:h-56 w-full h-36">
+          <div className="2xs:rounded-3xl rounded-xl border border-foreground bg-background dark:border-none dark:p-0 p-2 sm:w-100 sm:h-60 xs:h-76 w-full h-46">
             <Image
               src={session.image_cover}
               alt=""
@@ -200,37 +151,43 @@ function ResultScreen({
           </div>
 
           {/* Timestamp card */}
-          <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full max-w-2xl">
+          <div className="grid xs:grid-cols-3 grid-cols-1  gap-3 w-full max-w-2xl ">
             {[
-              { icon: <CalendarCheckIcon className="w-4 h-4" weight="fill" />, label: 'Mulai', val: fmtLocalTime(startedAt) },
-              { icon: <CalendarCheckIcon className="w-4 h-4" weight="fill" />, label: 'Selesai', val: fmtLocalTime(completedAt) },
-              { icon: <ClockCountdownIcon className="w-4 h-4" weight="fill" />, label: 'Durasi', val: duration !== '—' ? duration : 'Tidak diketahui' },
-            ].map(({ icon, label, val }) => (
-              <div key={label} className="flex flex-col gap-1 flex-1 bg-foreground/4 rounded-2xl p-4 border border-foreground/10">
-                <div className="flex items-center gap-1.5 text-muted-foreground">{icon}<span className="text-xs font-semibold uppercase tracking-wide">{label}</span></div>
-                <p className="text-sm font-medium text-foreground">{val}</p>
+              {label: 'Mulai', val: fmtLocalTime(startedAt) },
+              {label: 'Selesai', val: fmtLocalTime(completedAt) },
+              {label: 'Durasi', val: duration !== '—' ? `${duration} menit` : 'Tidak diketahui' },
+            ].map(({label, val }, i) => (
+              <div
+                key={label}
+                className={cn(
+                  'flex flex-col sm:items-start items-center gap-1 flex-1 bg-foreground/4 rounded-2xl p-4 border border-foreground/10 w-full',
+                  i === 2 && 'col-span-1'
+                )}
+              >
+                <div className="flex items-center gap-1.5 text-muted-foreground"><span className="text-xs font-semibold uppercase tracking-wide">{label}</span></div>
+                <p className="text-sm font-medium text-foreground xs:text-left text-center">{val}</p>
               </div>
             ))}
           </div>
 
           {/* Actions */}
-          <div className="flex xs:flex-row flex-col items-center xs:gap-3 gap-2 w-full max-w-xs">
+          <div className="flex xs:flex-row flex-col-reverse items-center justify-center xs:gap-3 gap-2 w-full max-w-xs">
             <Button
               onClick={onRepeat}
               variant="link"
-              className="w-full flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5"
+              className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5"
             >
               <RepeatIcon weight="fill" />
-              Ulangi Sesi
+              Ulangi sesi ini
             </Button>
 
-            <Link href={"/homepage" as Route}>
+            <Link href={"/beranda" as Route}>
               <Button 
-                variant="link" 
-                className="w-full flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5"
+                variant="ghost" 
+                className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5 bg-foreground text-background hover:bg-foreground/80 rounded-lg h-8"
               >
                 <HouseIcon weight="fill" />
-                Homepage
+                Beranda
               </Button>
             </Link>
           </div>
@@ -242,7 +199,7 @@ function ResultScreen({
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
-type Phase = 'exercise' | 'post_form' | 'result'
+type Phase = 'exercise' | 'result'
 
 export default function ExercisePage({ params }: Props) {
   const { slug } = use(params)
@@ -292,7 +249,8 @@ export default function ExercisePage({ params }: Props) {
     setFeedbackOpen(false)
   }
 
-  // Called when stepper finishes all steps (incl. pre_form, narration, body_map, etc.)
+  // Called when stepper finishes ALL steps (incl. pre_form, narration, post_form, body_map, etc.)
+  // post_form is now handled inside the stepper itself, so we go straight to save + result.
   const handleExerciseDone = async (
     _completionId: string,
     _userId: string,
@@ -301,39 +259,12 @@ export default function ExercisePage({ params }: Props) {
   ) => {
     setAllResponses(formResponses)
     setStartedAt(exerciseStartedAt)
-
-    // Check if there's a post_form step
-    const postFormStep = session?.instructions?.find(
-      (i: { step_type: string }) => i.step_type === 'post_form'
-    )
-
-    if (postFormStep) {
-      setPhase('post_form')
-    } else {
-      // No post form — go straight to save + result
-      await persistAndShowResult(formResponses, exerciseStartedAt, {})
-    }
-  }
-
-  // Called after post form is submitted
-  const handlePostFormSubmit = async (postFormResponses: Record<string, unknown>) => {
-    const postFormStep = session?.instructions?.find(
-      (i: { step_type: string }) => i.step_type === 'post_form'
-    )
-    if (!postFormStep) return
-
-    const updatedResponses = {
-      ...allResponses,
-      [postFormStep.id]: postFormResponses,
-    }
-    setAllResponses(updatedResponses)
-    await persistAndShowResult(updatedResponses, startedAt, postFormResponses)
+    await persistAndShowResult(formResponses, exerciseStartedAt)
   }
 
   const persistAndShowResult = async (
     formResponses: Record<string, Record<string, unknown>>,
     exerciseStartedAt: string | null,
-    _postFormData: Record<string, unknown>
   ) => {
     const supabase = createClient()
     const { data: userData } = await supabase.auth.getUser()
@@ -437,32 +368,8 @@ export default function ExercisePage({ params }: Props) {
     }, 300)
   }
 
-  if (session === undefined) return <ExerciseLoadingSkeleton />
+  if (session === undefined) return <SessionLoadingCard label="Memuat sesi…" />
   if (session === null) notFound()
-
-  // ── Post Form Phase ────────────────────────────────────────────────────────
-  if (phase === 'post_form') {
-    const postFormStep = session.instructions?.find(
-      (i: { step_type: string }) => i.step_type === 'post_form'
-    )
-    if (!postFormStep) {
-      // Shouldn't happen — fallback
-      persistAndShowResult(allResponses, startedAt, {})
-      return <ExerciseLoadingSkeleton />
-    }
-    const config = parseConfig(postFormStep.step_config)
-    const fields = ((config.questions ?? config.fields ?? []) as FormField[])
-
-    return (
-      <PostFormScreen
-        session={session}
-        postFormStepId={postFormStep.id}
-        postFormFields={fields}
-        initialValues={allResponses[postFormStep.id]}
-        onSubmit={handlePostFormSubmit}
-      />
-    )
-  }
 
   // ── Result Phase ───────────────────────────────────────────────────────────
   if (phase === 'result') {

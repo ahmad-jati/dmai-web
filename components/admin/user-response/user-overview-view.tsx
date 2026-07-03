@@ -147,8 +147,8 @@ function PrePostColumns({ preSteps, postSteps }: { preSteps: FormStep[]; postSte
 
 function BodyMapSection({ bm }: { bm: BodyMapResponse }) {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-foreground/12 p-3">
-      <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider">Body Map</p>
+    <div className="flex flex-col gap-2 bg-background rounded-lg border border-foreground/12 p-3">
+      <p className="text-sm font-semibold text-foreground uppercase tracking-wider">Body Map</p>
       {bm.selected_parts.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {bm.selected_parts.map((part, i) => (
@@ -195,7 +195,7 @@ function ResponsePanel({ record }: { record: SessionHistoryRecord }) {
     <div className="grid grid-cols-2 gap-3 p-4">
       {hasCompare && <PrePostColumns preSteps={preSteps} postSteps={postSteps} />}
       {sortedOther.map((step, i) => (
-        <div key={i} className="flex flex-col rounded-lg bg-white border border-foreground/12 p-3">
+        <div key={i} className="flex flex-col rounded-lg bg-background border border-foreground/12 p-3">
           <p className="text-sm font-semibold text-foreground uppercase tracking-wider mb-1">
             {step.step_title ?? `Form ${step.step_number}`}
           </p>
@@ -383,7 +383,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
       </div>
 
       {/* 3-column panel */}
-      <div className="flex border border-border rounded-xl overflow-hidden bg-background" style={{ height: "calc(100vh - 124px)", minHeight: 440 }}>
+      <div className="flex border border-border rounded-lg overflow-hidden" style={{ height: "calc(100vh - 140px)", minHeight: 440 }}>
 
         {/* ── Col 1: Session list ───────────────────────────────────────── */}
         <div className="w-66 shrink-0 border-r border-border flex flex-col overflow-hidden">
@@ -436,40 +436,34 @@ export function UserOverviewView({ userId }: { userId: string }) {
               <p className="text-xs text-muted-foreground italic text-center py-8">Pilih sesi</p>
             ) : (
               <div className="p-3 flex flex-col gap-3">
-                <div className="pt-1">
-                  <p className="text-xl font-semibold leading-tight">{selected.session_name}</p>
+                <div className="">
+                  <p className="text-xl/5.5 font-semibold">{selected.session_name} Lorem ipsum dolor sit, amet consectetur adipisicing elit. Maiores placeat nemo adipisci natus corporis, distinctio sit consequatur culpa? Doloribus veritatis perferendis corporis ratione repudiandae porro laudantium, nostrum nam excepturi in.</p>
                 </div>
-                <div className={`flex gap-10 rounded-lg text-sm`}>
+                <div className="flex flex-row gap-10 rounded-lg bg-muted/30 px-4 py-2.5 text-xs w-fit">
                   {selected.started_at && (
-                    <div className="flex flex-col gap-0.5">
+                    <div className="flex flex-col justify-between">
                       <span className="text-muted-foreground shrink-0">Mulai</span>
-                      <span className="font-medium text-right">{fmtLocalTime(selected.started_at)}</span>
+                      <span className="font-medium">{fmtLocalTime(selected.started_at)}</span>
                     </div>
                   )}
-                  <div className="flex flex-col gap-0.5">
+                  <div className="flex flex-col justify-between">
                     <span className="text-muted-foreground shrink-0">Selesai</span>
-                    <span className="font-medium text-right">{fmtLocalTime(selected.completed_at)}</span>
+                    <span className="font-medium">{fmtLocalTime(selected.completed_at)}</span>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-muted-foreground shrink-0">
-                      Durasi
-                    </span>
-                    <span className="font-medium tabular-nums">{fmtDuration(selected.started_at, selected.completed_at)}</span>
+                  <div className="flex flex-col justify-between">
+                    <span className="text-muted-foreground shrink-0">Durasi</span>
+                    <span className="font-semibold tabular-nums">{fmtDuration(selected.started_at, selected.completed_at)}</span>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-muted-foreground shrink-0">
-                      Form Response
-                    </span>
-                    <span className="font-medium text-foreground">{selected.form_responses.length}</span>
+                  <div className="flex flex-col justify-between">
+                    <span className="text-muted-foreground shrink-0">Form Response</span>
+                    <span className="font-medium">{selected.form_responses.length}</span>
                   </div>
-                  {
-                    selected.body_map_responses.length>0 && (
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-muted-foreground">Body maps</span>
-                        <span className="">{selected.body_map_responses.length}</span>
-                      </div>
-                    )
-                  }
+                  {selected.body_map_responses.length > 0 && (
+                    <div className="flex flex-col justify-between">
+                      <span className="text-muted-foreground shrink-0">Body maps</span>
+                      <span className="font-medium">{selected.body_map_responses.length}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -372,7 +372,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
       </div>
 
       {/* 3-column panel */}
-      <div className="flex border border-border rounded-xl overflow-hidden bg-background" style={{ height: "calc(100vh - 160px)", minHeight: 480 }}>
+      <div className="flex border border-border rounded-xl overflow-hidden" style={{ height: "calc(100vh - 180px)", minHeight: 480 }}>
 
         {/* ── Col 1: User list ─────────────────────────────────────────── */}
         <div className="w-70 shrink-0 border-r border-border flex flex-col overflow-hidden">
