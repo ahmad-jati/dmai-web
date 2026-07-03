@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { PlayIcon, ArrowLeftIcon, ArrowRightIcon, ArrowCounterClockwiseIcon, CheckCircleIcon } from '@phosphor-icons/react'
 import { Button } from '../ui/button'
 import Link from 'next/link'
+import Image from 'next/image'
 
 type Props = {
   onNext: () => void
@@ -73,45 +74,58 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-center px-12 gap-6 w-full">
+    <div className="flex-1 flex flex-col items-center 2md:px-12 px-0 gap-6 w-full">
 
       {/* Wrapper: iframe + note panel */}
-      <div className="flex w-full gap-4 md:h-106 h-140">
+      <div className="flex 2md:flex-row flex-col w-full gap-4 flex-1">
 
         {/* Iframe area */}
-        <div className="flex-1 rounded-2xl overflow-hidden border border-border shadow-sm bg-muted relative">
+        <div className="flex-1 rounded-2xl overflow-hidden border border-border shadow-sm bg-muted/20 dark:bg-muted relative ">
           {!started ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-              <div className="text-5xl">🦕</div>
+            <div className="2md:h-100 h-90 flex flex-col items-center justify-center gap-4 2md:p-4 p-6">
+              {/* <p className='text-base font-medium'>
+                Let&apos;s Play DINO Game!!
+              </p> */}
+              <div className="relative 2md:w-50 w-40 h-40">
+                <Image
+                  src={"/dino-game.png"}
+                  alt={'Dino game'}
+                  fill
+                  unoptimized
+                  priority
+                  className="object-contain w-full h-full rounded-xl dark:invert"
+                />
+              </div>
               <Button
                 onClick={handleStart}
-                className="flex items-center gap-2 px-6 py-3 rounded-full bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-all">
+                className="flex items-center gap-2 px-6 py-3 rounded-full bg-white dark:bg-popover text-foreground font-semibold text-sm hover:bg-muted-foreground/10 transition-all">
                 <PlayIcon weight="fill" className="w-4 h-4" />
-                Mulai Game
+                Start Game
               </Button>
-              <p className="text-xs text-muted-foreground">Tekan spasi untuk melompat</p>
             </div>
           ) : isExpired ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background/95">
-              <CheckCircleIcon weight="fill" className="w-14 h-14 text-green-500" />
+            <div className="2md:h-100 h-90 flex flex-col items-center justify-center gap-4 2md:p-4 p-6 bg-muted/20 dark:bg-muted">
+              <CheckCircleIcon weight="fill" className="w-14 h-14 text-green dark:text-foreground" />
               <p className="font-semibold text-lg text-foreground text-center">Sesi game selesai!</p>
-              <p className="text-sm text-muted-foreground text-center max-w-xs">
+              <p className="sm:text-sm text-xs/3 text-muted-foreground text-center -mt-1">
                 Waktu bermain sudah habis. Silahkan ikuti step selanjutnya.
               </p>
             </div>
           ) : (
-            <iframe
-              key={iframeKey}
-              src="https://dinoswords.gg/"
-              title="Mini Game Fokus"
-              className="w-full h-full"
-              allow="autoplay"
-            />
+            <div className='2md:h-100 h-90'>
+              <iframe
+                key={iframeKey}
+                src="https://dinoswords.gg/"
+                title="Mini Game Fokus"
+                className="w-full h-full"
+                allow="autoplay"
+              />
+            </div>
           )}
         </div>
 
         {/* Note panel */}
-        <div className="w-60 shrink-0 flex flex-col gap-4 rounded-2xl border border-border bg-muted/20 p-4">
+        <div className="2md:w-60 w-full shrink-0 flex flex-col gap-4 rounded-2xl border border-border bg-muted/20 dark:bg-muted p-4">
 
           {/* Timer */}
           {hasDuration && (
@@ -137,14 +151,23 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
 
           <div className="flex flex-col gap-1.5 mt-1 flex-1">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tips</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Jika dinosaurus tidak terlihat atau layar menampilkan halaman lain, coba tekan <span className="font-semibold text-foreground">Refresh Game.</span>
-            </p>
+            <ul className='list-disc list-outside text-muted-foreground pl-4'>
+              <li>
+                <p className="text-xs leading-loose">
+                  Tekan <span className='text-2xs bg-muted dark:bg-popover text-foreground rounded-xs py-1 px-2'>Spasi</span> pada keyboard komputer atau <span className='text-2xs bg-muted dark:bg-popover text-foreground rounded-xs py-1 px-2'>Tap layar</span> di garis jalan Dino pada mobile.
+                </p>
+              </li>
+              <li>
+                <p className="text-xs leading-snug">
+                  Jika dinosaurus tidak muncul atau layar menampilkan halaman lain, coba tekan <span className="font-semibold text-foreground">Refresh Game.</span>
+                </p>
+              </li>
+            </ul>
           </div>
 
           <div className=''>
             <p className="text-sm/4.5 text-muted-foreground font-medium text-center max-w-2xl">
-              Dino Swords by{" "}
+              Dino Swords dari{" "}
               <Link
                 href="https://dinoswords.gg/"
                 target="_blank"
@@ -160,19 +183,24 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-center gap-1.5">
         {onPrev && (
           <Button
+            type="button"
             onClick={onPrev}
-            className="hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg">
+            className="hover:bg-foreground/96 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+          >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
-            Kembali
+            Sebelumnya
           </Button>
         )}
         <Button
+          type="button"
           onClick={onNext}
-          className="bg-lemon hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg">
-          Lanjutkan
+          variant={'ghost'}
+          className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+        >
+          Selanjutnya
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
         </Button>
       </div>

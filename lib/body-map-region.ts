@@ -180,14 +180,14 @@ export const BodyMapRegion = [
   },
   {
     id: "KK05",
-    part_key: "betis_kanan",
-    label_id: "Betis Kanan",
+    part_key: "telapak_kaki_kanan",
+    label_id: "Telapak Kaki Kanan",
     region: "kaki"
   },
   {
     id: "KK06",
-    part_key: "betis_kiri",
-    label_id: "Betis Kiri",
+    part_key: "telapak_kaki_kiri",
+    label_id: "Telapak Kaki Kiri",
     region: "kaki"
   },
   {
@@ -204,14 +204,14 @@ export const BodyMapRegion = [
   },
   {
     id: "KK09",
-    part_key: "telapak_kaki_kanan",
-    label_id: "Telapak Kaki Kanan",
+    part_key: "betis_kanan",
+    label_id: "Betis Kanan",
     region: "kaki"
   },
   {
     id: "KK10",
-    part_key: "telapak_kaki_kiri",
-    label_id: "Telapak Kaki Kiri",
+    part_key: "betis_kiri",
+    label_id: "Betis Kiri",
     region: "kaki"
   }
 ];

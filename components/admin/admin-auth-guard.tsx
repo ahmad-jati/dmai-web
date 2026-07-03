@@ -29,7 +29,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
       if (roleData?.role === "admin") {
         setAuthorized(true)
       } else {
-        router.replace("/homepage")
+        router.replace("/beranda")
       }
 
       setChecking(false)

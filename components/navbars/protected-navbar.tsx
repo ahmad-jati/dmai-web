@@ -106,7 +106,7 @@ export function ProtectedNavbar() {
       <div className="lg:max-w-7xl mx-auto md:px-16 px-6">
         <div className="w-full flex justify-between items-center bg-white dark:bg-secondary dark:text-secondary-foreground text-foreground md:rounded-b-5xl rounded-b-xl xs:p-6 p-4 border border-foreground border-t-0">
           <Link
-            href={"/homepage"}
+            href={"/beranda"}
             className="text-app-name hover:font-bold font-semibold"
           >
             DMAI
@@ -141,16 +141,16 @@ export function ProtectedNavbar() {
                   </DropdownMenuLabel>
 
                   <DropdownMenuItem asChild className="[&_svg]:size-4">
-                    <Link href="/homepage" className="flex gap-2 items-center cursor-pointer">
+                    <Link href="/beranda" className="flex gap-2 items-center cursor-pointer">
                       <HouseIcon />
-                      Homepage
+                      Beranda
                     </Link>
                   </DropdownMenuItem>
 
                   <DropdownMenuItem asChild className="[&_svg]:size-4">
-                    <Link href="/history" className="flex gap-2 items-center cursor-pointer">
+                    <Link href="/riwayat" className="flex gap-2 items-center cursor-pointer">
                       <ClockCounterClockwiseIcon />
-                      History
+                      Riwayat Sesi
                     </Link>
                   </DropdownMenuItem>
 

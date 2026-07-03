@@ -22,8 +22,8 @@ function OtherSessionCardSkeleton() {
       <div className="flex flex-col items-start xs:gap-1.5 gap-2 2md:px-1 w-full">
         {/* title row + ruang utk lock icon */}
         <div className="flex items-center w-full gap-2">
-          <div className="h-[1lh] bg-foreground/10 rounded w-3/4" />
-          <div className="h-4 w-4 rounded-full bg-foreground/8 flex-shrink-0" />
+          <div className="h-lh bg-foreground/10 rounded w-3/4" />
+          <div className="h-4 w-4 rounded-full bg-foreground/8 shrink-0" />
         </div>
 
         {/* deskripsi 2 baris */}
@@ -62,16 +62,16 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
   const sorted = [...filtered].sort((a, b) => a.week_number - b.week_number)
 
   return (
-    <div className="grid lg:grid-cols-3  md:grid-cols-2 grid-cols-1 2xs:gap-3.5 gap-2 w-full">
+    <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 2xs:gap-3.5 gap-2 w-full">
       {sorted.map((session) => (
         <Link
           key={session.slug}
-          href={session.is_locked ? "#" : (`/session/${session.slug}` as Route)}
-          scroll={false}
+          href={session.is_locked ? "#" : (`/sesi/${session.slug}` as Route)}
+          scroll={true}
           className={`
             group flex flex-col items-start lg:gap-6 gap-3
             2md:rounded-[20px] rounded-lg w-full overflow-hidden transition-shadow p-3
-            2xs:bg-transparent bg-background
+            lg:bg-transparent bg-background
             ${session.is_locked 
               ? "cursor-not-allowed opacity-70" 
               : "hover:bg-background hover:dark:bg-secondary hover:shadow-md"
@@ -97,12 +97,12 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
               />
 
               {session.is_locked && (
-                <div className="absolute inset-0 flex 2xs:flex-row flex-col  items-center gap-3 justify-center bg-background/40 dark:bg-black/40 backdrop-blur-sm z-10 animate-fade-in rounded-sm">
-                  <div className="bg-background dark:bg-secondary p-3 rounded-full shadow-lg border border-border/40">
-                    <LockSimpleIcon className="h-6 w-6 text-foreground" weight="fill" />
+                <div className="absolute inset-0 flex flex-col items-center gap-3 justify-center dark:bg-black/40 bg-background/20 backdrop-blur-sm z-10 animate-fade-in rounded-sm">
+                  <div className="w-16 h-16 rounded-full bg-foreground/20 flex items-center justify-center">
+                    <LockSimpleIcon className="w-8 h-8 text-foreground" weight="fill" />
                   </div>
                   <div>
-                    <p className="2xs:text-p/5 text-xs/4">Sesi berikutnya segera hadir</p>
+                    <p className="2xs:text-sm/4 text-xs/4 text-foreground font-medium">Sesi berikutnya segera hadir.</p>
                   </div>
                 </div>
               )}
@@ -138,8 +138,8 @@ export function OtherSessionList({ excludeSlug }: { excludeSlug?: string }) {
   return (
     <div className="flex flex-col gap-4 items-start">
       <div className="flex flex-col w-full 2md:items-start items-center gap-2 sm:max-w-180 2md:max-w-80">
-        <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold sm:text-left text-center">Other Session</h2>
-        <p className="xs:text-p/5 text-sm/4 sm:max-w-140 font-medium sm:text-left text-center text-pretty">
+        <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold lg:text-left text-center">Other Session</h2>
+        <p className="xs:text-p/5 text-sm/4 sm:max-w-140 font-medium lg:text-left text-center text-pretty">
           Temukan sesi lain yang bisa menemanimu hari ini.
         </p>
       </div>

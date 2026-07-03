@@ -328,3 +328,13 @@ input[type="password"]::placeholder {
   font-size: 14px;  
 }
 
+.grid-bg{
+  background-image:
+    linear-gradient(hsla(60, 2%, 16%, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, hsla(60, 4%, 15%, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+  
+}
+.grid-bg.dark {
+  background-image: inherit;
+}

@@ -54,7 +54,7 @@ export function LoginForm({
       if (roleData?.role === "admin") {
         router.push("/admin");
       } else {
-        router.push("/homepage");
+        router.push("/beranda");
       }
     } catch (err: unknown) {
       setError(

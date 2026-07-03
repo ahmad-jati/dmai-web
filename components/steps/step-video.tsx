@@ -4,6 +4,8 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { PlayIcon, ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
 import { Button } from '../ui/button'
+import Link from 'next/link'
+import { Route } from 'next'
 
 type Props = {
   youtubeUrl: string
@@ -64,10 +66,12 @@ function YoutubeThumbnail({ videoId, onClick }: { videoId: string; onClick: () =
 export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) {
   const [started, setStarted] = useState(false)
   const videoId = getYoutubeId(youtubeUrl)
+  console.log(youtubeKredit)
+  console.log(youtubeUrl)
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full">
-      <div className="w-full max-w-2xl aspect-video rounded-2xl overflow-hidden  shadow-sm bg-black relative">
+    <div className="flex flex-col items-center gap-6 w-full flex-1">
+      <div className="w-full max-w-2xl sm:h-full h-300 2md:aspect-video rounded-2xl overflow-hidden shadow-sm bg-black relative flex-1">
         {!started && videoId && (
           <YoutubeThumbnail videoId={videoId} onClick={() => setStarted(true)} />
         )}
@@ -77,6 +81,7 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
             title="Video Edukasi"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
+            loading='eager'
             className="w-full h-full"
           />
         )}
@@ -87,25 +92,38 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
         )}
       </div>
 
-      { youtubeKredit && (
-        <p className="text-sm/4.5 text-muted-foreground font-medium text-center max-w-2xl">Source: {youtubeKredit}</p>
-      )}
+      <div className='flex 2md:flex-row flex-col items-center 2md:gap-2 gap-1 text-sm/4.5 text-muted-foreground font-medium text-center max-w-2xl'>
+        <p className="">
+          Sumber: 
+        </p>
+        <Link
+          href={youtubeUrl as Route}
+          target="_blank"
+          rel="noopener noreferrer"
+          className='hover:underline underline-offset-2'
+        >
+          {youtubeKredit}
+        </Link>
+      </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-center gap-1.5">
         {onPrev && (
           <Button
+            type="button"
             onClick={onPrev}
-            className="hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg"
+            className="hover:bg-foreground/96 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
-            Kembali
+            Sebelumnya
           </Button>
         )}
         <Button
+          type="button"
           onClick={onNext}
-          className="bg-lemon hover:bg-lemon dark:bg-primary sm:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground rounded-lg"
+          variant={'ghost'}
+          className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
         >
-          Lanjutkan
+          Selanjutnya
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
         </Button>
       </div>
