@@ -3,39 +3,31 @@ import Link from "next/link"
 import Image from "next/image"
 import { fetchAllSessions } from "@/lib/data-detail-session"
 import { 
-  ArrowUpRightIcon, 
   LockSimpleIcon, 
   TimerIcon, 
   LightbulbIcon } from "@phosphor-icons/react/dist/ssr"
 import { Route } from "next"
-import { Button } from "./ui/button"
 
 const BLUR_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9HQAI8gMBfTQ1BQAAAABJRU5ErkJggg=="
 
 function OtherSessionCardSkeleton() {
   return (
-    <div className="flex flex-col items-end 2xs:gap-4 gap-2 bg-background dark:bg-card 2md:rounded-[20px] rounded-lg border border-foreground/15 w-full overflow-hidden p-3 animate-pulse">
-      {/* image placeholder — ukuran sama persis dengan card asli */}
-      <div className="md:w-full md:h-40 2xs:w-34 2xs:h-30 w-24 h-20 2md:rounded-[14px] rounded-[10px] bg-foreground/8" />
-
-      <div className="flex flex-col items-start xs:gap-1.5 gap-2 2md:px-1 w-full">
-        {/* title row + ruang utk lock icon */}
-        <div className="flex items-center w-full gap-2">
-          <div className="h-lh bg-foreground/10 rounded w-3/4" />
-          <div className="h-4 w-4 rounded-full bg-foreground/8 shrink-0" />
-        </div>
-
-        {/* deskripsi 2 baris */}
-        <div className="flex flex-col gap-1.5 w-full">
-          <div className="h-3 bg-foreground/8 rounded w-full" />
-          <div className="h-3 bg-foreground/8 rounded w-2/3" />
-        </div>
-
-        {/* footer: instruksi + durasi */}
-        <div className="flex items-center gap-3 mt-1">
-          <div className="h-3 bg-foreground/6 rounded w-20" />
-          <div className="h-3 bg-foreground/6 rounded w-14" />
+    <div className="flex flex-col items-start lg:gap-6 gap-3 2md:rounded-[20px] rounded-lg w-full overflow-hidden transition-shadow p-3 lg:bg-transparent bg-background animate-pulse">
+      {/* week number + title row */}
+      <div className="h-full flex gap-3 items-center w-full">
+        <div className="h-10 w-14 bg-foreground/10 rounded shrink-0" />
+        <div className="h-lh bg-foreground/10 rounded w-2/3" />
+      </div>
+ 
+      <div className="flex flex-col gap-3 w-full">
+        {/* image placeholder — same responsive heights as real card */}
+        <div className="relative w-full lg:h-60 3md:h-40 sm:h-60 xs:h-44 h-34 rounded-sm overflow-hidden bg-foreground/8">
+          {/* bottom-right meta badge placeholder */}
+          <div className="absolute bottom-4 right-4 flex flex-col gap-1.5 items-end">
+            <div className="h-3 w-20 bg-foreground/15 rounded" />
+            <div className="h-3 w-14 bg-foreground/15 rounded" />
+          </div>
         </div>
       </div>
     </div>
@@ -44,13 +36,14 @@ function OtherSessionCardSkeleton() {
 
 function OtherSessionListSkeleton() {
   return (
-    <div className="grid sm:grid-cols-2 grid-cols-1 gap-3.5 w-full">
-      {Array.from({ length: 4 }).map((_, i) => (
+    <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 2xs:gap-3.5 gap-2 w-full">
+      {Array.from({ length: 3 }).map((_, i) => (
         <OtherSessionCardSkeleton key={i} />
       ))}
     </div>
   )
 }
+ 
 
 async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string }) {
   const sessions = await fetchAllSessions()
