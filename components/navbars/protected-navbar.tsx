@@ -99,9 +99,9 @@ export function ProtectedNavbar() {
     <nav
       id="navbar-app"
       className="fixed top-0 left-0 z-40"
-      style={{
-        width: "calc(100% - var(--navbar-scrollbar-offset, 0px))",
-      }}
+      // style={{
+      //   width: "calc(100% - var(--navbar-scrollbar-offset, 0px))",
+      // }}
     >
       <div className="lg:max-w-7xl mx-auto md:px-16 px-6">
         <div className="w-full flex justify-between items-center bg-white dark:bg-secondary dark:text-secondary-foreground text-foreground md:rounded-b-5xl rounded-b-xl xs:p-6 p-4 border border-foreground border-t-0">
