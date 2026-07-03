@@ -387,7 +387,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
             ) : (
               grouped.map((group) => (
                 <div key={group.label}>
-                  <div className="px-3 py-1.5 bg-muted/20 border-b border-border/50 sticky top-0">
+                  <div className="px-3 py-1.5 bg-gray-100 border-b border-border/50 sticky top-0">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group.label}</p>
                   </div>
                   {group.items.map((c) => {
@@ -398,7 +398,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
                         onClick={() => setSelectedId(c.id)}
                         className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left border-b border-border/40 transition-colors hover:bg-muted/40 ${isActive ? "bg-muted/40" : ""}`}
                       >
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-2xs font-bold shrink-0 bg-muted-foreground/50 text-background`}>
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-2xs font-bold shrink-0 bg-foreground text-background`}>
                           {getInitials(c.full_name, c.email)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -433,7 +433,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
                     href={`/admin/user-responses/${selected.user_id}` as Route}
                     className="flex items-center gap-2 pt-2 pb-1 group hover:cursor-pointer"
                   >
-                    <div className="w-10 h-10 rounded-full bg-foreground/8 flex items-center justify-center text-sm font-bold text-foreground/60">
+                    <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center text-sm font-bold text-background">
                       {getInitials(selected.full_name, selected.email)}
                     </div>
                     <div className="text-center">
@@ -448,7 +448,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
                   </Link>
 
                   {/* Time meta */}
-                  <div className="flex flex-row gap-10 rounded-lg bg-muted/30 px-4 py-2.5 text-xs">
+                  <div className="flex flex-row gap-10 rounded-lg bg-gray-100 px-4 py-2.5 text-xs">
                     <div className="flex flex-col justify-between">
                       <span className="text-muted-foreground">Mulai</span>
                       <span className="font-medium">{fmtLocalTime(selected.started_at)}</span>

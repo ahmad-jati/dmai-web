@@ -79,7 +79,7 @@ function CompactAnswerRow({
   if (isInlineAnswer(value)) {
     return (
       <div className="flex flex-col items-start justify-between gap-2 py-1.5 border-b border-border/50 last:border-0">
-        <span className="text-sm font-medium text-muted-foreground shrink-0 leading-tight">{label}</span>
+        <span className="text-sm font-medium text-muted-foreground shrink-0 leading-tight">{label} df</span>
         <div className="flex items-center gap-1 shrink-0">
           {renderAnswerValue(value, type)}
           {delta != null && delta !== 0 && (
@@ -370,7 +370,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
           </Button>
         </div>
         <div className="pl-7 min-w-0 flex flex-row-reverse items-center gap-4">
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-muted text-background`}>
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-foreground text-background`}>
             {getInitials(user?.full_name ?? null, user?.email ?? '')}
           </div>
           <div>
@@ -398,7 +398,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
             ) : (
               grouped.map((group) => (
                 <div key={group.label}>
-                  <div className="px-3 py-1.5 bg-muted border-b border-border/50 sticky top-0">
+                  <div className="px-3 py-1.5 bg-gray-100 border-b border-border/50 sticky top-0">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group.label}</p>
                   </div>
                   {group.items.map((r) => {
@@ -437,9 +437,9 @@ export function UserOverviewView({ userId }: { userId: string }) {
             ) : (
               <div className="p-3 flex flex-col gap-3">
                 <div className="">
-                  <p className="text-xl/5.5 font-semibold">{selected.session_name} Lorem ipsum dolor sit, amet consectetur adipisicing elit. Maiores placeat nemo adipisci natus corporis, distinctio sit consequatur culpa? Doloribus veritatis perferendis corporis ratione repudiandae porro laudantium, nostrum nam excepturi in.</p>
+                  <p className="text-xl/5.5 font-semibold">{selected.session_name}</p>
                 </div>
-                <div className="flex flex-row gap-10 rounded-lg bg-muted/30 px-4 py-2.5 text-xs w-fit">
+                <div className="flex flex-row gap-10 rounded-lg bg-gray-100 px-4 py-2.5 text-xs w-fit">
                   {selected.started_at && (
                     <div className="flex flex-col justify-between">
                       <span className="text-muted-foreground shrink-0">Mulai</span>
