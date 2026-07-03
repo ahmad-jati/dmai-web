@@ -50,6 +50,14 @@ type SubStep = {
   duration_seconds: number
 }
 
+type StoredDraft = {
+  responses: Record<string, Record<string, unknown>>
+  currentStep: number
+  savedAt: number
+}
+
+const STALE_MS = 3 * 24 * 60 * 60 * 1000 // 3 hari
+
 type Props = {
   instructions: SessionInstruction[]
   sessionName: string
@@ -184,6 +192,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const strokeDashoffset = circumference * (1 - progress / 100)
   const currentTrack = tracks[currentTrackIndex]
   const formResponsesRef = useRef<Record<string, Record<string, unknown>>>({})
+  const currentStepRef = useRef(0)
 
   // ── Presence payload — built after step is declared ───────────────────────────
   const presencePayload: PresencePayload | null = presenceUserId && presenceEmail
@@ -202,34 +211,52 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem(sessionStorageKey)
+      const saved = localStorage.getItem(sessionStorageKey)
       if (saved) {
-        const parsed = JSON.parse(saved)
-        setFormResponses(parsed)
-        formResponsesRef.current = parsed
+        const parsed: StoredDraft = JSON.parse(saved)
+        if (Date.now() - parsed.savedAt > STALE_MS) {
+          localStorage.removeItem(sessionStorageKey)
+          localStorage.removeItem(startedAtKey)
+        } else {
+          setFormResponses(parsed.responses)
+          formResponsesRef.current = parsed.responses
+          if (typeof parsed.currentStep === 'number') {
+            setCurrentStep(parsed.currentStep)
+            currentStepRef.current = parsed.currentStep
+          }
+        }
       }
     } catch {}
-  }, [sessionStorageKey])
+  }, [sessionStorageKey, startedAtKey])
 
-  // Record started_at once when the stepper first mounts for this session.
-  // We only write if the key doesn't exist yet, so resuming after a refresh
-  // keeps the original start time instead of resetting it.
   useEffect(() => {
     try {
-      if (!sessionStorage.getItem(startedAtKey)) {
-        sessionStorage.setItem(startedAtKey, new Date().toISOString())
+      if (!localStorage.getItem(startedAtKey)) {
+        localStorage.setItem(startedAtKey, new Date().toISOString())
       }
     } catch {}
   }, [startedAtKey])
+  
+  const persistDraft = useCallback(() => {
+    try {
+      localStorage.setItem(sessionStorageKey, JSON.stringify({
+        responses: formResponsesRef.current,
+        currentStep: currentStepRef.current,
+        savedAt: Date.now(),
+      }))
+    } catch {}
+  }, [sessionStorageKey])
 
   const handleFormResponse = useCallback((stepId: string, responses: Record<string, unknown>) => {
     formResponsesRef.current = { ...formResponsesRef.current, [stepId]: responses }
-    setFormResponses((prev) => {
-      const next = { ...prev, [stepId]: responses }
-      try { sessionStorage.setItem(sessionStorageKey, JSON.stringify(next)) } catch {}
-      return next
-    })
-  }, [sessionStorageKey])
+    setFormResponses((prev) => ({ ...prev, [stepId]: responses }))
+    persistDraft()
+  }, [persistDraft])
+
+  useEffect(() => {
+    currentStepRef.current = currentStep
+    persistDraft()
+  }, [currentStep, persistDraft])
 
   const persistFormResponses = useCallback(async (
     completionId: string,
@@ -314,8 +341,8 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     }
 
     await Promise.all(promises)
-    try { sessionStorage.removeItem(sessionStorageKey) } catch {}
-    try { sessionStorage.removeItem(startedAtKey) } catch {}
+    try { localStorage.removeItem(sessionStorageKey) } catch {}
+    try { localStorage.removeItem(startedAtKey) } catch {}
   }, [instructions, sessionId, sessionStorageKey, startedAtKey])
 
   const handleBack = () => {
@@ -345,8 +372,8 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
       const responseSnapshot = formResponsesRef.current
       let startedAt: string | null = null
       try {
-        startedAt = sessionStorage.getItem(startedAtKey)
-        sessionStorage.removeItem(startedAtKey)
+        startedAt = localStorage.getItem(startedAtKey)
+        localStorage.removeItem(startedAtKey)
       } catch {}
       setTimeout(() => onDone('', '', responseSnapshot, startedAt), 600)
     }
