@@ -105,7 +105,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                   <LockSimpleIcon className="w-5 h-5" weight="fill" />
                 </Button>
               ) : (
-                <Link href={`/session/${slug}/exercise` as Route} className="flex items-center gap-2">
+                <Link href={`/sesi/${slug}/latihan` as Route} className="flex items-center gap-2">
                   <Button
                     variant={"default"}
                     className="flex gap-2 items-center [&_svg]:size-3 dark:bg-primary lg:text-base bg-white text-foreground"
@@ -119,7 +119,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               <p className="xs:text-sm text-2xs text-muted-foreground">atau</p>
 
               <Link
-                href={"/homepage" as Route}
+                href={"/beranda" as Route}
                 className="xs:text-sm text-2xs underline-offset-2 hover:underline hover:cursor-pointer text-muted-foreground"
               >
                   Kembali ke homepage

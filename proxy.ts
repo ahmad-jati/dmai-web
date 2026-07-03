@@ -5,9 +5,9 @@ import { createServerClient } from "@supabase/ssr";
 import { hasEnvVars } from "@/lib/utils";
 
 const PROTECTED_ROUTES = [
-  "/homepage",
+  "/beranda",
   "/session",
-  "/history",
+  "/riwayat",
   "/profile",
 ];
 const ADMIN_ROUTES = ["/admin"];

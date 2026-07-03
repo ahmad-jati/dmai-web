@@ -17,7 +17,7 @@ export function MainNavbar() {
       } = await supabase.auth.getUser()
 
       if (user) {
-        setHref('/homepage')
+        setHref('/beranda')
       }
     }
 

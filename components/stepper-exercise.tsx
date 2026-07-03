@@ -347,7 +347,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
   const handleBack = () => {
     if (onBack) onBack()
-    else router.push(`/session/${sessionSlug}`)
+    else router.push(`/sesi/${sessionSlug}`)
   }
 
   // ── Navigation ──────────────────────────────────────────────────────────────

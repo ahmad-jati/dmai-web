@@ -18,7 +18,7 @@ export default function SessionLocked() {
             Sesi ini di masih di kunci. Harap tanyakan admin jika ingin mengakses sesi ini.
           </p>
 
-          <Link href={'/homepage' as Route} className="flex gap-2 items-center">
+          <Link href={'/beranda' as Route} className="flex gap-2 items-center">
             <Button
               variant={'default'}
               className="[&_svg]:size-4 xs:text-p/5 text-xs/4 rounded-xl hover:bg-background/80 dark:bg-primary"

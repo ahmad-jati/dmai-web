@@ -181,7 +181,7 @@ function ResultScreen({
               Ulangi sesi ini
             </Button>
 
-            <Link href={"/homepage" as Route}>
+            <Link href={"/beranda" as Route}>
               <Button 
                 variant="ghost" 
                 className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5 bg-foreground text-background hover:bg-foreground/80 rounded-lg"

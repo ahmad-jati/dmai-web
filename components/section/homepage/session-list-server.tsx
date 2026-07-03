@@ -36,7 +36,7 @@ function SessionGridLayout({ sessions }: { sessions: SessionData[] }) {
       {sessions.map((session) => (
         <Link
           key={session.slug}
-          href={session.is_locked ? "#" : (`/session/${session.slug}` as Route)}
+          href={session.is_locked ? "#" : (`/sesi/${session.slug}` as Route)}
           scroll={false}
           className={`
             group flex 2xs:flex-row flex-col items-start 2xs:gap-6 gap-3

@@ -1,5 +1,5 @@
 import { Section } from "@/components/layout/section-wrapper";
-import { SessionList } from "@/components/section/homepage/session-list";
+import { SessionList } from "@/components/section/beranda/session-list";
 
 export default function Page() {
   return (

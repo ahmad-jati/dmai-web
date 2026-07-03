@@ -159,7 +159,7 @@ export function ResultScreen({
               Ulangi sesi ini
             </Button>
 
-            <Link href={"/homepage" as Route}>
+            <Link href={"/beranda" as Route}>
               <Button
                 variant="link"
                 className="w-full flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5"
