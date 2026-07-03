@@ -423,7 +423,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
         console.error('[BGM] init error:', err)
       } finally {
         // Delay 2500ms
-        setTimeout(() => setIsReady(true), 2500)
+        setTimeout(() => setIsReady(true), 1500)
         // setIsReady(true)
       }
     }

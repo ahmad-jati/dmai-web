@@ -153,7 +153,7 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tips</p>
             <ul className='list-disc list-outside text-muted-foreground pl-4'>
               <li>
-                <p className="text-xs leading-snug">
+                <p className="text-xs leading-loose">
                   Tekan <span className='text-2xs bg-muted dark:bg-popover text-foreground rounded-xs py-1 px-2'>Spasi</span> pada keyboard komputer atau <span className='text-2xs bg-muted dark:bg-popover text-foreground rounded-xs py-1 px-2'>Tap layar</span> di garis jalan Dino pada mobile.
                 </p>
               </li>

@@ -158,7 +158,7 @@ function CompletionCard({
     >
       {/* Session name */}
       <Link
-        href={item.session_slug as Route}
+        href={`/sesi/${item.session_slug}` as Route}
         className="font-semibold xs:text-p/5 text-xs/3.5 flex items-center gap-2 group-hover:underline underline-offset-3"
       >
         {item.session_name}
@@ -315,9 +315,9 @@ export function UserHistory() {
     <>
       <div className="flex items-start gap-1 w-full">
         <div className="flex flex-col gap-4 items-start w-full min-h-90 h-full">
-          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">History Session</h2>
+          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">Riwayat Sesi</h2>
 
-          <div className="flex gap-3 w-full">
+          <div className="grid xs:grid-cols-2 grid-cols-1 gap-3 w-full">
             <StatCard
               icon={<ChartLineUpIcon className="w-5 h-5" />}
               label="Total Sesi Selesai"
