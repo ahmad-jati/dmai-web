@@ -22,8 +22,8 @@ function OtherSessionCardSkeleton() {
       <div className="flex flex-col items-start xs:gap-1.5 gap-2 2md:px-1 w-full">
         {/* title row + ruang utk lock icon */}
         <div className="flex items-center w-full gap-2">
-          <div className="h-[1lh] bg-foreground/10 rounded w-3/4" />
-          <div className="h-4 w-4 rounded-full bg-foreground/8 flex-shrink-0" />
+          <div className="h-lh bg-foreground/10 rounded w-3/4" />
+          <div className="h-4 w-4 rounded-full bg-foreground/8 shrink-0" />
         </div>
 
         {/* deskripsi 2 baris */}
@@ -97,12 +97,12 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
               />
 
               {session.is_locked && (
-                <div className="absolute inset-0 flex 2xs:flex-row flex-col  items-center gap-3 justify-center bg-background/40 dark:bg-black/40 backdrop-blur-sm z-10 animate-fade-in rounded-sm">
-                  <div className="bg-background dark:bg-secondary p-3 rounded-full shadow-lg border border-border/40">
-                    <LockSimpleIcon className="h-6 w-6 text-foreground" weight="fill" />
+                <div className="absolute inset-0 flex flex-col items-center gap-3 justify-center dark:bg-black/40 bg-background/20 backdrop-blur-sm z-10 animate-fade-in rounded-sm">
+                  <div className="w-16 h-16 rounded-full bg-foreground/20 flex items-center justify-center">
+                    <LockSimpleIcon className="w-8 h-8 text-foreground" weight="fill" />
                   </div>
                   <div>
-                    <p className="2xs:text-p/5 text-xs/4">Sesi berikutnya segera hadir</p>
+                    <p className="2xs:text-sm/4 text-xs/4 text-foreground font-medium">Sesi berikutnya segera hadir.</p>
                   </div>
                 </div>
               )}

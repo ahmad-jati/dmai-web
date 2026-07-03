@@ -82,10 +82,10 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
         {/* Iframe area */}
         <div className="flex-1 rounded-2xl overflow-hidden border border-border shadow-sm bg-muted/20 relative ">
           {!started ? (
-            <div className="2md:h-full h-80 flex flex-col items-center justify-center gap-4 2md:p-4 p-6">
-              <p className='text-base font-medium'>
+            <div className="2md:h-100 h-90 flex flex-col items-center justify-center gap-4 2md:p-4 p-6">
+              {/* <p className='text-base font-medium'>
                 Let&apos;s Play DINO Game!!
-              </p>
+              </p> */}
               <div className="relative 2md:w-50 w-40 h-40">
                 <Image
                   src={"/dino-game.png"}
@@ -104,7 +104,7 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
               </Button>
             </div>
           ) : isExpired ? (
-            <div className="2md:h-full h-80 flex flex-col items-center justify-center gap-4 2md:p-4 p-6 bg-muted/20">
+            <div className="2md:h-100 h-90 flex flex-col items-center justify-center gap-4 2md:p-4 p-6 bg-muted/20">
               <CheckCircleIcon weight="fill" className="w-14 h-14 text-green" />
               <p className="font-semibold text-lg text-foreground text-center">Sesi game selesai!</p>
               <p className="sm:text-sm text-xs/3 text-muted-foreground text-center -mt-1">
@@ -112,7 +112,7 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
               </p>
             </div>
           ) : (
-            <div className='2md:h-full h-80'>
+            <div className='2md:h-100 h-90'>
               <iframe
                 key={iframeKey}
                 src="https://dinoswords.gg/"
@@ -153,12 +153,12 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tips</p>
             <ul className='list-disc list-outside text-muted-foreground pl-4'>
               <li>
-                <p className="text-xs leading-relaxed">
-                  Tekan <span className='text-2xs bg-muted text-foreground rounded-xs py-1 px-2'>Spasi</span> pada Keyboard pada komputer atau <span className='text-2xs bg-muted text-foreground rounded-xs py-1 px-2'>Tap layar</span> pada mobile.
+                <p className="text-xs leading-snug">
+                  Tekan <span className='text-2xs bg-muted text-foreground rounded-xs py-1 px-2'>Spasi</span> pada keyboard komputer atau <span className='text-2xs bg-muted text-foreground rounded-xs py-1 px-2'>Tap layar</span> di garis jalan Dino pada mobile.
                 </p>
               </li>
               <li>
-                <p className="text-xs leading-relaxed">
+                <p className="text-xs leading-snug">
                   Jika dinosaurus tidak muncul atau layar menampilkan halaman lain, coba tekan <span className="font-semibold text-foreground">Refresh Game.</span>
                 </p>
               </li>

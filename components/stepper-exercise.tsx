@@ -923,7 +923,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             <ArrowLeftIcon weight="bold" /> 
             Kembali
           </Button>
-          <div className="bg-muted-foreground/10 border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
+          <div className="bg-gray-100 border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
             <span className="sm:text-sm text-xs font-semibold text-muted-foreground">
               Tahap {currentStep + 1} / {totalSteps}
             </span>
@@ -970,7 +970,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           <div className="flex-1 truncate w-full flex justify-center">
             <h3 className="text-p text-foreground font-semibold text-right uppercase">DMAI SESI - {sessionName}</h3>
           </div>
-          <div className="bg-muted-foreground/10 border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
+          <div className="bg-gray-100 border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
             <span className="text-sm font-semibold text-muted-foreground">
               Tahap {currentStep + 1} / {totalSteps}
             </span>
