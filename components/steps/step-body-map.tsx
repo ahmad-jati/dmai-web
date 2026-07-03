@@ -126,34 +126,34 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
               onChange={(e) => handleNote(e.target.value)}
               rows={2}
               placeholder="Deskripsikan lebih lanjut jika perlu..."
-              className="w-full rounded-xl border border-border bg-white text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-colors"
+              className="w-full rounded-xl border border-border bg-white dark:bg-popover text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-colors"
             />
           </div>
         )}
       </div>
 
-      <div className={cn('flex gap-3 justify-center')}>
-        {onPrev && (
-          <Button
-            type="button"
-            onClick={onPrev}
-            className="hover:bg-foreground/96 hover:text-background dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
-          >
-            <ArrowLeftIcon weight="bold" className="w-4 h-4" />
-            Kembali
-          </Button>
-        )}
+    <div className={cn('flex gap-1.5 justify-center')}>
+      {onPrev && (
         <Button
           type="button"
-          onClick={() => onNext({ selected_parts: selected, sensation, note })}
-          disabled={selected.length === 0}
-          variant={'ghost'}
-          className="bg-foreground hover:bg-foreground/96 dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8! disabled:opacity-40 disabled:cursor-not-allowed"
+          onClick={onPrev}
+          className="hover:bg-foreground/96 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
         >
-          Lanjutkan
-          <ArrowRightIcon weight="bold" className="w-4 h-4" />
+          <ArrowLeftIcon weight="bold" className="w-4 h-4" />
+          Sebelumnya
         </Button>
-      </div>
+      )}
+      <Button
+        type="button"
+        onClick={() => onNext({ selected_parts: selected, sensation, note })}
+        disabled={selected.length === 0}
+        variant={'ghost'}
+        className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8! disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Selanjutnya
+        <ArrowRightIcon weight="bold" className="w-4 h-4" />
+      </Button>
+    </div>
     </div>
   )
 }

@@ -80,7 +80,7 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
       <div className="flex 2md:flex-row flex-col w-full gap-4 flex-1">
 
         {/* Iframe area */}
-        <div className="flex-1 rounded-2xl overflow-hidden border border-border shadow-sm bg-muted/20 relative ">
+        <div className="flex-1 rounded-2xl overflow-hidden border border-border shadow-sm bg-muted/20 dark:bg-muted relative ">
           {!started ? (
             <div className="2md:h-100 h-90 flex flex-col items-center justify-center gap-4 2md:p-4 p-6">
               {/* <p className='text-base font-medium'>
@@ -93,19 +93,19 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
                   fill
                   unoptimized
                   priority
-                  className="object-contain w-full h-full rounded-xl"
+                  className="object-contain w-full h-full rounded-xl dark:invert"
                 />
               </div>
               <Button
                 onClick={handleStart}
-                className="flex items-center gap-2 px-6 py-3 rounded-full bg-white text-foreground font-semibold text-sm hover:bg-muted-foreground/10 transition-all">
+                className="flex items-center gap-2 px-6 py-3 rounded-full bg-white dark:bg-popover text-foreground font-semibold text-sm hover:bg-muted-foreground/10 transition-all">
                 <PlayIcon weight="fill" className="w-4 h-4" />
                 Start Game
               </Button>
             </div>
           ) : isExpired ? (
-            <div className="2md:h-100 h-90 flex flex-col items-center justify-center gap-4 2md:p-4 p-6 bg-muted/20">
-              <CheckCircleIcon weight="fill" className="w-14 h-14 text-green" />
+            <div className="2md:h-100 h-90 flex flex-col items-center justify-center gap-4 2md:p-4 p-6 bg-muted/20 dark:bg-muted">
+              <CheckCircleIcon weight="fill" className="w-14 h-14 text-green dark:text-foreground" />
               <p className="font-semibold text-lg text-foreground text-center">Sesi game selesai!</p>
               <p className="sm:text-sm text-xs/3 text-muted-foreground text-center -mt-1">
                 Waktu bermain sudah habis. Silahkan ikuti step selanjutnya.
@@ -125,7 +125,7 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
         </div>
 
         {/* Note panel */}
-        <div className="2md:w-60 w-full shrink-0 flex flex-col gap-4 rounded-2xl border border-border bg-muted/20 p-4">
+        <div className="2md:w-60 w-full shrink-0 flex flex-col gap-4 rounded-2xl border border-border bg-muted/20 dark:bg-muted p-4">
 
           {/* Timer */}
           {hasDuration && (
@@ -154,7 +154,7 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
             <ul className='list-disc list-outside text-muted-foreground pl-4'>
               <li>
                 <p className="text-xs leading-snug">
-                  Tekan <span className='text-2xs bg-muted text-foreground rounded-xs py-1 px-2'>Spasi</span> pada keyboard komputer atau <span className='text-2xs bg-muted text-foreground rounded-xs py-1 px-2'>Tap layar</span> di garis jalan Dino pada mobile.
+                  Tekan <span className='text-2xs bg-muted dark:bg-popover text-foreground rounded-xs py-1 px-2'>Spasi</span> pada keyboard komputer atau <span className='text-2xs bg-muted dark:bg-popover text-foreground rounded-xs py-1 px-2'>Tap layar</span> di garis jalan Dino pada mobile.
                 </p>
               </li>
               <li>
@@ -183,24 +183,24 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center justify-center gap-1.5">
         {onPrev && (
           <Button
             type="button"
             onClick={onPrev}
-            className="hover:bg-foreground/96 hover:text-background dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+            className="hover:bg-foreground/96 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
-            Kembali
+            Sebelumnya
           </Button>
         )}
         <Button
           type="button"
           onClick={onNext}
           variant={'ghost'}
-          className="bg-foreground hover:bg-foreground/96 dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+          className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
         >
-          Lanjutkan
+          Selanjutnya
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
         </Button>
       </div>

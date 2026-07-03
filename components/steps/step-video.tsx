@@ -106,24 +106,24 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
         </Link>
       </div>
 
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center justify-center gap-1.5">
         {onPrev && (
           <Button
             type="button"
             onClick={onPrev}
-            className="hover:bg-foreground/96 hover:text-background dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground hover:dark:text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+            className="hover:bg-foreground/96 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
-            Kembali
+            Sebelumnya
           </Button>
         )}
         <Button
           type="button"
           onClick={onNext}
           variant={'ghost'}
-          className="bg-foreground hover:bg-foreground/96 dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+          className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
         >
-          Lanjutkan
+          Selanjutnya
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
         </Button>
       </div>

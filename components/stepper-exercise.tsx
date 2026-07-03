@@ -559,7 +559,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               className="[&_svg]:size-4 gap-1.5 px-3 text-foreground">
               <ArrowLeftIcon weight="bold" /> Kembali
             </Button>
-            <div className="bg-white border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
+            <div className="bg-white dark:bg-popover border border-foreground/20 px-3 py-1.5 rounded-lg flex items-center">
               <span className="sm:text-sm text-xs font-semibold text-muted-foreground">
                 Tahap {currentStep + 1} / {totalSteps}
               </span>
@@ -567,7 +567,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           </div>
 
           {/* White card shell */}
-          <div className="flex flex-col w-full rounded-2xl bg-white border border-border shadow-sm flex-1 p-4 gap-3">
+          <div className="flex flex-col w-full rounded-2xl bg-white dark:bg-popover border border-border shadow-sm flex-1 p-4 gap-3">
 
             {/* Step type + sub-step indicator */}
             <div className="flex items-center justify-between gap-2 shrink-0">
@@ -579,7 +579,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="group flex items-center gap-3 px-4 py-2 mb-2 rounded-lg bg-gray-100 text-foreground/80 hover:bg-muted/40 hover:cursor-pointer transition-all duration-150 ease-out w-full shrink-0"
+                  className="group flex items-center gap-3 px-4 py-2 lg:mb-0 mb-2 rounded-lg bg-gray-100 dark:bg-celeste text-foreground/80 hover:bg-muted/40 hover:cursor-pointer transition-all duration-150 ease-out w-full shrink-0"
                 >
                   <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
                   <div className="flex flex-1 flex-col min-w-0 text-left">
@@ -593,7 +593,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                 align="center"
                 sideOffset={8}
                 style={{ width: 'var(--radix-dropdown-menu-trigger-width)' }}
-                className="bg-gray-100 dark:bg-foreground text-foreground dark:text-background border border-border rounded-lg p-2.5 flex flex-col gap-0.5 z-9999"
+                className="bg-gray-100 dark:bg-celeste text-foreground border border-border rounded-lg p-2.5 flex flex-col gap-0.5 z-9999 group"
               >
                 <span className="text-xs font-bold tracking-[0.18em] uppercase px-2 pb-1.5">Musik Latar</span>
                 {tracks.map((track, index) => (
@@ -601,26 +601,29 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                     key={track.id}
                     onSelect={() => { setCurrentTrackIndex(index); bgmSwitchTrack(track.audio_url) }}
                     className={cn(
-                      'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-md cursor-pointer hover:bg-celeste!',
-                          index === currentTrackIndex && !isBGMStopped
-                            ? 'border-foreground/40 bg-celeste shadow-sm'
-                            : 'hover:bg-celeste')}
+                      'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-md cursor-pointer',
+                      index === currentTrackIndex && !isBGMStopped
+                        ? 'border-foreground/40 bg-celeste dark:bg-foreground/20 shadow-sm'
+                        : 'hover:bg-foreground hover:dark:bg-foreground/20')}
                   >
                     <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-muted-foreground/40" />
                     <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-semibold text-foreground dark:text-background">{track.title}</span>
-                      {track.composer && <span className="text-xs text-foreground dark:text-background">{track.composer}</span>}
+                      <span className="text-xs font-semibold text-foreground">{track.title}</span>
+                      {track.composer && <span className="text-xs text-foreground">{track.composer}</span>}
                     </div>
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator className="m-1 bg-muted-foreground/25 dark:bg-background/20" />
                 <DropdownMenuItem
                   onSelect={() => bgmStop()}
-                  className={cn('flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg cursor-pointer',
-                    isBGMStopped ? 'bg-muted-foreground/10' : 'focus:bg-muted-foreground/10')}
+                  className={cn(
+                    'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg cursor-pointer ',
+                    isBGMStopped 
+                        ? 'border-foreground/40 bg-celeste dark:bg-foreground/20 shadow-sm'
+                        : 'hover:bg-foreground hover:dark:bg-foreground/20')}
                 >
                   <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-muted-foreground/40" />
-                  <span className="text-xs font-semibold text-foreground dark:text-background">Tanpa Musik</span>
+                  <span className="text-xs font-semibold text-foreground dark:bg-foregound">Tanpa Musik</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -711,7 +714,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                 onClick={goPrev}
                 disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
                 variant="ghost"
-                className="[&_svg]:size-3.5 rounded-sm text-sm h-8! text-foreground hover:bg-foreground/96 hover:text-background disabled:opacity-30 disabled:cursor-not-allowed"
+                className="hover:bg-foreground/96 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
               >
                 <ArrowLeftIcon weight="bold" />
                 Sebelumnya
@@ -720,7 +723,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground hover:bg-foreground/96 dark:bg-primary [&_svg]:size-3.5 text-background hover:dark:text-foreground rounded-sm text-sm h-8!"
+                  className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
                 >
                   Selesai
                   <CheckIcon weight="bold" />
@@ -728,7 +731,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               ) : (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground hover:bg-foreground/96 dark:bg-primary [&_svg]:size-3.5 text-background hover:dark:text-foreground rounded-sm text-sm h-8!"
+                  className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
                 >
                   Berikutnya
                   <ArrowRightIcon weight="bold" />
@@ -753,7 +756,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             <div className="flex-1 truncate w-full flex justify-center">
               <h3 className="text-p text-foreground font-semibold text-right uppercase">DMAI SESI - {sessionName}</h3>
             </div>
-            <div className="bg-white border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
+            <div className="bg-white dark:bg-popover border border-foreground/20 px-3 py-1.5 rounded-lg flex items-center">
               <span className="text-sm font-semibold text-muted-foreground">
                 Tahap {currentStep + 1} / {totalSteps}
               </span>
@@ -761,7 +764,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           </div>
 
           {/* White card shell */}
-          <div className="flex flex-col w-full rounded-4xl bg-white border border-border shadow-sm flex-1 overflow-hidden p-6 gap-6">
+          <div className="flex flex-col w-full rounded-4xl bg-white dark:bg-popover border border-border shadow-sm flex-1 overflow-hidden p-6 gap-6">
 
             {/* Top — image + info column */}
             <div className="flex gap-6 flex-1 min-h-0">
@@ -793,7 +796,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="group flex items-center gap-3 px-4 py-2 lg:mb-0 mb-2 rounded-lg bg-gray-100 text-foreground/80 hover:bg-muted/40 hover:cursor-pointer transition-all duration-150 ease-out w-full shrink-0"
+                      className="group flex items-center gap-3 px-4 py-2 lg:mb-0 mb-2 rounded-lg bg-gray-100 dark:bg-celeste text-foreground/80 hover:bg-muted/40 hover:cursor-pointer transition-all duration-150 ease-out w-full shrink-0"
                     >
                       <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
                       <div className="flex flex-1 flex-col min-w-0 text-left">
@@ -807,7 +810,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                     align="center"
                     sideOffset={8}
                     style={{ width: 'var(--radix-dropdown-menu-trigger-width)' }}
-                    className="bg-gray-100 dark:bg-foreground text-foreground dark:text-background border border-border rounded-lg p-2.5 flex flex-col gap-0.5 z-9999"
+                    className="bg-gray-100 dark:bg-celeste text-foreground border border-border rounded-lg p-2.5 flex flex-col gap-0.5 z-9999 group"
                   >
                     <span className="text-xs font-bold tracking-[0.18em] uppercase px-2 pb-1.5">Musik Latar</span>
                     {tracks.map((track, index) => (
@@ -815,15 +818,15 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                         key={track.id}
                         onSelect={() => { setCurrentTrackIndex(index); bgmSwitchTrack(track.audio_url) }}
                         className={cn(
-                          'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-md cursor-pointer hover:bg-celeste!',
+                          'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-md cursor-pointer',
                           index === currentTrackIndex && !isBGMStopped
-                            ? 'border-foreground/40 bg-celeste shadow-sm'
-                            : 'hover:bg-celeste')}
+                            ? 'border-foreground/40 bg-celeste dark:bg-foreground/20 shadow-sm'
+                            : 'hover:bg-foreground hover:dark:bg-foreground/20')}
                       >
                         <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-muted-foreground/40" />
                         <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-semibold text-foreground dark:text-background">{track.title}</span>
-                          {track.composer && <span className="text-xs text-foreground dark:text-background">{track.composer}</span>}
+                          <span className="text-xs font-semibold text-foreground">{track.title}</span>
+                          {track.composer && <span className="text-xs text-foreground">{track.composer}</span>}
                         </div>
                       </DropdownMenuItem>
                     ))}
@@ -831,17 +834,19 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                     <DropdownMenuItem
                       onSelect={() => bgmStop()}
                       className={cn(
-                        'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg cursor-pointer hover:bg-celeste!',
-                        isBGMStopped ? 'bg-muted-foreground/10' : 'focus:bg-muted-foreground/10')}
+                        'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg cursor-pointer ',
+                        isBGMStopped 
+                            ? 'border-foreground/40 bg-celeste dark:bg-foreground/20 shadow-sm'
+                            : 'hover:bg-foreground hover:dark:bg-foreground/20')}
                     >
                       <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-muted-foreground/40" />
-                      <span className="text-xs font-semibold text-foreground dark:text-background">Tanpa Musik</span>
+                      <span className="text-xs font-semibold text-foreground dark:bg-foregound">Tanpa Musik</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
                 {/* Title + description */}
-                <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto bg-gray-100 p-3 rounded-xl">
+                <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto bg-gray-100 dark:bg-celeste p-3 rounded-xl">
                   <p className='text-sm font-semibold text-muted-foreground'>Teks Narasi</p>
                   <p className="sm:text-xl/5.5 text-lg/4 font-semibold text-foreground max-w-2xl">{activeTitle}</p>
                   {activeDescription && (
@@ -921,7 +926,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                 onClick={goPrev}
                 disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
                 variant="ghost"
-                className="2md:[&_svg]:size-4 [&_svg]:size-3.5 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8! text-foreground hover:bg-foreground/96 hover:text-background disabled:opacity-30 disabled:cursor-not-allowed"
+                className="hover:bg-foreground/96 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
               >
                 <ArrowLeftIcon weight="bold" />
                 Sebelumnya
@@ -930,7 +935,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground hover:bg-foreground/96 dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+                  className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
                 >
                   Selesai
                   <CheckIcon weight="bold" />
@@ -938,7 +943,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               ) : (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground hover:bg-foreground/96 dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+                  className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
                 >
                   Berikutnya
                   <ArrowRightIcon weight="bold" />
@@ -1039,14 +1044,14 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             <ArrowLeftIcon weight="bold" />
             Kembali
           </Button>
-          <div className="bg-white border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
+          <div className="bg-white dark:bg-popover border border-foreground/20 px-3 py-1.5 rounded-lg flex items-center">
             <span className="sm:text-sm text-xs font-semibold text-muted-foreground">
               Tahap {currentStep + 1} / {totalSteps}
             </span>
           </div>
         </div>
 
-        <div className='flex w-full md:rounded-4xl rounded-2xl bg-white border border-border shadow-sm flex-1'>
+        <div className='flex w-full md:rounded-4xl rounded-2xl bg-white dark:bg-popover border border-border shadow-sm flex-1'>
          <div className='flex flex-col items-center w-full p-6 gap-2'>
             {/* Step title */}
             {step.title && (
@@ -1086,13 +1091,13 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           <div className="flex-1 truncate w-full flex justify-center">
             <h3 className="text-p text-foreground font-semibold text-right uppercase">DMAI SESI - {sessionName}</h3>
           </div>
-          <div className="bg-white border border-foreground/20 px-3 py-1.5 rounded-sm flex items-center">
+          <div className="bg-white dark:bg-popover border border-foreground/20 px-3 py-1.5 rounded-lg flex items-center">
             <span className="text-sm font-semibold text-muted-foreground">
               Tahap {currentStep + 1} / {totalSteps}
             </span>
           </div>
         </div>
-        <div className="flex w-full rounded-4xl bg-white border border-border shadow-sm flex-1">
+        <div className="flex w-full rounded-4xl bg-white dark:bg-popover border border-border shadow-sm flex-1">
           <div className="flex flex-col items-start w-full p-6 gap-6 flex-1">
 
             {/* Step title */}
