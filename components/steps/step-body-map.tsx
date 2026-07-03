@@ -146,10 +146,11 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
         <Button
           type="button"
           onClick={() => onNext({ selected_parts: selected, sensation, note })}
+          disabled={selected.length === 0}
           variant={'ghost'}
-          className="bg-foreground hover:bg-foreground/96 dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+          className="bg-foreground hover:bg-foreground/96 dark:bg-primary 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8! disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {selected.length === 0 ? 'Lanjutkan' : 'Lanjutkan'}
+          Lanjutkan
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
         </Button>
       </div>

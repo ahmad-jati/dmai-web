@@ -95,8 +95,10 @@ function TextInputField({ field, value, onChange }: {
     <div className="flex flex-col gap-1.5">
       <label className="2md:text-base text-sm font-medium text-foreground flex gap-2 p-0!">{field.label} <span className='text-destructive text-xl'>*</span></label>
       <textarea
-        value={value ?? ''} onChange={(e) => onChange(e.target.value)}
-        rows={3} placeholder="Tulis jawabanmu di sini..."
+        value={value ?? ''} 
+        onChange={(e) => onChange(e.target.value)}
+        rows={3} 
+        placeholder="Tulis jawabanmu di sini..."
         className="w-full rounded-xl border border-border bg-white text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-foreground/10 focus:border-foreground/40 transition-colors"
       />
     </div>
@@ -136,7 +138,10 @@ export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLa
     setResponses((prev) => ({ ...prev, [getKey(field)]: value }))
 
   const allAnswered = fields.every((f) => {
-    if (f.type === 'text_input' || f.type === 'textarea') return true
+    if (f.type === 'text_input' || f.type === 'textarea') {
+      const val = responses[getKey(f)] as string | undefined
+      return val !== undefined && val.trim().length > 0
+    }
     if (f.type === 'checkbox_group') {
       const val = responses[getKey(f)]
       return Array.isArray(val) && val.length > 0
