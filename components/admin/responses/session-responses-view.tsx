@@ -3,15 +3,12 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
 import {
   ArrowLeftIcon,
   ArrowSquareOutIcon,
-  ClockIcon,
-  UserIcon,
 } from "@phosphor-icons/react"
 import { BodyMapRegion } from "@/lib/body-map-region"
-import { fmtLocalTime, fmtDuration, groupByDay } from "@/lib/session-helper"
+import { fmtLocalTime, fmtDuration, groupByDay, fmtClock } from "@/lib/session-helper"
 import type { CompletionRecord, SessionInfo, FormStep, BodyMapResponse } from "@/lib/session-helper"
 import Link from "next/link"
 import { Route } from "next"
@@ -110,56 +107,12 @@ function CompactAnswerRow({
   )
 }
 
-// ─── Pre/Post side-by-side ────────────────────────────────────────────────────
-
-function buildDeltaMap(preSteps: FormStep[], postSteps: FormStep[]): Map<string, number> {
-  const preAnswers = preSteps.flatMap((s) => s.answers)
-  const map = new Map<string, number>()
-  for (const post of postSteps.flatMap((s) => s.answers)) {
-    const pre = preAnswers.find((a) => a.label === post.label)
-    if (!pre || pre.value == null || post.value == null) continue
-    if (Array.isArray(pre.value) || Array.isArray(post.value)) continue
-    const before = Number(pre.value), after = Number(post.value)
-    if (!isNaN(before) && !isNaN(after)) map.set(post.label, after - before)
-  }
-  return map
-}
-
-function PrePostColumns({ preSteps, postSteps }: { preSteps: FormStep[]; postSteps: FormStep[] }) {
-  const deltaMap = buildDeltaMap(preSteps, postSteps)
-  const preAnswers = preSteps.flatMap((s) => s.answers)
-  const postAnswers = postSteps.flatMap((s) => s.answers)
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      <div className="flex flex-col rounded-lg border border-foreground/12 p-3">
-        <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-1">
-          {preSteps[0]?.step_title ?? "Pre Form"}
-        </p>
-        {preAnswers.map((ans, i) => (
-          <CompactAnswerRow key={i} label={ans.label} value={ans.value} type={ans.type} />
-        ))}
-      </div>
-      <div className="flex flex-col rounded-lg border border-foreground/12 p-3">
-        <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-1">
-          {postSteps[0]?.step_title ?? "Post Form"}
-        </p>
-        {postAnswers.map((ans, i) => (
-          <CompactAnswerRow
-            key={i} label={ans.label} value={ans.value} type={ans.type}
-            delta={deltaMap.get(ans.label) ?? null}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
 // ─── Body Map section ────────────────────────────────────────────────────────
 
 function BodyMapSection({ bm }: { bm: BodyMapResponse }) {
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-foreground/12 p-3">
-      <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider">Body Map</p>
+      <p className="text-xs font-semibold text-foreground uppercase tracking-wider bg-muted/20 w-fit rounded-md px-2 py-2">Body Map</p>
       {bm.selected_parts.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {bm.selected_parts.map((part, i) => (
@@ -206,11 +159,10 @@ function ResponsePanel({ record }: { record: CompletionRecord }) {
 
   return (
     <div className="grid grid-cols-2 gap-3 p-4">
-      {hasCompare && <PrePostColumns preSteps={preSteps} postSteps={postSteps} />}
       {sortedOther.map((step, i) => (
         <div key={i} className="flex flex-col rounded-lg border border-foreground/12 p-3">
-          <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-1">
-            {step.step_title ?? `Form ${step.step_number}`}
+          <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 bg-muted/20 w-fit rounded-md px-2 py-2">
+            {step.step_number === 1 ? `Form Check-in` : `Form Reflection`}
           </p>
           {step.answers.map((ans, ai) => (
             <CompactAnswerRow key={ai} label={ans.label} value={ans.value} type={ans.type} />
@@ -229,21 +181,53 @@ function ResponsePanel({ record }: { record: CompletionRecord }) {
 function Skeleton() {
   return (
     <div className="flex flex-col gap-4 animate-pulse">
-      <div className="flex items-center gap-3">
-        <div className="h-8 w-20 bg-muted rounded-sm" />
-        <div className="h-5 bg-muted rounded w-48" />
+      {/* Header */}
+      <div className="flex flex-col items-start gap-3">
+        <div className="h-4 w-20 bg-muted rounded-sm" />
+        <div className="pl-7 flex flex-col gap-1.5">
+          <div className="h-2.5 bg-muted/60 rounded w-32" />
+          <div className="h-5 bg-muted rounded w-48" />
+          <div className="h-3 bg-muted/60 rounded w-24" />
+        </div>
       </div>
-      <div className="flex border border-border rounded-xl overflow-hidden h-[600px]">
-        <div className="w-60 border-r border-border flex flex-col gap-2 p-3">
-          {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-12 bg-muted/50 rounded-lg" />)}
+
+      {/* 2-column panel */}
+      <div className="flex border border-border rounded-xl overflow-hidden" style={{ height: "calc(100vh - 180px)", minHeight: 480 }}>
+        {/* Col 1: user list */}
+        <div className="w-70 shrink-0 border-r border-border flex flex-col">
+          <div className="h-9 border-b border-border bg-muted/30" />
+          <div className="flex-1 p-3 flex flex-col gap-2">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-2.5 px-1 py-1">
+                <div className="w-7 h-7 rounded-full bg-muted shrink-0" />
+                <div className="flex-1 flex flex-col gap-1.5">
+                  <div className="h-3 bg-muted rounded w-3/4" />
+                  <div className="h-2.5 bg-muted/60 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="w-56 border-r border-border p-3 flex flex-col gap-3">
-          <div className="h-4 bg-muted rounded w-3/4" />
-          <div className="h-3 bg-muted/60 rounded w-1/2" />
-        </div>
-        <div className="flex-1 p-3 flex flex-col gap-3">
-          <div className="h-32 bg-muted/40 rounded-lg" />
-          <div className="h-20 bg-muted/40 rounded-lg" />
+
+        {/* Col 2: response content */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="h-9 border-b border-border bg-muted/30" />
+          <div className="p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-muted shrink-0" />
+              <div className="flex flex-col gap-1.5">
+                <div className="h-3.5 bg-muted rounded w-32" />
+                <div className="h-2.5 bg-muted/60 rounded w-40" />
+              </div>
+            </div>
+            <div className="h-12 w-64 bg-muted/50 rounded-lg" />
+          </div>
+          <div className="h-9 border-b border-border bg-muted/30" />
+          <div className="p-4 grid grid-cols-2 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-28 bg-muted/40 rounded-lg" />
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -253,7 +237,6 @@ function Skeleton() {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function SessionResponsesView({ sessionId }: { sessionId: string }) {
-  const router = useRouter()
   const [session, setSession] = useState<SessionInfo | null>(null)
   const [completions, setCompletions] = useState<CompletionRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -355,19 +338,17 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
     <div className="flex flex-col gap-4">
 
       {/* Header */}
-      <div className="flex flex-col items-start gap-3">
-        <Button
-          variant="link" 
-          size="sm"
-          className="rounded-sm gap-1.5 [&_svg]:size-3.5 shrink-0"
-          onClick={() => router.push("/admin/user-responses")}
+      <div className="flex flex-col items-start gap-1">
+        <Link
+          href={'/admin/session-responses'}
+          className="rounded-sm gap-1.5 [&_svg]:size-3.5 mt-0.5 shrink-0 flex items-center font-medium text-sm hover:underline underline-offset-3"
         >
           <ArrowLeftIcon />
           Kembali
-        </Button>
-        <div className="pl-7">
+        </Link>
+        <div className="pl-4.5">
           <h2 className="text-xl font-semibold leading-tight">{session?.session_name ?? "Sesi"}</h2>
-          <p className="text-xs text-muted-foreground">{completions.length} penyelesaian</p>
+          <p className="text-xs text-muted-foreground">Detail Aktivitas User</p>
         </div>
       </div>
 
@@ -378,7 +359,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
         <div className="w-70 shrink-0 border-r border-border flex flex-col overflow-hidden">
           <div className="px-3 py-2 border-b border-border bg-muted/30">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Peserta ({completions.length})
+              List User ({completions.length})
             </p>
           </div>
           <div className="flex-1 overflow-y-auto">
@@ -387,7 +368,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
             ) : (
               grouped.map((group) => (
                 <div key={group.label}>
-                  <div className="px-3 py-1.5 bg-muted/20 border-b border-border/50 sticky top-0">
+                  <div className="px-3 py-1.5 bg-gray-100 border-b border-border/50 sticky top-0">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group.label}</p>
                   </div>
                   {group.items.map((c) => {
@@ -398,7 +379,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
                         onClick={() => setSelectedId(c.id)}
                         className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left border-b border-border/40 transition-colors hover:bg-muted/40 ${isActive ? "bg-muted/40" : ""}`}
                       >
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-2xs font-bold shrink-0 bg-muted-foreground/50 text-background`}>
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-2xs font-bold shrink-0 bg-foreground/90 text-background`}>
                           {getInitials(c.full_name, c.email)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -406,7 +387,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
                             {c.full_name ?? <span className="italic opacity-60">Tanpa nama</span>}
                           </p>
                           <p className={`text-xs truncate text-muted-foreground`}>
-                            {fmtLocalTime(c.completed_at)}
+                            {fmtClock(c.completed_at)}
                           </p>
                         </div>
                       </button>
@@ -433,7 +414,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
                     href={`/admin/user-responses/${selected.user_id}` as Route}
                     className="flex items-center gap-2 pt-2 pb-1 group hover:cursor-pointer"
                   >
-                    <div className="w-10 h-10 rounded-full bg-foreground/8 flex items-center justify-center text-sm font-bold text-foreground/60">
+                    <div className="w-10 h-10 rounded-full bg-foreground/90 flex items-center justify-center text-sm font-bold text-background">
                       {getInitials(selected.full_name, selected.email)}
                     </div>
                     <div className="text-center">
@@ -448,7 +429,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
                   </Link>
 
                   {/* Time meta */}
-                  <div className="flex flex-row gap-10 rounded-lg bg-muted/30 px-4 py-2.5 text-xs">
+                  <div className="flex flex-row gap-10 rounded-lg bg-gray-100 px-4 py-2.5 text-xs">
                     <div className="flex flex-col justify-between">
                       <span className="text-muted-foreground">Mulai</span>
                       <span className="font-medium">{fmtLocalTime(selected.started_at)}</span>

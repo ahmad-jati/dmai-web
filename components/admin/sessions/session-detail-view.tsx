@@ -408,7 +408,7 @@ export function SessionDetailView({
         {/* ── Meta Edit Form ── */}
         <div className="flex flex-col gap-5 w-80 shrink-0">
           <Link
-            href={`/session/${session.slug}` as Route}
+            href={`/sesi/${session.slug}` as Route}
             className="text-2xl font-semibold flex items-center gap-3 group hover:underline underline-offset-2"
             target="_blank"
             rel="noopener noreferrer"

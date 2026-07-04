@@ -2,6 +2,33 @@ import { createClient } from '@/lib/supabase/client'
 import type { StepType } from '@/components/admin/sessions/types'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
+const MAX_ACCESS_LIMIT = 3
+
+type SessionRow = {
+  id: string
+  slug: string
+  session_name: string
+  detail_short: string | null
+  detail_full: string[] | null
+  icon_url: string | null
+  total_instruction: number | null
+  duration: string | null
+  image_cover_url: string | null
+  week_number: number | null
+  sort_order: number | null
+  is_locked: boolean | null
+}
+
+type SessionStepRow = {
+  id: string
+  session_id: string
+  step_number: number
+  title: string
+  description: string | null
+  duration_seconds: number
+  step_type: string | null
+  step_config: Record<string, unknown> | null
+}
 
 export type SessionInstruction = {
   id: string
@@ -11,6 +38,12 @@ export type SessionInstruction = {
   duration_seconds: number
   step_type: StepType
   step_config: Record<string, unknown>
+}
+
+export type SessionAccessInfo = {
+  access_count: number
+  remaining_access: number
+  show_reminder: boolean
 }
 
 export type SessionData = {
@@ -26,23 +59,24 @@ export type SessionData = {
   week_number: number | null
   is_locked: boolean
   instructions: SessionInstruction[]
+  access: SessionAccessInfo | null
 }
 
 // ─── Mappers ───────────────────────────────────────────────────────────────────
 
-function mapStep(step: any): SessionInstruction {
+function mapStep(step: SessionStepRow): SessionInstruction {
   return {
     id: step.id,
     step: step.step_number,
     title: step.title,
     description: step.description ?? '',
     duration_seconds: step.duration_seconds,
-    step_type: step.step_type ?? 'narration',
+    step_type: (step.step_type ?? 'narration') as StepType,
     step_config: step.step_config ?? {},
   }
 }
 
-function mapSession(s: any, steps: any[]): SessionData {
+function mapSession(s: SessionRow, steps: SessionStepRow[]): SessionData {
   return {
     id: s.id,
     slug: s.slug,
@@ -59,11 +93,20 @@ function mapSession(s: any, steps: any[]): SessionData {
       .filter((step) => step.session_id === s.id)
       .sort((a, b) => a.step_number - b.step_number)
       .map(mapStep),
+    access: null,
+  }
+}
+
+function mapAccessInfo(completedCount: number): SessionAccessInfo {
+  const remaining = Math.max(0, MAX_ACCESS_LIMIT - completedCount)
+  return {
+    access_count: completedCount,
+    remaining_access: remaining,
+    show_reminder: remaining > 0,
   }
 }
 
 // ─── Fetch all sessions (homepage, session list) ────────────────────────────────
-
 export async function fetchAllSessions(): Promise<SessionData[]> {
   const supabase = createClient()
 
@@ -75,6 +118,7 @@ export async function fetchAllSessions(): Promise<SessionData[]> {
       week_number, sort_order, is_locked
     `)
     .order('sort_order', { ascending: true })
+    .returns<SessionRow[]>()
 
   if (sessionsError || !sessions) {
     console.error('fetchAllSessions error:', sessionsError)
@@ -91,6 +135,7 @@ export async function fetchAllSessions(): Promise<SessionData[]> {
     `)
     .in('session_id', sessionIds)
     .order('step_number', { ascending: true })
+    .returns<SessionStepRow[]>()
 
   if (stepsError) {
     console.error('fetchAllSessions steps error:', stepsError)
@@ -101,8 +146,10 @@ export async function fetchAllSessions(): Promise<SessionData[]> {
 }
 
 // ─── Fetch single session by slug (exercise page) ──────────────────────────────
-
-export async function fetchSessionBySlug(slug: string): Promise<SessionData | null> {
+export async function fetchSessionBySlug(
+  slug: string,
+  userId?: string
+): Promise<SessionData | null> {
   const supabase = createClient()
 
   const { data: session, error: sessionError } = await supabase
@@ -113,7 +160,7 @@ export async function fetchSessionBySlug(slug: string): Promise<SessionData | nu
       week_number, sort_order, is_locked
     `)
     .eq('slug', slug)
-    .single()
+    .single<SessionRow>()
 
   if (sessionError || !session) {
     console.error('fetchSessionBySlug session error:', sessionError)
@@ -128,11 +175,32 @@ export async function fetchSessionBySlug(slug: string): Promise<SessionData | nu
     `)
     .eq('session_id', session.id)
     .order('step_number', { ascending: true })
+    .returns<SessionStepRow[]>()
 
   if (stepsError) {
     console.error('fetchSessionBySlug steps error:', stepsError)
     return null
   }
 
-  return mapSession(session, (steps ?? []).map((s) => ({ ...s, session_id: session.id })))
+  const result = mapSession(
+    session,
+    (steps ?? []).map((s) => ({ ...s, session_id: session.id }))
+  )
+
+  if (userId) {
+    const { count, error: completionsError } = await supabase
+      .from('session_completions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('session_id', session.id)
+      .eq('status', 'completed')
+
+    if (completionsError) {
+      console.error('fetchSessionBySlug completions error:', completionsError)
+    } else {
+      result.access = mapAccessInfo(count ?? 0)
+    }
+  }
+
+  return result
 }

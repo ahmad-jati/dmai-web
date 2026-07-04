@@ -579,7 +579,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="group flex items-center gap-3 px-4 py-2 lg:mb-0 mb-2 rounded-lg bg-gray-100 dark:bg-celeste text-foreground/80 hover:bg-muted/40 hover:cursor-pointer transition-all duration-150 ease-out w-full shrink-0"
+                  className="group flex items-center gap-3 px-4 py-2 lg:mb-0 mb-2 rounded-lg bg-gray-100 dark:bg-celeste text-foreground/80 hover:bg-muted/40 hover:cursor-pointer transition-all duration-150 ease-out w-full shrink-0 h-13"
                 >
                   <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
                   <div className="flex flex-1 flex-col min-w-0 text-left">
@@ -714,7 +714,9 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                 onClick={goPrev}
                 disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
                 variant="ghost"
-                className="hover:bg-foreground/96 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+                className="hover:bg-foreground/90 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!
+                border border-foreground
+                "
               >
                 <ArrowLeftIcon weight="bold" />
                 Sebelumnya
@@ -723,7 +725,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Selesai
                   <CheckIcon weight="bold" />
@@ -731,7 +733,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               ) : (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Berikutnya
                   <ArrowRightIcon weight="bold" />
@@ -796,7 +798,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="group flex items-center gap-3 px-4 py-2 lg:mb-0 mb-2 rounded-lg bg-gray-100 dark:bg-celeste text-foreground/80 hover:bg-muted/40 hover:cursor-pointer transition-all duration-150 ease-out w-full shrink-0"
+                      className="group flex items-center gap-3 px-4 py-2 lg:mb-0 mb-2 rounded-lg bg-gray-100 dark:bg-celeste text-foreground/80 hover:bg-muted/40 hover:cursor-pointer transition-all duration-150 ease-out w-full shrink-0 h-13"
                     >
                       <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
                       <div className="flex flex-1 flex-col min-w-0 text-left">
@@ -926,7 +928,9 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                 onClick={goPrev}
                 disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
                 variant="ghost"
-                className="hover:bg-foreground/96 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+                className="bg-foreground/90 hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!
+                border border-foreground
+                "
               >
                 <ArrowLeftIcon weight="bold" />
                 Sebelumnya
@@ -935,7 +939,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Selesai
                   <CheckIcon weight="bold" />
@@ -943,7 +947,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               ) : (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground hover:bg-foreground/96 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm 2md:text-p text-sm 2md:h-9 h-8!"
+                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Berikutnya
                   <ArrowRightIcon weight="bold" />
@@ -1098,8 +1102,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           </div>
         </div>
         <div className="flex w-full rounded-4xl bg-white dark:bg-popover border border-border shadow-sm flex-1">
-          <div className="flex flex-col items-start w-full p-6 gap-6 flex-1">
-
+          <div className="flex flex-col items-start py-6 w-full gap-6 flex-1">
             {/* Step title */}
             {step.title && (
               <div className="flex flex-col items-center gap-1.5 w-full text-center">

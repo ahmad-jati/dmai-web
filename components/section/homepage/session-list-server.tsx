@@ -40,7 +40,7 @@ function SessionGridLayout({ sessions }: { sessions: SessionData[] }) {
           scroll={false}
           className={`
             group flex 2xs:flex-row flex-col items-start 2xs:gap-6 gap-3
-            2md:rounded-[20px] rounded-lg w-full overflow-hidden transition-shadow p-3
+            2md:rounded-[20px] rounded-lg w-full overflow-hidden transition-shadow lg:p-3 p-4
             lg:bg-transparent bg-background
             ${session.is_locked 
               ? "cursor-not-allowed opacity-70" 
@@ -49,7 +49,7 @@ function SessionGridLayout({ sessions }: { sessions: SessionData[] }) {
           `}
         >
           <div className="h-full">
-            <h3 className="font-bold text-5xl text-muted-foreground/30 uppercase">0{session.week_number}</h3>
+            <h3 className="font-bold text-5xl text-muted-foreground/30">0{session.week_number}</h3>
           </div>
           <div className="flex flex-col gap-3 w-full">
             <div className="flex flex-col gap-1">
@@ -78,7 +78,7 @@ function SessionGridLayout({ sessions }: { sessions: SessionData[] }) {
                     <LockSimpleIcon className="w-8 h-8 text-foreground" weight="fill" />
                   </div>
                   <div>
-                    <p className="2xs:text-sm/4 text-xs/4 text-foreground font-medium">Sesi berikutnya segera hadir.</p>
+                    <p className="2xs:text-sm/4 text-xs/4 text-foreground font-medium">Sesi ini akan segera hadir.</p>
                   </div>
                 </div>
               )}
