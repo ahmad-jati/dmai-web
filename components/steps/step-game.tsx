@@ -186,7 +186,7 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
           <Button
             type="button"
             onClick={onPrev}
-            className="bg-foreground/90 hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+            className="hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground  rounded-sm text-sm 2md:h-9 h-8!"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
             Sebelumnya
@@ -196,7 +196,7 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
           type="button"
           onClick={onNext}
           variant={'ghost'}
-          className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+          className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground  rounded-sm text-sm 2md:h-9 h-8!"
         >
           Selanjutnya
           <ArrowRightIcon weight="bold" className="w-4 h-4" />

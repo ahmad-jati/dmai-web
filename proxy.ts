@@ -11,6 +11,7 @@ const PROTECTED_ROUTES = [
   "/profile",
 ];
 const ADMIN_ROUTES = ["/admin"];
+const AUTH_ROUTES = ["/login", "/sign-up"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -22,6 +23,41 @@ export async function proxy(request: NextRequest) {
   const isAdmin = ADMIN_ROUTES.some((route) =>
     pathname.startsWith(route)
   );
+
+  const isAuthPage = AUTH_ROUTES.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  if (isAuthPage) {
+    if (!hasEnvVars) {
+      return NextResponse.next({ request });
+    }
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll() {
+            // no-op: cuma butuh baca session di sini,
+            // refresh cookie di-handle sama updateSession di route protected
+          },
+        },
+      }
+    );
+
+    const { data } = await supabase.auth.getClaims();
+    const user = data?.claims;
+
+    if (user) {
+      return NextResponse.redirect(new URL("/beranda", request.url));
+    }
+
+    return NextResponse.next({ request });
+  }
 
   if (isProtected) {
     return await updateSession(request);

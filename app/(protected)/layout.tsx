@@ -3,6 +3,7 @@ import { ProtectedNavbar } from "@/components/navbars/protected-navbar";
 import { DummyPlaceholderNavbar } from "@/components/navbars/dummy-placeholder-navbar";
 import { AuthStateListener } from "@/components/auth-state-listener";
 import { PresenceTracker } from "@/components/presence-tracker";
+import { ScrollbarOffsetWatcher } from "@/components/scrollbar-offset-watcher";
 
 export default function ProtectedLayout({
   children,
@@ -11,14 +12,13 @@ export default function ProtectedLayout({
 }) {
   return (
     <div className="flex flex-col flex-1 relative">
-      <AuthStateListener/>
+      <ScrollbarOffsetWatcher />
+      <AuthStateListener />
       <PresenceTracker />
-      <ProtectedNavbar/>
+      <ProtectedNavbar />
       <div className="flex flex-col items-center md:px-16 px-6 gap-8 lg:max-w-7xl mx-auto w-full flex-1">
-      <DummyPlaceholderNavbar/>
-        <div className="w-full">
-          {children}
-        </div>
+        <DummyPlaceholderNavbar />
+        <div className="w-full">{children}</div>
         <Footer />
       </div>
     </div>

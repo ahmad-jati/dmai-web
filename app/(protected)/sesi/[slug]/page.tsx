@@ -105,11 +105,11 @@ async function SessionDetail({ slug }: { slug: string }) {
             <div className="flex-col gap-1 items-start justify-start text-muted-foreground lg:flex hidden">
               <div className="flex items-center gap-1">
                 <LightbulbIcon className="w-4 h-4" weight="fill" />
-                <p className="font-medium xs:text-p/5 text-xs/3.5">{session.total_instruction} Instruksi</p>
+                <p className="font-medium xs:text-sm/5 text-xs/3.5">{session.total_instruction} Instruksi</p>
               </div>
               <div className="flex items-center gap-1">
                 <TimerIcon className="w-4 h-4" weight="fill" />
-                <p className="font-medium xs:text-p/5 text-xs/3.5">{session.duration}</p>
+                <p className="font-medium xs:text-sm/5 text-xs/3.5">{session.duration}</p>
               </div>
               <CompletionCount count={completionCount} />
           </div>
@@ -128,10 +128,10 @@ async function SessionDetail({ slug }: { slug: string }) {
               <Link href={`/sesi/${slug}/latihan` as Route} className="flex items-center gap-2">
                 <Button
                   variant={"default"}
-                  className="flex gap-2 items-center [&_svg]:size-3 dark:bg-primary lg:text-base bg-white text-foreground"
+                  className="flex gap-2 items-center [&_svg]:size-3 dark:bg-primary lg:text-sm bg-white hover:bg-white/90 text-foreground rounded-lg"
                 >
                   Mulai Sesi
-                  <PlayIcon className="w-5 h-5" weight="fill" />
+                  {/* <PlayIcon className="w-5 h-5" weight="fill" /> */}
                 </Button>
               </Link>
             )}

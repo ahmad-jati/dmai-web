@@ -144,9 +144,9 @@ export default function ExercisePage({ params }: Props) {
 
   useEffect(() => {
     if (!sessionId) return
-    for (const key of Object.keys(sessionStorage)) {
+    for (const key of Object.keys(localStorage)) {
       if (key.startsWith('dmai_form_draft_') && key !== `dmai_form_draft_${sessionId}`) {
-        sessionStorage.removeItem(key)
+        localStorage.removeItem(key)
       }
     }
   }, [sessionId])
@@ -276,7 +276,7 @@ export default function ExercisePage({ params }: Props) {
         })())
       }
       await Promise.all(promises)
-      try { sessionStorage.removeItem(`dmai_form_draft_${session.id}`) } catch {}
+      try { localStorage.removeItem(`dmai_form_draft_${session.id}`) } catch {}
     }
 
     const refreshed = await fetchSessionBySlug(slug, user.id)

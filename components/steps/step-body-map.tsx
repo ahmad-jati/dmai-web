@@ -65,7 +65,7 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
   return (
     <div className="flex flex-col gap-5 w-full max-w-lg mx-auto flex-1">
 
-      <div className='flex flex-col gap-5 h-fit pr-1'>
+      <div className='flex flex-col gap-5 h-fit pr-1 flex-1'>
         <div className="flex flex-col gap-4">
           {REGIONS.map((region) => (
             <div key={region.key} className="flex flex-col gap-2">
@@ -133,7 +133,7 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
         <Button
           type="button"
           onClick={onPrev}
-          className="bg-foreground/90 hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+          className="hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground  rounded-sm text-sm 2md:h-9 h-8!"
         >
           <ArrowLeftIcon weight="bold" className="w-4 h-4" />
           Sebelumnya
@@ -144,7 +144,7 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
         onClick={() => onNext({ selected_parts: selected, sensation, note })}
         disabled={selected.length === 0}
         variant={'ghost'}
-        className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8! disabled:opacity-40 disabled:cursor-not-allowed"
+        className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground  rounded-sm text-sm 2md:h-9 h-8! disabled:opacity-40 disabled:cursor-not-allowed"
       >
         Selanjutnya
         <ArrowRightIcon weight="bold" className="w-4 h-4" />

@@ -130,8 +130,8 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const [narrationKey, setNarrationKey] = useState(0)
   const [formResponses, setFormResponses] = useState<Record<string, Record<string, unknown>>>({})
 
-  // sessionStorage keys for this session
-  const sessionStorageKey = `dmai_form_draft_${sessionId}`
+  // localStorage keys for this session
+  const localStorageKey = `dmai_form_draft_${sessionId}`
   const startedAtKey = `dmai_started_at_${sessionId}`
 
   // Sub-step index — for narration steps with multiple sub_steps
@@ -213,11 +213,11 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(sessionStorageKey)
+      const saved = localStorage.getItem(localStorageKey)
       if (saved) {
         const parsed: StoredDraft = JSON.parse(saved)
         if (Date.now() - parsed.savedAt > STALE_MS) {
-          localStorage.removeItem(sessionStorageKey)
+          localStorage.removeItem(localStorageKey)
           localStorage.removeItem(startedAtKey)
         } else {
           setFormResponses(parsed.responses)
@@ -229,7 +229,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
         }
       }
     } catch {}
-  }, [sessionStorageKey, startedAtKey])
+  }, [localStorageKey, startedAtKey])
 
   useEffect(() => {
     try {
@@ -241,13 +241,13 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
   const persistDraft = useCallback(() => {
     try {
-      localStorage.setItem(sessionStorageKey, JSON.stringify({
+      localStorage.setItem(localStorageKey, JSON.stringify({
         responses: formResponsesRef.current,
         currentStep: currentStepRef.current,
         savedAt: Date.now(),
       }))
     } catch {}
-  }, [sessionStorageKey])
+  }, [localStorageKey])
 
   const handleFormResponse = useCallback((stepId: string, responses: Record<string, unknown>) => {
     formResponsesRef.current = { ...formResponsesRef.current, [stepId]: responses }
@@ -343,9 +343,9 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     }
 
     await Promise.all(promises)
-    try { localStorage.removeItem(sessionStorageKey) } catch {}
+    try { localStorage.removeItem(localStorageKey) } catch {}
     try { localStorage.removeItem(startedAtKey) } catch {}
-  }, [instructions, sessionId, sessionStorageKey, startedAtKey])
+  }, [instructions, sessionId, localStorageKey, startedAtKey])
 
   const handleBack = () => {
     if (onBack) onBack()
@@ -714,7 +714,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                 onClick={goPrev}
                 disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
                 variant="ghost"
-                className="hover:bg-foreground/90 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!
+                className="hover:bg-foreground/90 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground rounded-sm text-sm 2md:h-9 h-8!
                 border border-foreground
                 "
               >
@@ -725,7 +725,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Selesai
                   <CheckIcon weight="bold" />
@@ -928,7 +928,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                 onClick={goPrev}
                 disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
                 variant="ghost"
-                className="bg-foreground/90 hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!
+                className="hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground rounded-sm text-sm 2md:h-9 h-8!
                 border border-foreground
                 "
               >
@@ -939,7 +939,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Selesai
                   <CheckIcon weight="bold" />
@@ -1056,7 +1056,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
         </div>
 
         <div className='flex w-full md:rounded-4xl rounded-2xl bg-white dark:bg-popover border border-border shadow-sm flex-1'>
-         <div className='flex flex-col items-center w-full p-6 gap-2'>
+         <div className='flex flex-col items-center w-full p-6 gap-6'>
             {/* Step title */}
             {step.title && (
               <div className="flex flex-col items-center gap-1.5 w-full text-center xs:max-w-2xl">

@@ -16,8 +16,8 @@ export function StepExternalEmbed({ url, onNext, onPrev }: Props) {
   return (
     <div className="w-full max-w-xl mx-auto h-full flex-1 gap-5 flex justify-between items-center flex-col">
 
-      <div className="flex flex-col items-center justify-center gap-6 w-full h-full bg-celeste rounded-xl group hover:bg-celeste/80 hover:cursor-pointer">
-        <div className="relative w-full h-full flex flex-col items-center justify-center rounded-xl">
+      <div className="flex flex-col items-center justify-start gap-6 w-full h-full rounded-xl group hover:cursor-pointer">
+        <div className="relative w-full h-[80%] flex flex-col items-center justify-center rounded-xl">
           <Image
             src={"/tropicaline/compress/Play.png"}
             alt={'Aktivitas'}
@@ -46,7 +46,7 @@ export function StepExternalEmbed({ url, onNext, onPrev }: Props) {
           <Button
             type="button"
             onClick={onPrev}
-            className="bg-foreground/90 hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+            className="hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
             Sebelumnya

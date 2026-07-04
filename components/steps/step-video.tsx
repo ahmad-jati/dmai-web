@@ -71,7 +71,7 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
 
   return (
     <div className="flex flex-col items-center gap-6 w-full flex-1">
-      <div className="w-full max-w-2xl sm:h-full h-300 2md:aspect-video rounded-2xl overflow-hidden shadow-sm bg-black relative flex-1">
+      <div className="w-full max-w-2xl md:h-300 h-[80%] 2md:aspect-video rounded-2xl overflow-hidden shadow-sm bg-black relative flex-1">
         {!started && videoId && (
           <YoutubeThumbnail videoId={videoId} onClick={() => setStarted(true)} />
         )}
@@ -111,7 +111,7 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
           <Button
             type="button"
             onClick={onPrev}
-            className="bg-foreground/90 hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+            className="hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground  rounded-sm text-sm 2md:h-9 h-8!"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
             Sebelumnya
@@ -121,7 +121,7 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
           type="button"
           onClick={onNext}
           variant={'ghost'}
-          className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+          className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground  rounded-sm text-sm 2md:h-9 h-8!"
         >
           Selanjutnya
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
