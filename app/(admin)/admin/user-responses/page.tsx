@@ -1,11 +1,9 @@
-'use client'
+import { UserResponseManager } from "@/components/admin/responses/user-response-manager"
 
-import { UserResponsesManager } from "@/components/admin/user-response/user-responses-manager"
-
-export default function UserResponsesPage() {
+export default function TrackUserPage() {
   return (
     <div className="p-10">
-      <UserResponsesManager />
+      <UserResponseManager />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { UserOverviewView } from "@/components/admin/user-response/user-overview-view"
+import { UserOverviewView } from "@/components/admin/responses/user-overview-view"
 
 export default async function UserOverviewPage({ params }: { params: { userId: string } }) {
   const { userId } = await params

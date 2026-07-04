@@ -10,20 +10,39 @@ import {
   SignOutIcon,
   HouseIcon,
   ArrowSquareOutIcon,
-  ChatCenteredTextIcon,
   MusicNotesIcon,
   ClipboardTextIcon,
   WifiHighIcon,
+  UserSwitchIcon,
+  CaretDownIcon,
 } from "@phosphor-icons/react"
 import { Route } from "next"
 import { Button } from "../ui/button"
 
+function getInitials(fullName: string | null, email: string) {
+  const source = (fullName ?? "").trim() || email
+  const parts = source.split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return "?"
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
+}
+
+type SessionLite = { id: string; session_name: string; week_number: number | null }
+
 export function AdminSidebar() {
   const [adminEmail, setAdminEmail] = useState<string | null>(null)
   const [adminName, setAdminName] = useState<string | null>(null)
+  const [sessions, setSessions] = useState<SessionLite[]>([])
   const router = useRouter()
   const pathname = usePathname()
   const [isLoading, setIsLoading] = useState(true)
+
+  const onSessionRoute = pathname?.startsWith("/admin/user-responses/session") ?? false
+  const [sessionsOpen, setSessionsOpen] = useState(onSessionRoute)
+
+  useEffect(() => {
+    if (onSessionRoute) setSessionsOpen(true)
+  }, [onSessionRoute])
 
   useEffect(() => {
     const get = async () => {
@@ -32,6 +51,13 @@ export function AdminSidebar() {
 
       setAdminName(user?.user_metadata?.full_name ?? null)
       setAdminEmail(user?.email ?? null)
+
+      const { data: sessionsData } = await supabase
+        .from("sessions")
+        .select("id, session_name, week_number")
+        .order("sort_order", { ascending: true })
+      setSessions(sessionsData ?? [])
+
       setIsLoading(false)
     }
     get()
@@ -52,7 +78,7 @@ export function AdminSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 flex flex-col px-3 py-4 gap-4">
+      <nav className="flex-1 flex flex-col px-3 py-4 gap-6 overflow-y-auto">
 
         <SidebarGroup label="Pengguna">
           <SidebarLink
@@ -77,15 +103,6 @@ export function AdminSidebar() {
             active={pathname?.startsWith("/admin/sessions") ?? false}
           />
           <SidebarLink
-            href="/admin/user-responses"
-            icon={<ClipboardTextIcon className="w-4 h-4" />}
-            label="Respons Sesi"
-            active={pathname?.startsWith("/admin/user-responses") ?? false}
-          />
-        </SidebarGroup>
-
-        <SidebarGroup label="Konten">
-          <SidebarLink
             href="/admin/music"
             icon={<MusicNotesIcon className="w-4 h-4" />}
             label="Musik Latar"
@@ -93,7 +110,27 @@ export function AdminSidebar() {
           />
         </SidebarGroup>
 
-        <div className="pt-2 border-t border-border">
+        <SidebarGroup label="Respons">
+          <SidebarLink
+            href="/admin/session-responses"
+            icon={<ClipboardTextIcon className="w-4 h-4" />}
+            label="Aktivitas Sesi"
+            active={pathname?.startsWith("/admin/session-responses") ?? false}
+          />
+
+          <SidebarLink
+            href="/admin/user-responses"
+            icon={<UserSwitchIcon className="w-4 h-4" />}
+            label="Riwayat User"
+            active={pathname?.startsWith("/admin/user-responses") ?? false}
+          />
+        </SidebarGroup>
+
+      </nav>
+
+      {/* Footer */}
+      <div className="p-3 pb-5 border-t border-border flex flex-col gap-3">
+        <div className="">
           <Link
             href="/beranda"
             target="_blank"
@@ -105,16 +142,28 @@ export function AdminSidebar() {
             <ArrowSquareOutIcon className="w-3 h-3 ml-auto opacity-60" />
           </Link>
         </div>
-      </nav>
-
-      {/* Footer */}
-      <div className="px-3 pb-5 border-t border-border pt-4 flex flex-col items-center gap-3">
         {isLoading ? (
-          <div className="h-4 w-full rounded bg-muted animate-pulse" />
+          <div className="flex items-center gap-2.5 px-1">
+            <div className="w-9 h-9 rounded-full bg-muted animate-pulse shrink-0" />
+            <div className="flex flex-col gap-1.5 flex-1">
+              <div className="h-2.5 w-24 rounded bg-muted animate-pulse" />
+              <div className="h-2.5 w-32 rounded bg-muted animate-pulse" />
+            </div>
+          </div>
         ) : (
-          <p className="text-p/4.5 text-foreground line-clamp-2 w-full text-center font-medium px-3 text-clip">
-            Hi, {adminName ?? adminEmail}
-          </p>
+          <div className="flex items-center gap-2.5 p-2 min-w-0 bg-muted/30 rounded-lg">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-foreground/90 text-background">
+              {getInitials(adminName, adminEmail ?? "")}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <p className="text-sm/4.5 text-foreground font-semibold truncate">
+                {adminName ?? "Tanpa nama"}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {adminEmail}
+              </p>
+            </div>
+          </div>
         )}
         <Button
           variant="ghost"
@@ -131,8 +180,8 @@ export function AdminSidebar() {
 
 function SidebarGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <p className="px-3 mb-1 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">
+    <div className="flex flex-col gap-1">
+      <p className="px-2 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">
         {label}
       </p>
       {children}
@@ -149,9 +198,9 @@ function SidebarLink({ href, icon, label, active }: {
   return (
     <Link
       href={href as Route}
-      className={`flex items-center gap-3 px-3 py-2 text-sm transition-colors font-semibold rounded-md
+      className={`flex items-center gap-3 px-3 py-2 text-sm transition-colors font-semibold rounded-sm
         ${active
-          ? "bg-lemon text-foreground"
+          ? "bg-foreground/90 text-background"
           : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
         }`}
     >

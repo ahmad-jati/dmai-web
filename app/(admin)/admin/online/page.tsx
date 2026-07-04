@@ -288,7 +288,7 @@ export default function OnlineActivityPage() {
             className={cn(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all',
               selectedSessionId === null
-                ? 'bg-foreground text-background border-foreground'
+                ? 'bg-foreground/90 text-background border-foreground'
                 : 'bg-background text-muted-foreground border-border hover:border-foreground/30'
             )}
           >
@@ -304,7 +304,7 @@ export default function OnlineActivityPage() {
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all truncate max-w-60',
                 selectedSessionId === group.session_id
-                  ? 'bg-foreground text-background border-foreground'
+                  ? 'bg-foreground/90 text-background border-foreground'
                   : 'bg-background text-muted-foreground border-border hover:border-foreground/30'
               )}
             >

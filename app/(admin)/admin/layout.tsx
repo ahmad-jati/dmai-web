@@ -3,6 +3,7 @@ import { AdminAuthGuard } from "@/components/admin/admin-auth-guard"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { Toaster } from "@/components/ui/sonner"
 import { AuthStateListener } from "@/components/auth-state-listener"
+import { MobileWarningDialog } from "@/components/admin/mobile-warning-dialog"
 
 export const metadata: Metadata = {
   title: "User Info — DMAI Admin",
@@ -20,6 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {children}
         </main>
         <Toaster position="top-right" />
+        <MobileWarningDialog />
       </div>
     </AdminAuthGuard>
   )
