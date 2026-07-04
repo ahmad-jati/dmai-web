@@ -60,9 +60,8 @@ export function useNarrationPlayback(): NarrationControls {
   const pauseNarration = useCallback(() => {
     cancelFade()
     const audio = audioRef.current
-    if (audio && !audio.paused) {
-      audio.pause()
-    }
+    if (!audio) return
+    audio.pause() // panggil aja langsung, idempotent kalau udah paused
   }, [])
 
   const resumeNarration = useCallback(() => {

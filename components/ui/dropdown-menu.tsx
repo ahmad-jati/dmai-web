@@ -84,7 +84,7 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center gap- rounded-sm px-2 py-1.5 text-sm outline-none transition-colorsfocus:font-bold font-medium data-disabled:pointer-events-none data-disabled:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0 group-hover:cursor-pointer hover:font-semibold focus:bg-muted-foreground/20 focus:text-foreground focus:cursor-pointer",
+      "relative flex cursor-default select-none items-center gap- rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:font-bold font-medium data-disabled:pointer-events-none data-disabled:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0 group-hover:cursor-pointer hover:font-semibold focus:bg-muted/30 focus:text-foreground focus:cursor-pointer",
       inset && "pl-8",
       className,
     )}
@@ -124,7 +124,7 @@ const DropdownMenuRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-muted-foreground/20 focus:cursor-pointer focus:text-foreground  data-disabled:pointer-events-none data-disabled:opacity-50",
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-muted/30 focus:cursor-pointer focus:text-foreground  data-disabled:pointer-events-none data-disabled:opacity-50",
       className,
     )}
     {...props}

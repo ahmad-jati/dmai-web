@@ -1,12 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { fetchAllSessions } from "@/lib/data-detail-session";
-import { ArrowUpRightIcon, PersonSimpleTaiChiIcon, TimerIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  TimerIcon,
+  LockSimpleIcon,
+  LightbulbIcon
+} from "@phosphor-icons/react/dist/ssr";
 import { Route } from "next";
-import { Button } from "@/components/ui/button";
 
-// A tiny 1×1 pixel base64 placeholder — the browser shows this blurred
-// while the real cover image loads. Using a warm neutral that fits the app tone.
 const BLUR_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9HQAI8gMBfTQ1BQAAAABJRU5ErkJggg==";
 
@@ -14,8 +15,8 @@ interface Props {
   excludeSlug?: string;
 }
 
-// This is an async Server Component — no "use client", no useEffect.
-// Next.js runs this on the server and streams the result to the browser.
+type SessionData = Awaited<ReturnType<typeof fetchAllSessions>>[number];
+
 export async function SessionListServer({ excludeSlug }: Props) {
   const sessions = await fetchAllSessions();
 
@@ -23,72 +24,82 @@ export async function SessionListServer({ excludeSlug }: Props) {
     ? sessions.filter((s) => s.slug !== excludeSlug)
     : sessions;
 
+  const sorted = [...filtered].sort((a, b) => (a.week_number ?? 0) - (b.week_number ?? 0))
+
+  return <SessionGridLayout sessions={sorted} />
+}
+
+// ---------- Layout: semua unlocked → grid 3 kolom ----------
+function SessionGridLayout({ sessions }: { sessions: SessionData[] }) {
   return (
-    <div
-      className="
-        grid 2lg:grid-cols-4 3md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-3.5 
-        w-full
-      "
-    >
-      {filtered.map((session) => (
+    <div className="grid 2md:grid-cols-2 grid-cols-1 2xs:gap-3.5 gap-2 w-full">
+      {sessions.map((session) => (
         <Link
           key={session.slug}
-          href={`/session/${session.slug}` as Route}
+          href={session.is_locked ? "#" : (`/sesi/${session.slug}` as Route)}
           scroll={false}
-          className="
-            group flex flex-col 2md:items-start items-end 2md:gap-3 gap-0
-            bg-background dark:bg-secondary 2md:rounded-[20px] rounded-lg border border-foreground w-full overflow-hidden hover:shadow-md transition-shadow 
-            p-3
-          "
+          className={`
+            group flex 2xs:flex-row flex-col items-start 2xs:gap-6 gap-3
+            2md:rounded-[20px] rounded-lg w-full overflow-hidden transition-shadow lg:p-3 p-4
+            lg:bg-transparent bg-background
+            ${session.is_locked 
+              ? "cursor-not-allowed opacity-70" 
+              : "hover:bg-background hover:dark:bg-secondary hover:shadow-md"
+            }
+          `}
         >
-          <div className="md:w-full md:h-40 2xs:w-34 2xs:h-30 w-24 h-20 2md:rounded-[14px] rounded-[10px] overflow-hidden">
-            <Image
-              src={session.image_cover}
-              alt={`session ${session.session_name}`}
-              width={2000}
-              height={2000}
-              priority
-              unoptimized
-              placeholder="blur"
-              blurDataURL={BLUR_DATA_URL}
-              className="w-full h-full object-cover bg-muted-foreground/10 group-hover:scale-105 transition-transform duration-300"
-            />
+          <div className="h-full">
+            <h3 className="font-bold text-5xl text-muted-foreground/30">0{session.week_number}</h3>
           </div>
-
-          <div className="flex flex-col items-start gap-1.5 2md:px-1 w-full">
-            <div className="flex items-center w-full gap-2">
-              <p className="text-p/5 max-w-140 font-semibold group-hover:underline underline-offset-2 2md:text-left text-left text-foreground">
+          <div className="flex flex-col gap-3 w-full">
+            <div className="flex flex-col gap-1">
+              <p className={`xs:text-lg/4.5 text-sm/3.5 font-semibold w-full text-left underline-offset-3 ${!session.is_locked && "group-hover:underline"}`}>
                 {session.session_name}
               </p>
-              <Button
-                variant={"default"}
-                className="[&_svg]:size-6 font-foreground bg-transparent rounded-none border-none p-0 2md:hidden block"
-              >
-                <ArrowUpRightIcon />
-              </Button>
+              <p className="text-pretty xs:text-p/5 text-sm/4 2md:max-w-140 font-medium line-clamp-3 text-muted-foreground text-left">
+                {session.detail_short}
+              </p>
             </div>
+            
+            <div className="relative w-full lg:h-60 3md:h-40 sm:h-60 xs:h-44 h-34 rounded-sm overflow-hidden">
+              <Image
+                src={session.image_cover}
+                alt={`session ${session.session_name}`}
+                fill
+                unoptimized
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
+                className={`w-full h-full object-cover bg-muted-foreground/10 transition-transform duration-300 ${!session.is_locked && " rounded-sm"}`}
+              />
 
-            <p className="text-pretty 2md:mt-0 -mt-2 xs:text-p/5 text-sm/4 2md:max-w-140 font-medium line-clamp-3 2md:min-h-[3lh] text-muted-foreground 2md:text-left text-left">
-              {session.detail_short}
-            </p>
+              {session.is_locked && (
+                <div className="absolute inset-0 flex flex-col items-center gap-3 justify-center dark:bg-black/40 bg-background/20 backdrop-blur-sm z-10 animate-fade-in rounded-sm">
+                  <div className="w-16 h-16 rounded-full bg-foreground/10 flex items-center justify-center">
+                    <LockSimpleIcon className="w-8 h-8 text-foreground" weight="fill" />
+                  </div>
+                  <div>
+                    <p className="2xs:text-sm/4 text-xs/4 text-foreground font-medium">Sesi ini akan segera hadir.</p>
+                  </div>
+                </div>
+              )}
 
-            <div className="flex-1 flex items-center gap-3">
-              <span className="flex items-center gap-1">
-                <PersonSimpleTaiChiIcon
-                  className="h-3 w-3 text-muted-foreground"
-                  weight="fill"
-                />
-                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
-                  {session.total_instruction} Instruksi
-                </p>
-              </span>
+              <div className="absolute bottom-4 right-4 rounded-sm p-2 flex flex-col xs:gap-1 gap-0 transition items-end 
+              md:bg-muted-foreground/40 bg-background md:text-background text-muted-foreground group-hover:bg-background/86  group-hover:text-muted-foreground group-hover:dark:text-foreground              
+              ">
+                <span className="flex items-center gap-1">
+                  <p className="md:text-sm/5 xs:text-xs/4 text-2xs font-medium">
+                    {session.total_instruction} Instruksi
+                  </p>
+                  <LightbulbIcon className="h-3 w-3" weight="fill" />
+                </span>
 
-              <span className="flex items-center gap-1">
-                <TimerIcon className="h-3 w-3 text-muted-foreground" weight="fill" />
-                <p className="sm:text-sm/5 text-xs/4 font-medium text-muted-foreground">
-                  {session.duration}
-                </p>
-              </span>
+                <span className="flex items-center gap-1">
+                  <p className="md:text-sm/5 xs:text-xs/4 text-2xs font-medium">
+                    {session.duration}
+                  </p>
+                  <TimerIcon className="h-3 w-3" weight="fill" />
+                </span>
+              </div>
             </div>
           </div>
         </Link>

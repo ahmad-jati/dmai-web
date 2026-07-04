@@ -9,8 +9,10 @@ export default function AdminPage() {
   const isSessionsTab = pathname?.startsWith("/admin/sessions")
 
   return (
-    <div className="p-10">
-      {isSessionsTab ? <SessionsManager /> : <UsersTable />}
+    <div className="flex gap-6 p-10 items-start">
+      <div className="flex-1 min-w-0">
+        {isSessionsTab ? <SessionsManager /> : <UsersTable />}
+      </div>
     </div>
   )
 }

@@ -65,7 +65,7 @@ export function UpdatePasswordForm({
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      router.push("/homepage");
+      router.push("/beranda");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Terjadi kesalahan");
     } finally {

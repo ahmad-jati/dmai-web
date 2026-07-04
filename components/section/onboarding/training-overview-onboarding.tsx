@@ -53,9 +53,9 @@ export function TrainingOverviewOnboarding() {
             <p className="font-medium text-p/5">Setiap sesi dirancang khusus untuk membantumu lebih dalam memahami, menerima, dan mengubah apa yang kamu rasakan.</p>
           </div>
 
-          <div className="grid xl:grid-cols-4 md:grid-cols-3 xs:grid-cols-2 grid-cols-1 gap-3.5 w-full">
+          <div className="grid md:grid-cols-3 xs:grid-cols-2 grid-cols-1 gap-3.5 w-full">
             {loading
-              ? Array.from({ length: 7 }).map((_, i) => <SkeletonCard key={i} />)
+              ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
               : sessions.map((session) => (
                   <div
                     key={session.slug}

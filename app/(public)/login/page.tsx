@@ -15,7 +15,7 @@ export default function Page() {
         <Section className="flex-1 w-full bg-white dark:bg-card flex flex-col gap-8 justify-center items-center">
           <div className="w-fit xs:h-64 h-fit bg-celeste dark:bg-card sm:rounded-3xl dark:rounded-none rounded-lg lg:hidden flex items-center justify-center p-4">
             <Image
-              src={"/tropicaline/compress/happy.png"}
+              src={"/tropicaline/compress/Play.png"}
               alt=""
               width={2000}
               height={2000}
@@ -29,7 +29,7 @@ export default function Page() {
         <Section className="bg-white dark:bg-card p-4! lg:block hidden flex-1">
           <div className="h-full w-fit rounded-4xl dark:rounded-none bg-celeste dark:bg-card flex items-center justify-center p-4 dark:p-0">
             <Image
-              src={"/tropicaline/compress/happy.png"}
+              src={"/tropicaline/compress/Play.png"}
               alt=""
               width={2000}
               height={2000}

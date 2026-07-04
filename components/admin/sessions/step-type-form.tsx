@@ -1,0 +1,737 @@
+'use client'
+
+import { useRef, useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  ImageIcon,
+  SpeakerHighIcon,
+  PlusIcon,
+  TrashIcon,
+  YoutubeLogoIcon,
+  LinkIcon,
+  TextTIcon,
+  SlidersIcon,
+  SmileyIcon,
+  ListChecksIcon,
+  PersonIcon,
+  MusicNotesIcon,
+} from '@phosphor-icons/react'
+import Image from 'next/image'
+import {
+  SessionStep,
+  StepType,
+  STEP_TYPE_LABELS,
+  STEP_TYPE_COLORS,
+  FormQuestion,
+  FormQuestionType,
+  NarrationSubStep,
+  BodyPart,
+  NarrationStepConfigData,
+  FormStepConfigData,
+  VideoStepConfigData,
+  BodyMapStepConfigData,
+  ExternalEmbedStepConfigData,
+} from './types'
+
+// Re-exported so existing imports of these from this file keep working.
+export type { FormQuestion, NarrationSubStep, BodyPart }
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+export function newKey(): string {
+  return `k-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+}
+
+function formatDurSec(sec: number): string {
+  const m = Math.floor(sec / 60)
+  const s = sec % 60
+  if (m === 0) return `${s}s`
+  if (s === 0) return `${m}m`
+  return `${m}m ${s}s`
+}
+
+const FORM_QUESTION_TYPES: { value: FormQuestionType; label: string; icon: ReactNode }[] = [
+  { value: 'emoji_scale', label: 'Skala Emoji', icon: <SmileyIcon className="w-3.5 h-3.5" /> },
+  { value: 'slider', label: 'Slider (1-100)', icon: <SlidersIcon className="w-3.5 h-3.5" /> },
+  { value: 'text_input', label: 'Input Teks', icon: <TextTIcon className="w-3.5 h-3.5" /> },
+]
+
+// ─── Duration input (string-based so it can be cleared) ────────────────────────
+
+type DurationInputProps = {
+  value: number
+  onChange: (value: number) => void
+  label?: string
+  readOnly?: boolean
+  hint?: string
+}
+
+function DurationInput({
+  value,
+  onChange,
+  label = 'Durasi (detik)',
+  readOnly = false,
+  hint,
+}: DurationInputProps) {
+  const [raw, setRaw] = useState(value === 0 ? '' : String(value))
+  const lastExternal = useRef(value)
+  if (value !== lastExternal.current) {
+    lastExternal.current = value
+    if (value !== Number(raw || '0')) {
+      setRaw(value === 0 ? '' : String(value))
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label>{label}</Label>
+      {readOnly ? (
+        <div className="flex items-center h-9 px-3 rounded-sm border border-border bg-muted text-sm text-muted-foreground">
+          {value > 0 ? `${value}d · ${formatDurSec(value)}` : '0'}
+        </div>
+      ) : (
+        <Input
+          type="text"
+          inputMode="numeric"
+          value={raw}
+          placeholder="60"
+          onChange={(e) => {
+            const v = e.target.value.replace(/[^0-9]/g, '')
+            setRaw(v)
+            onChange(v === '' ? 0 : Number(v))
+          }}
+          onBlur={() => {
+            if (raw === '') setRaw('')
+          }}
+        />
+      )}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  )
+}
+
+// ─── Narration sub-step config ─────────────────────────────────────────────────
+
+type NarrationSubStepCardProps = {
+  sub: NarrationSubStep
+  index: number
+  total: number
+  onChange: (updated: NarrationSubStep) => void
+  onRemove: () => void
+}
+
+function NarrationSubStepCard({ sub, index, total, onChange, onRemove }: NarrationSubStepCardProps) {
+  const audioRef = useRef<HTMLInputElement>(null!)
+  const imageRef = useRef<HTMLInputElement>(null!)
+
+  const handleAudio = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    // Read duration from the file metadata, but store only the File object.
+    // The blob URL is used only for local playback preview — never stored in DB.
+    const blobUrl = URL.createObjectURL(file)
+    const audio = new window.Audio(blobUrl)
+    audio.addEventListener('loadedmetadata', () => {
+      onChange({
+        ...sub,
+        audio_file: file,
+        audio_url: '',          // cleared — real URL written on save to Supabase Storage
+        audio_preview: blobUrl, // runtime-only preview URL
+        duration_seconds: Math.round(audio.duration),
+      })
+    })
+  }
+
+  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    onChange({
+      ...sub,
+      image_file: file,
+      image_url: '',                          // cleared — real URL written on save
+      image_preview: URL.createObjectURL(file), // runtime-only preview
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-3 p-3 bg-muted/20 border border-border rounded-sm">
+      {/* Sub-step header */}
+      <div className="flex items-center gap-2">
+        <div className="w-5 h-5 rounded-full bg-blue-100 border border-blue-300 text-blue-700 text-xs font-bold flex items-center justify-center shrink-0">
+          {index + 1}
+        </div> 
+        <span className="text-xs text-muted-foreground font-medium">Sub-step narasi</span>
+        <div className="flex-1" />
+        {sub.duration_seconds > 0 && (
+          <span className="text-xs text-muted-foreground bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-sm">
+            {formatDurSec(sub.duration_seconds)}
+          </span>
+        )}
+        {total > 1 && (
+          <button
+            onClick={onRemove}
+            className="w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+          >
+            <TrashIcon className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex gap-6">
+        {/* Audio + Image row */}
+        <div className="flex flex-col gap-3 items-start flex-1">
+          {/* Title */}
+          <div className="flex flex-col gap-1.5 w-full">
+            <Label className="text-xs">Nama Step Suara</Label>
+            <Input
+              value={sub.title}
+              onChange={(e) => onChange({ ...sub, title: e.target.value })}
+              placeholder="e.g. Pernapasan Dalam"
+              className="h-8 text-sm"
+            />
+          </div>
+
+          {/* Description */}
+          <div className="flex flex-col gap-1.5 w-full">
+            <Label className="text-xs">Deskripsi</Label>
+            <Textarea
+              value={sub.description}
+              onChange={(e) => onChange({ ...sub, description: e.target.value })}
+              placeholder="Deskripsi singkat panduan ini..."
+              rows={2}
+              className="resize-none text-sm"
+            />
+          </div>
+
+          {/* Audio */}
+          <div className="flex flex-col gap-1.5 w-full">
+            <Label className="text-xs flex items-center gap-1">
+              <SpeakerHighIcon className="w-3.5 h-3.5" /> Audio Panduan
+            </Label>
+            {/* Show playback: prefer local preview blob, fallback to stored URL */}
+            {(sub.audio_preview || sub.audio_url) && (
+              <audio controls src={sub.audio_preview || sub.audio_url} className="w-full h-8" />
+            )}
+            {sub.audio_file && (
+              <p className="text-xs text-muted-foreground truncate">{sub.audio_file.name}</p>
+            )}
+            {sub.duration_seconds > 0 && (
+              <p className="text-xs text-blue-600">Durasi: {formatDurSec(sub.duration_seconds)}</p>
+            )}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => audioRef.current?.click()}
+              className="w-fit h-7 text-xs px-2 rounded-sm  gap-1.5"
+            >
+              <SpeakerHighIcon className="w-3.5 h-3.5" />
+              {sub.audio_url || sub.audio_file ? 'Ganti Audio' : 'Upload Audio'}
+            </Button>
+            <input ref={audioRef} type="file" accept="audio/*" className="hidden" onChange={handleAudio} />
+          </div>
+
+        </div>
+        {/* Image */}
+        <div className="flex flex-col gap-1.5 items-start shrink-0 w-40">
+          <Label className="text-xs flex items-center gap-1">
+            Gambar
+          </Label>
+          {/* Show preview: prefer local preview blob, fallback to stored URL */}
+          {(sub.image_preview || sub.image_url) ? (
+            <div className="w-40 max-h-50">
+              <Image
+                src={sub.image_preview || sub.image_url}
+                alt="preview"
+                width={56}
+                height={56}
+                className="w-full h-full object-cover border border-border rounded-sm bg-muted/30"
+                unoptimized
+              />
+            </div> 
+          ) : (
+            <div className="w-full h-30 bg-muted/30 border border-border rounded-sm flex items-center justify-center">
+              <ImageIcon className="w-10 h-10 text-muted-foreground/40" />
+            </div>
+          )}
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => imageRef.current?.click()}
+            className="w-fit h-7 text-xs px-2 rounded-sm gap-1.5 mt-1"
+          >
+            {sub.image_url || sub.image_preview ? 'Ganti' : 'Upload'}
+          </Button>
+          <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
+        </div>
+      </div>
+        
+    </div>
+  )
+}
+
+type NarrationStepConfigProps = {
+  config: NarrationStepConfigData
+  onChange: (patch: Partial<NarrationStepConfigData>) => void
+  onTotalDurationChange: (total: number) => void
+}
+
+function NarrationStepConfig({ config, onChange, onTotalDurationChange }: NarrationStepConfigProps) {
+  const parseSubSteps = (cfg: NarrationStepConfigData | string | null | undefined): NarrationSubStep[] => {
+    const obj: NarrationStepConfigData =
+      typeof cfg === 'string'
+        ? (() => {
+            try {
+              return JSON.parse(cfg) as NarrationStepConfigData
+            } catch {
+              return {}
+            }
+          })()
+        : (cfg ?? {})
+    const raw = Array.isArray(obj.sub_steps) ? obj.sub_steps : []
+    return raw.map((s) => (s._key ? s : { ...s, _key: newKey() }))
+  }
+
+  // Own the sub-steps locally so UI state is never lost between re-renders.
+  const [subSteps, setSubSteps] = useState<NarrationSubStep[]>(() => parseSubSteps(config))
+
+  // Sync when config reference changes externally (dialog opened with a different step)
+  const prevConfigRef = useRef(config)
+  useEffect(() => {
+    if (prevConfigRef.current === config) return
+    prevConfigRef.current = config
+    setSubSteps(parseSubSteps(config))
+  }, [config])
+
+  const totalDuration = subSteps.reduce((acc, s) => acc + (s.duration_seconds || 0), 0)
+
+  const commit = (updated: NarrationSubStep[]) => {
+    console.log('commit dipanggil, sub_steps:', updated)  // ← tambah ini
+    setSubSteps(updated)
+    onChange({ sub_steps: updated })
+    onTotalDurationChange(updated.reduce((acc, s) => acc + (s.duration_seconds || 0), 0))
+  }
+
+  const addSub = () =>
+    commit([
+      ...subSteps,
+      {
+        _key: newKey(),
+        title: '',
+        description: '',
+        duration_seconds: 0,
+        audio_url: '',
+        image_url: '',
+      },
+    ])
+
+  const removeSub = (key: string) => commit(subSteps.filter((s) => s._key !== key))
+
+  const updateSub = (key: string, updated: NarrationSubStep) =>
+    commit(subSteps.map((s) => (s._key === key ? updated : s)))
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <MusicNotesIcon className="w-4 h-4" />
+            Sub-steps Panduan Suara
+          </p>
+          {totalDuration > 0 && (
+            <span className="text-xs bg-blue-50 border border-blue-200 text-blue-700 px-1.5 py-0.5 rounded-sm font-medium">
+              Total: {formatDurSec(totalDuration)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {subSteps.length === 0 && (
+        <p className="text-xs text-muted-foreground italic">
+          Belum ada sub-step. Klik Tambah sub-step untuk mulai.
+        </p>
+      )}
+
+      <div className="flex flex-col gap-2">
+        {subSteps.map((sub, i) => (
+          <NarrationSubStepCard
+            key={sub._key ?? `sub-${i}`}
+            sub={sub}
+            index={i}
+            total={subSteps.length}
+            onChange={(updated) => updateSub(sub._key, updated)}
+            onRemove={() => removeSub(sub._key)}
+          />
+        ))}
+      </div>
+
+      <div>
+        <Button
+        onClick={addSub}
+        size={'sm'}
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <PlusIcon className="w-3.5 h-3.5" />
+        Tambah sub-step
+      </Button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Form step config ──────────────────────────────────────────────────────────
+
+type FormStepConfigProps = {
+  config: FormStepConfigData
+  onChange: (patch: Partial<FormStepConfigData>) => void
+}
+
+function FormStepConfig({ config, onChange }: FormStepConfigProps) {
+  // Own questions in local state so edits survive parent re-renders that pass a stale config prop.
+  // Sync from config only when the config reference changes (e.g. a different step is opened).
+  const [questions, setQuestions] = useState<FormQuestion[]>(() => config.questions ?? [])
+  const prevConfigRef = useRef(config)
+  useEffect(() => {
+    if (prevConfigRef.current === config) return
+    prevConfigRef.current = config
+    setQuestions(config.questions ?? [])
+  }, [config])
+
+  const commit = (updated: FormQuestion[]) => {
+    setQuestions(updated)
+    onChange({ questions: updated })
+  }
+
+  const addQ = () =>
+    commit([...questions, { _key: newKey(), label: '', type: 'text_input' }])
+  const removeQ = (key: string) => commit(questions.filter((q) => q._key !== key))
+  const updateQ = (key: string, patch: Partial<FormQuestion>) =>
+    commit(questions.map((q) => (q._key === key ? { ...q, ...patch } : q)))
+
+  return (
+    <div className="flex flex-col gap-3 ">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          Pertanyaan Form
+        </p>
+      </div>
+
+      {questions.length === 0 && (
+        <p className="text-xs text-muted-foreground italic">
+          Belum ada pertanyaan. Klik Tambah pertanyaan untuk mulai.
+        </p>
+      )}
+
+      <div className="flex flex-col gap-2">
+        {questions.map((q, i) => (
+          <div
+            key={q._key}
+            className="flex items-start gap-2 p-3 bg-muted/20 border border-border rounded-sm"
+          >
+            <span className="text-xs text-muted-foreground font-semibold mt-2 w-4 shrink-0">
+              {i + 1}.
+            </span>
+            <div className="flex flex-col gap-2 flex-1 min-w-0">
+              <Input
+                value={q.label}
+                onChange={(e) => updateQ(q._key, { label: e.target.value })}
+                placeholder="Label pertanyaan, e.g. Bagaimana mood kamu hari ini?"
+                className="h-8 text-sm"
+              />
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-muted-foreground shrink-0">Tipe:</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {FORM_QUESTION_TYPES.map((t) => (
+                    <button
+                      key={t.value}
+                      onClick={() => updateQ(q._key, { type: t.value })}
+                      className={[
+                        'flex items-center gap-1 px-2 py-1 rounded-sm border text-xs font-medium transition-colors border-border',
+                        q.type === t.value
+                          ? 'bg-lemon text-foreground'
+                          : 'bg-accent text-muted-foreground hover:border-foreground/40',
+                      ].join(' ')}
+                    >
+                      {t.icon}
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => removeQ(q._key)}
+              className="mt-2 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-destructive shrink-0"
+            >
+              <TrashIcon className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className='w-full flex items-end'>
+        <Button
+          onClick={addQ}
+          size={'sm'}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <PlusIcon className="w-3.5 h-3.5" />
+          Tambah pertanyaan
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Video step config ─────────────────────────────────────────────────────────
+
+type VideoStepConfigProps = {
+  config: VideoStepConfigData
+  onChange: (patch: Partial<VideoStepConfigData>) => void
+}
+
+function VideoStepConfig({ config, onChange }: VideoStepConfigProps) {
+  return (
+    <div className="flex flex-col gap-3 ">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        Konfigurasi Video
+      </p>
+      <div className="flex flex-col gap-1.5">
+        <Label className="flex items-center gap-1.5">
+          <YoutubeLogoIcon className="w-4 h-4 text-red-500" />
+          URL YouTube
+        </Label>
+        <Input
+          value={config.youtube_url ?? ''}
+          onChange={(e) => onChange({ ...config, youtube_url: e.target.value })}
+          placeholder="https://www.youtube.com/watch?v=..."
+          className="text-sm"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label>
+          Kredit Video{' '}
+          <span className="text-muted-foreground font-normal text-xs">(opsional)</span>
+        </Label>
+        <Input
+          value={config.credit ?? ''}
+          onChange={(e) => onChange({ ...config, credit: e.target.value })}
+          placeholder="e.g. Dr. Amelia Putri, Psikolog Klinis"
+          className="text-sm"
+        />
+      </div>
+    </div>
+  )
+}
+
+// ─── Body map step config ──────────────────────────────────────────────────────
+
+type BodyMapStepConfigProps = {
+  config: BodyMapStepConfigData
+  onChange: (patch: Partial<BodyMapStepConfigData>) => void
+}
+
+function BodyMapStepConfig({ config, onChange }: BodyMapStepConfigProps) {
+
+  return (
+    <div className="flex flex-col gap-3 ">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+        <PersonIcon className="w-4 h-4" />
+        Konfigurasi Body Map
+      </p>
+      <div className="flex flex-col gap-1.5">
+        <Label>Label Pertanyaan</Label>
+        <Input
+          value={config.section_label ?? ''}
+          onChange={(e) => onChange({ ...config, section_label: e.target.value })}
+          placeholder="e.g. Pilih bagian tubuh yang terasa lelah/tegang saat ini"
+          className="text-sm"
+        />
+        <p className="text-xs text-muted-foreground">Pertanyaan ini akan muncul di atas peta tubuh.</p>
+      </div>
+     
+    </div>
+  )
+}
+
+// ─── External embed step config ────────────────────────────────────────────────
+
+type ExternalEmbedStepConfigProps = {
+  config: ExternalEmbedStepConfigData
+  onChange: (patch: Partial<ExternalEmbedStepConfigData>) => void
+}
+
+function ExternalEmbedStepConfig({ config, onChange }: ExternalEmbedStepConfigProps) {
+  return (
+    <div className="flex flex-col gap-3 ">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+        <LinkIcon className="w-4 h-4" />
+        Konfigurasi External Embed
+      </p>
+      <div className="flex flex-col gap-1.5">
+        <Label>URL Embed</Label>
+        <Input
+          value={config.embed_url ?? ''}
+          onChange={(e) => onChange({ ...config, embed_url: e.target.value })}
+          placeholder="https://app.mentimeter.com/..."
+          className="text-sm"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label>Label / Instruksi</Label>
+        <Input
+          value={config.embed_label ?? ''}
+          onChange={(e) => onChange({ ...config, embed_label: e.target.value })}
+          placeholder="e.g. Buka Mentimeter dan tulis reaksi tubuhmu"
+          className="text-sm"
+        />
+      </div>
+    </div>
+  )
+}
+
+// ─── Main export: StepTypeForm ─────────────────────────────────────────────────
+
+type StepTypeFormProps = {
+  form: SessionStep
+  setForm: (patch: Partial<SessionStep>) => void
+  bodyParts?: BodyPart[]
+  bodyPartsLoading?: boolean
+}
+
+export function StepTypeForm({
+  form,
+  setForm,
+}: StepTypeFormProps) {
+  type StepConfigPatch =
+    | Partial<NarrationStepConfigData>
+    | Partial<FormStepConfigData>
+    | Partial<VideoStepConfigData>
+    | Partial<BodyMapStepConfigData>
+    | Partial<ExternalEmbedStepConfigData>
+
+  const updateConfig = (patch: StepConfigPatch) => {
+  console.log('updateConfig patch:', patch)  // ← tambah ini
+  setForm({ step_config: { ...form.step_config, ...patch } })
+}
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* ── Type + Title + Duration row ── */}
+      <div className="grid grid-cols-4 gap-3 items-start">
+        <div className="flex flex-col gap-1.5">
+          <Label>Tipe Step</Label>
+          <Select
+            value={form.step_type}
+            onValueChange={(val) =>
+              setForm({ step_type: val as StepType, step_config: {} })
+            }
+          >
+            <SelectTrigger className="rounded-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.entries(STEP_TYPE_LABELS) as [StepType, string][]).map(([val, label]) => (
+                <SelectItem key={val} value={val}>
+                  <span className="flex items-center gap-2">
+                    {label}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex flex-col gap-1.5 col-span-2">
+          <Label>Nama Step *</Label>
+          <Input
+            value={form.title}
+            onChange={(e) => setForm({ title: e.target.value })}
+            placeholder={
+              form.step_type === 'video' ? 'e.g. Video Edukasi'
+              : form.step_type === 'pre_form' ? 'e.g. Form Check-in Awal'
+              : form.step_type === 'post_form' ? 'e.g. Form Check-in Akhir'
+              : form.step_type === 'body_map' ? 'e.g. Pemetaan Tubuh'
+              : form.step_type === 'external_embed' ? 'e.g. Aktivitas Mentimeter'
+              : form.step_type === 'game' ? 'e.g. Game Fokus'
+              : 'e.g. Panduan Relaksasi'
+            }
+          />
+        </div>
+
+        {/* Narration: duration auto from sub-steps; others: manual */}
+        {form.step_type === 'narration' ? (
+          <DurationInput
+            label="Durasi (otomatis)"
+            value={form.duration_seconds}
+            onChange={() => {}}
+            readOnly
+            hint="Dari total audio sub-steps"
+          />
+        ) : (
+          <DurationInput
+            value={form.duration_seconds}
+            onChange={(v) => setForm({ duration_seconds: v })}
+          />
+        )}
+      </div>
+
+      {form.step_type !== 'narration' && (
+        <div className="flex flex-col gap-1.5">
+          <Label>Instruksi / Deskripsi</Label>
+          <Textarea
+            value={form.description}
+            onChange={(e) => setForm({ description: e.target.value })}
+            rows={3}
+            className={`resize-none text-sm`}
+            placeholder={
+              form.step_type === 'game'
+                ? 'Jelaskan cara main game dan tujuannya...'
+                : form.step_type === 'body_map'
+                ? 'Instruksi tambahan sebelum pengguna memilih bagian tubuh...'
+                : form.step_type === 'pre_form'
+                ? 'Instruksi pengisian form awal untuk pengguna...'
+                : form.step_type === 'post_form'
+                ? 'Instruksi pengisian form akhir untuk pengguna...'
+                : ''
+            }
+          />
+        </div>
+      )}
+
+      {/* ── Type-specific config ── */}
+      {form.step_type === 'narration' && (
+        <NarrationStepConfig
+          config={form.step_config as NarrationStepConfigData}
+          onChange={updateConfig}
+          onTotalDurationChange={(total) => setForm({ duration_seconds: total })}
+        />
+      )}
+      {(form.step_type === 'pre_form' || form.step_type === 'post_form') && (
+        <FormStepConfig config={form.step_config as FormStepConfigData} onChange={updateConfig} />
+      )}
+      {form.step_type === 'video' && (
+        <VideoStepConfig config={form.step_config as VideoStepConfigData} onChange={updateConfig} />
+      )}
+      {form.step_type === 'body_map' && (
+        <BodyMapStepConfig
+          config={form.step_config as BodyMapStepConfigData}
+          onChange={updateConfig}
+        />
+      )}
+      {form.step_type === 'external_embed' && (
+        <ExternalEmbedStepConfig config={form.step_config as ExternalEmbedStepConfigData} onChange={updateConfig} />
+      )}
+    </div>
+  )
+}

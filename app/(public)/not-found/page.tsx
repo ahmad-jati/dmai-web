@@ -18,13 +18,13 @@ export default function Page() {
             Halaman yang kamu cari tidak ditemukan
           </p>
 
-          <Link href={'/homepage' as Route} className="flex gap-2 items-center">
+          <Link href={'/beranda' as Route} className="flex gap-2 items-center">
             <Button
               variant={'default'}
               className="[&_svg]:size-4 xs:text-p/5 text-xs/4 rounded-xl hover:bg-background/80 dark:bg-primary"
             >
               <ArrowLeftIcon/>
-              Kembali ke Homepage
+              Kembali ke Beranda
             </Button>
           </Link>
         </div>
