@@ -1098,8 +1098,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           </div>
         </div>
         <div className="flex w-full rounded-4xl bg-white dark:bg-popover border border-border shadow-sm flex-1">
-          <div className="flex flex-col items-start w-full p-6 gap-6 flex-1">
-
+          <div className="flex flex-col items-start py-6 w-full gap-6 flex-1">
             {/* Step title */}
             {step.title && (
               <div className="flex flex-col items-center gap-1.5 w-full text-center">

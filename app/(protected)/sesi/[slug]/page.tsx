@@ -41,6 +41,8 @@ async function SessionDetail({ slug }: { slug: string }) {
   if (!session) notFound()
 
   const isLocked = session.is_locked === true
+  console.log(completionCount)
+  console.log(session)
 
   return (
     <div className="relative h-full w-full">
@@ -48,11 +50,11 @@ async function SessionDetail({ slug }: { slug: string }) {
         <div className="flex flex-col lg:items-start items-center lg:justify-between gap-4 lg:w-120 w-full h-full">
 
           {/* Mobile title + meta */}
-          <div className="lg:hidden flex flex-col gap-2 items-center">
+          <div className="lg:hidden flex flex-col gap-2 items-center mb-2">
             <p className="md:text-xl text-sm font-medium text-muted-foreground -mb-2 block lg:hidden uppercase">Sesi</p>
-            <h1 className="md:text-3xl/6.5 2xs:text-3xl/6.5 text-2xl/6 text-center font-semibold md:max-w-160 w-full mb-2">
-              {session.session_name}
-            </h1>
+            <h2 className="md:text-3xl/6.5 2xs:text-3xl/6.5 text-2xl/6 text-center font-semibold md:max-w-160 w-full">
+              {session.session_name} 
+            </h2>
             <div className="flex flex-col gap-1 items-center">
               <div className="flex items-center gap-3 text-muted-foreground">
                 <div className="flex items-center gap-1">
@@ -112,7 +114,7 @@ async function SessionDetail({ slug }: { slug: string }) {
               <CompletionCount count={completionCount} />
           </div>
 
-          <div className="flex sm:flex-row flex-col sm:gap-2 gap-1 items-center">
+          <div className="flex lg:flex-row flex-col lg:gap-2 gap-1 items-center lg:mt-0 mt-2">
             {isLocked ? (
               <Button
                 variant={"default"}

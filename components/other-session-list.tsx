@@ -62,7 +62,7 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
           href={session.is_locked ? "#" : (`/sesi/${session.slug}` as Route)}
           scroll={true}
           className={`
-            group flex flex-col items-start lg:gap-6 gap-3
+            group flex flex-col items-start gap-3
             2md:rounded-[20px] rounded-lg w-full overflow-hidden transition-shadow p-3
             lg:bg-transparent bg-background
             ${session.is_locked 
@@ -95,7 +95,7 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
                     <LockSimpleIcon className="w-8 h-8 text-foreground" weight="fill" />
                   </div>
                   <div>
-                    <p className="2xs:text-sm/4 text-xs/4 text-foreground font-medium">Sesi berikutnya segera hadir.</p>
+                    <p className="2xs:text-sm/4 text-xs/4 text-foreground font-medium">Sesi ini akan segera hadir.</p>
                   </div>
                 </div>
               )}

@@ -103,9 +103,9 @@ function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-4 items-start w-full min-h-90 h-full">
       <div className="flex flex-col w-full 2md:items-start items-center gap-2 sm:max-w-180 2md:max-w-80 mb-2">
-        <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold sm:text-left text-center">
+        <h1 className="sm:text-h2/7 text-xl/5.5 font-semibold sm:text-left text-center">
           History Session
-        </h2>
+        </h1>
         <p className="xs:text-p/5 text-sm/4 sm:max-w-140 font-medium sm:text-left text-center text-pretty">
           Semua sesi yang telah kamu selesaikan tersimpan di sini.
         </p>

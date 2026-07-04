@@ -98,13 +98,13 @@ export function StepGame({ onNext, onPrev, duration }: Props) {
               </div>
               <Button
                 onClick={handleStart}
-                className="flex items-center gap-2 px-6 py-3 rounded-full bg-white dark:bg-popover text-foreground font-semibold text-sm hover:bg-muted-foreground/10 transition-all">
+                className="flex items-center gap-2 px-6 py-3 rounded-full bg-celeste/80 hover:bg-celeste border-foreground/40 text-foreground font-semibold text-sm transition-all">
                 <PlayIcon weight="fill" className="w-4 h-4" />
                 Start Game
               </Button>
             </div>
           ) : isExpired ? (
-            <div className="2md:h-100 h-90 flex flex-col items-center justify-center gap-4 2md:p-4 p-6 bg-muted/20 dark:bg-muted">
+            <div className="2md:h-100 h-90 flex flex-col items-center justify-center 2md:gap-2 2md:p-4 p-6 bg-muted/20 dark:bg-muted">
               <CheckCircleIcon weight="fill" className="w-14 h-14 text-green dark:text-foreground" />
               <p className="font-semibold text-lg text-foreground text-center">Sesi game selesai!</p>
               <p className="sm:text-sm text-xs/3 text-muted-foreground text-center -mt-1">

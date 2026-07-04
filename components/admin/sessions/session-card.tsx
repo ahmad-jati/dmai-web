@@ -32,7 +32,17 @@ export function SessionCard({ session, onClick, onLockToggled }: SessionCardProp
       toast.error('Gagal mengubah status', { description: error.message })
     } else {
       onLockToggled(session.id, newLocked)
-      toast.success(newLocked ? 'Sesi dikunci' : 'Sesi dibuka')
+      toast.success(
+        newLocked
+          ? `Sesi ${session.session_name.toUpperCase()} dikunci`
+          : `Sesi ${session.session_name.toUpperCase()} dibuka`,
+        {
+          description: newLocked
+            ? 'User tidak akan bisa mengakses sesi ini sampai dibuka kembali.'
+            : 'Sesi ini sekarang bisa diakses oleh user.',
+          icon: newLocked ? '🔒' : '🔓',
+        }
+      )
     }
     setToggling(false)
   }

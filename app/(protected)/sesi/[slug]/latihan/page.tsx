@@ -5,195 +5,106 @@ import { use } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { StepperExercise } from "@/components/stepper-exercise"
 import { fetchSessionBySlug, type SessionData } from "@/lib/data-detail-session.client"
 import { notFound } from "next/navigation"
-import {
-  RepeatIcon, HouseIcon, ClockCountdownIcon,
-  CalendarCheckIcon, ClipboardTextIcon, UserIcon,
-  BookOpenTextIcon,
-} from "@phosphor-icons/react"
+import { RepeatIcon, HouseIcon } from "@phosphor-icons/react"
 import { Route } from "next"
 import { createClient } from "@/lib/supabase/client"
 import { SessionLoadingCard } from "@/components/session-loading-card"
 import { toast } from 'sonner'
 import { fmtLocalTime, fmtDuration } from "@/lib/session-helper"
-import { BodyMapRegion } from "@/lib/body-map-region"
-import type { FormField } from "@/components/steps/step-form"
 import { cn } from "@/lib/utils"
 
 type Props = {
   params: Promise<{ slug: string }>
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function parseConfig(config: unknown): Record<string, unknown> {
-  if (!config) return {}
-  if (typeof config === 'string') { try { return JSON.parse(config) } catch { return {} } }
-  if (typeof config === 'object') return config as Record<string, unknown>
-  return {}
-}
-
-const EMOJI_MAP: Record<number, { emoji: string; label: string }> = {
-  1: { emoji: "😞", label: "Sangat buruk" },
-  2: { emoji: "😕", label: "Buruk" },
-  3: { emoji: "😐", label: "Netral" },
-  4: { emoji: "🙂", label: "Baik" },
-  5: { emoji: "😊", label: "Sangat baik" },
-}
-
-const REGION_LABEL: Record<string, string> = {
-  kepala: "Kepala", leher_bahu: "Leher & Bahu", dada_perut: "Dada & Perut",
-  punggung: "Punggung", lengan: "Lengan & Tangan", kaki: "Kaki",
-}
-
-function groupBodyParts(partIds: string[]): { regionLabel: string; parts: string[] }[] {
-  const idSet = new Set(partIds)
-  const regionMap = new Map<string, string[]>()
-  for (const entry of BodyMapRegion) {
-    if (!idSet.has(entry.id)) continue
-    const list = regionMap.get(entry.region) ?? []
-    list.push(entry.label_id)
-    regionMap.set(entry.region, list)
-  }
-  return Array.from(regionMap.entries()).map(([key, parts]) => ({
-    regionLabel: REGION_LABEL[key] ?? key, parts,
-  }))
-}
-
-function renderAnswerValue(value: unknown, field?: FormField): React.ReactNode {
-  if (value === null || value === undefined || value === '') return null
-  if (field?.type === 'emoji_scale') {
-    const num = Number(value)
-    const entry = EMOJI_MAP[num]
-    if (entry) return <span className="inline-flex items-center gap-2 text-sm font-medium"><span className="text-xl">{entry.emoji}</span><span>{entry.label}</span></span>
-  }
-  if (field?.type === 'slider') {
-    const max = field.max ?? 100
-    const min = field.min ?? 1
-    return <span className="text-sm font-semibold">{String(value)}<span className="text-xs font-normal text-muted-foreground ml-1">/ {max} (skala {min}–{max})</span></span>
-  }
-  if (Array.isArray(value)) {
-    return <div className="flex flex-wrap gap-1.5">{(value as string[]).map((v) => <span key={v} className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-foreground/8 border border-foreground/15">{v}</span>)}</div>
-  }
-  // try emoji scale detection for raw number
-  if (typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 5) {
-    const entry = EMOJI_MAP[value]
-    if (entry) return <span className="inline-flex items-center gap-2 text-sm font-medium"><span className="text-xl">{entry.emoji}</span><span>{entry.label}</span></span>
-  }
-  return <p className="text-sm bg-foreground/4 rounded-lg px-3 py-2 leading-relaxed">{String(value)}</p>
-}
-
 // ─── Result Screen ─────────────────────────────────────────────────────────────
-
 type ResultScreenProps = {
   session: SessionData
   startedAt: string | null
   completedAt: string | null
   allResponses: Record<string, Record<string, unknown>>
   onRepeat: () => void
-  feedbackOpen: boolean
-  setFeedbackOpen: (v: boolean) => void
   userId: string | null
   slug: string
 }
 
 function ResultScreen({
-  session, startedAt, completedAt, allResponses, onRepeat,
-  feedbackOpen, setFeedbackOpen, userId, slug,
+  session, startedAt, completedAt, onRepeat
 }: ResultScreenProps) {
   const duration = fmtDuration(startedAt, completedAt)
 
-  // Separate pre and post form step ids
-  const preFormStep = session.instructions?.find(
-    (i: { step_type: string }) => i.step_type === 'pre_form'
-  )
-  const postFormStep = session.instructions?.find(
-    (i: { step_type: string }) => i.step_type === 'post_form'
-  )
-  const bodyMapStep = session.instructions?.find(
-    (i: { step_type: string }) => i.step_type === 'body_map'
-  )
-
-  const preResponses = preFormStep ? allResponses[preFormStep.id] : undefined
-  const postResponses = postFormStep ? allResponses[postFormStep.id] : undefined
-  const bodyMapResponses = bodyMapStep ? allResponses[bodyMapStep.id] : undefined
-
-  // Get questions from step config
-  function getFields(step: { step_config?: unknown } | undefined): FormField[] {
-    if (!step) return []
-    const config = parseConfig(step.step_config)
-    return ((config.questions ?? config.fields ?? []) as FormField[])
-  }
-
-
   return (
-    <>
-      <div className="w-full md:rounded-5xl rounded-xl border border-foreground md:p-8 xs:p-6 p-4 bg-celeste">
-        <div className="flex flex-col items-center justify-center gap-7  w-full">
-          {/* Hero */}
-          <div className="flex flex-col items-center gap-1 text-center max-w-lg">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Kamu telah menyelesaikan sesi</p>
-            <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>
-          </div>
+    <div className="w-full md:rounded-5xl rounded-xl border border-foreground md:p-8 xs:p-6 p-4 bg-celeste">
+      <div className="flex flex-col items-center justify-center gap-7  w-full">
+        <div className="flex flex-col items-center gap-1 text-center max-w-lg">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">Kamu telah menyelesaikan sesi</p>
+          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold">{session.session_name}</h2>
+        </div>
 
-          <div className="2xs:rounded-3xl rounded-xl border border-foreground bg-background dark:border-none dark:p-0 p-2 sm:w-100 sm:h-60 xs:h-76 w-full h-46">
-            <Image
-              src={session.image_cover}
-              alt=""
-              width={2000}
-              height={2000}
-              priority
-              className="w-full h-full object-cover 2xs:rounded-xl rounded-md bg-muted-foreground/10"
-              unoptimized
-            />
-          </div>
+        <div className="2xs:rounded-3xl rounded-xl border border-foreground bg-background dark:border-none dark:p-0 p-2 sm:w-100 sm:h-60 xs:h-76 w-full h-46">
+          <Image
+            src={session.image_cover}
+            alt=""
+            width={2000}
+            height={2000}
+            priority
+            className="w-full h-full object-cover 2xs:rounded-xl rounded-md bg-muted-foreground/10"
+            unoptimized
+          />
+        </div>
 
-          {/* Timestamp card */}
-          <div className="grid xs:grid-cols-3 grid-cols-1  gap-3 w-full max-w-2xl ">
-            {[
-              {label: 'Mulai', val: fmtLocalTime(startedAt) },
-              {label: 'Selesai', val: fmtLocalTime(completedAt) },
-              {label: 'Durasi', val: duration !== '—' ? `${duration} menit` : 'Tidak diketahui' },
-            ].map(({label, val }, i) => (
-              <div
-                key={label}
-                className={cn(
-                  'flex flex-col sm:items-start items-center gap-1 flex-1 bg-foreground/4 rounded-2xl p-4 border border-foreground/10 w-full',
-                  i === 2 && 'col-span-1'
-                )}
-              >
-                <div className="flex items-center gap-1.5 text-muted-foreground"><span className="text-xs font-semibold uppercase tracking-wide">{label}</span></div>
-                <p className="text-sm font-medium text-foreground xs:text-left text-center">{val}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Actions */}
-          <div className="flex xs:flex-row flex-col-reverse items-center justify-center xs:gap-3 gap-2 w-full max-w-xs">
-            <Button
-              onClick={onRepeat}
-              variant="link"
-              className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5"
+        <div className="grid xs:grid-cols-3 grid-cols-1  gap-3 w-full max-w-2xl ">
+          {[
+            {label: 'Mulai', val: fmtLocalTime(startedAt) },
+            {label: 'Selesai', val: fmtLocalTime(completedAt) },
+            {label: 'Durasi', val: duration !== '—' ? `${duration} menit` : 'Tidak diketahui' },
+          ].map(({label, val }, i) => (
+            <div
+              key={label}
+              className={cn(
+                'flex flex-col sm:items-start items-center gap-1 flex-1 bg-foreground/4 rounded-2xl p-4 border border-foreground/10 w-full',
+                i === 2 && 'col-span-1'
+              )}
             >
-              <RepeatIcon weight="fill" />
-              Ulangi sesi ini
-            </Button>
+              <div className="flex items-center gap-1.5 text-muted-foreground"><span className="text-xs font-semibold uppercase tracking-wide">{label}</span></div>
+              <p className="text-sm font-medium text-foreground xs:text-left text-center">{val}</p>
+            </div>
+          ))}
+        </div>
 
-            <Link href={"/beranda" as Route}>
-              <Button 
-                variant="ghost" 
-                className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5 bg-foreground text-background hover:bg-foreground/80 rounded-lg h-8"
-              >
-                <HouseIcon weight="fill" />
-                Beranda
-              </Button>
-            </Link>
-          </div>
+        <div className="flex xs:flex-row flex-col-reverse items-center justify-center xs:gap-3 gap-2 w-full max-w-xs">
+          <Button
+            onClick={onRepeat}
+            variant="link"
+            className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5"
+          >
+            <RepeatIcon weight="fill" />
+            Ulangi sesi ini
+          </Button>
+
+          <Link href={"/beranda" as Route}>
+            <Button 
+              variant="ghost" 
+              className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5 bg-foreground text-background hover:bg-foreground/80 rounded-lg h-8"
+            >
+              <HouseIcon weight="fill" />
+              Beranda
+            </Button>
+          </Link>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -207,20 +118,29 @@ export default function ExercisePage({ params }: Props) {
   const [phase, setPhase] = useState<Phase>('exercise')
   const [key, setKey] = useState(0)
   const [userId, setUserId] = useState<string | null>(null)
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
 
-  // Store all responses + timing across phases
   const [allResponses, setAllResponses] = useState<Record<string, Record<string, unknown>>>({})
   const [startedAt, setStartedAt] = useState<string | null>(null)
   const [completedAt, setCompletedAt] = useState<string | null>(null)
 
+  const [reminderOpen, setReminderOpen] = useState(false)
+
   useEffect(() => {
-    fetchSessionBySlug(slug).then((data) => {
+    const getUser = async () => {
+      const supabase = createClient()
+      const { data } = await supabase.auth.getUser()
+      setUserId(data?.user?.id ?? null)
+    }
+    getUser()
+  }, [])
+
+  useEffect(() => {
+    fetchSessionBySlug(slug, userId ?? undefined).then((data) => {
       setSession(data ?? null)
       if (data) setSessionId(data.id)
     })
-  }, [slug])
+  }, [slug, userId])
 
   useEffect(() => {
     if (!sessionId) return
@@ -232,13 +152,12 @@ export default function ExercisePage({ params }: Props) {
   }, [sessionId])
 
   useEffect(() => {
-    const getUser = async () => {
-      const supabase = createClient()
-      const { data } = await supabase.auth.getUser()
-      setUserId(data?.user?.id ?? null)
-    }
-    getUser()
-  }, [])
+    if (phase !== 'result') return
+    if (!session?.access?.show_reminder) return
+
+    const t = setTimeout(() => setReminderOpen(true), 500)
+    return () => clearTimeout(t)
+  }, [session, phase])
 
   const handleRepeat = () => {
     setKey((k) => k + 1)
@@ -246,11 +165,9 @@ export default function ExercisePage({ params }: Props) {
     setAllResponses({})
     setStartedAt(null)
     setCompletedAt(null)
-    setFeedbackOpen(false)
+    setReminderOpen(false)
   }
 
-  // Called when stepper finishes ALL steps (incl. pre_form, narration, post_form, body_map, etc.)
-  // post_form is now handled inside the stepper itself, so we go straight to save + result.
   const handleExerciseDone = async (
     _completionId: string,
     _userId: string,
@@ -271,9 +188,11 @@ export default function ExercisePage({ params }: Props) {
     const user = userData?.user
 
     if (!user || !session) {
-      toast.error('Gagal menyimpan sesi.', { duration: 4000 })
+      toast.error('Gagal menyimpan sesi', {
+        description: 'Progres kamu mungkin gak tersimpan. Coba lagi atau hubungi Admin kalau masalah berlanjut.',
+        duration: 5000,
+      })
       setPhase('result')
-      setTimeout(() => setFeedbackOpen(true), 400)
       return
     }
 
@@ -289,15 +208,18 @@ export default function ExercisePage({ params }: Props) {
         session_name: session.session_name,
         started_at: exerciseStartedAt ?? new Date().toISOString(),
         completed_at: now,
+        status: 'completed',
       })
       .select('id')
       .single()
 
     if (completionError || !completion) {
       console.error('completion insert error:', completionError)
-      toast.error('Gagal menyimpan sesi.', { duration: 4000 })
+      toast.error('Gagal menyimpan sesi', {
+        description: 'Progres kamu mungkin gak tersimpan. Coba lagi atau hubungi Admin kalau masalah berlanjut.',
+        duration: 5000,
+      })
       setPhase('result')
-      setTimeout(() => setFeedbackOpen(true), 400)
       return
     }
 
@@ -357,14 +279,11 @@ export default function ExercisePage({ params }: Props) {
       try { sessionStorage.removeItem(`dmai_form_draft_${session.id}`) } catch {}
     }
 
-    toast.success('Sesi selesai! 🎉', {
-      description: `Kamu telah menyelesaikan sesi ${session.session_name}.`,
-      duration: 4000,
-    })
+    const refreshed = await fetchSessionBySlug(slug, user.id)
+    if (refreshed) setSession(refreshed)
 
     setTimeout(() => {
       setPhase('result')
-      setTimeout(() => setFeedbackOpen(true), 400)
     }, 300)
   }
 
@@ -374,17 +293,37 @@ export default function ExercisePage({ params }: Props) {
   // ── Result Phase ───────────────────────────────────────────────────────────
   if (phase === 'result') {
     return (
-      <ResultScreen
-        session={session}
-        startedAt={startedAt}
-        completedAt={completedAt}
-        allResponses={allResponses}
-        onRepeat={handleRepeat}
-        feedbackOpen={feedbackOpen}
-        setFeedbackOpen={setFeedbackOpen}
-        userId={userId}
-        slug={slug}
-      />
+      <div className="w-full">
+        <Dialog open={reminderOpen} onOpenChange={setReminderOpen}>
+          <DialogContent className="max-w-sm!">
+            <DialogHeader>
+              <DialogTitle>Pengingat</DialogTitle>
+              <DialogDescription>
+                Kamu bisa akses sesi ini <span className="font-semibold text-foreground">{session.access?.remaining_access ?? 0} kali</span> lagi sampai minggu depan.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button 
+                onClick={() => setReminderOpen(false)}
+                size={'sm'}
+                variant={'secondary'}
+              >
+                Mengerti
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <ResultScreen
+          session={session}
+          startedAt={startedAt}
+          completedAt={completedAt}
+          allResponses={allResponses}
+          onRepeat={handleRepeat}
+          userId={userId}
+          slug={slug}
+        />
+      </div>
     )
   }
 

@@ -77,6 +77,10 @@ export function SessionsManager() {
     load()
   }, [])
 
+  const sortedSessions = [...sessions].sort(
+    (a, b) => (a.week_number ?? 0) - (b.week_number ?? 0)
+  )
+
   const handleSessionUpdated = useCallback((updated: SessionRecord) => {
     setSessions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
     setActiveSession(updated)
@@ -123,7 +127,7 @@ export function SessionsManager() {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        {sessions.map((s) => (
+        {sortedSessions.map((s) => (
           <SessionCard
             key={s.id}
             session={s}

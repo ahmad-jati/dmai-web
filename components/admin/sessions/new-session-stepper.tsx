@@ -192,7 +192,7 @@ function SessionInfoStep({
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="slug">Slug (URL) *</Label>
           <Input id="slug" value={form.slug} onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))} placeholder="present-moment-awareness" />
-          <p className="text-xs text-muted-foreground">URL: /session/<strong>{form.slug || '...'}</strong></p>
+          <p className="text-xs text-muted-foreground">URL: /sesi/<strong>{form.slug || '...'}</strong></p>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
