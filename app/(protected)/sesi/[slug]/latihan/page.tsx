@@ -96,7 +96,7 @@ function ResultScreen({
           <Link href={"/beranda" as Route}>
             <Button 
               variant="ghost" 
-              className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5 bg-foreground text-background hover:bg-foreground/80 rounded-lg h-8"
+              className="w-fit flex items-center gap-2 sm:[&_svg]:size-4 [&_svg]:size-3.5 bg-foreground/90 text-background hover:bg-foreground/80 rounded-lg h-8"
             >
               <HouseIcon weight="fill" />
               Beranda
@@ -295,10 +295,10 @@ export default function ExercisePage({ params }: Props) {
     return (
       <div className="w-full">
         <Dialog open={reminderOpen} onOpenChange={setReminderOpen}>
-          <DialogContent className="max-w-sm!">
+          <DialogContent className="md:max-w-sm! max-w-xs">
             <DialogHeader>
               <DialogTitle>Pengingat</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="py-2">
                 Kamu bisa akses sesi ini <span className="font-semibold text-foreground">{session.access?.remaining_access ?? 0} kali</span> lagi sampai minggu depan.
               </DialogDescription>
             </DialogHeader>

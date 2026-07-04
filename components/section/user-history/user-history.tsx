@@ -113,7 +113,7 @@ function DashboardSkeleton() {
 
       <div className="flex lg:gap-6 gap-3 items-start w-full lg:items-center animate-pulse">
         <div className="flex flex-col lg:gap-6 gap-4 w-full min-h-90 h-full overflow-hidden">
-          <div className="flex gap-3">
+          <div className="grid xs:grid-cols-2 grid-cols-1 gap-3 w-full">
             <div className="h-16 bg-foreground/8 rounded-xl flex-1" />
             <div className="h-16 bg-foreground/8 rounded-xl flex-1" />
           </div>

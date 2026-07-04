@@ -93,7 +93,7 @@ function StepperHeader({ current }: { current: number }) {
                 className={[
                   'w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors border-2',
                   done
-                    ? 'bg-foreground text-background border-foreground'
+                    ? 'bg-foreground/90 text-background border-foreground'
                     : active
                     ? 'bg-background text-foreground border-foreground'
                     : 'bg-muted text-muted-foreground border-border',
@@ -110,7 +110,7 @@ function StepperHeader({ current }: { current: number }) {
             </div>
             {i < WIZARD_STEPS.length - 1 && (
               <div
-                className={`flex-1 h-px mx-3 mt-[-20px] transition-colors ${done ? 'bg-foreground' : 'bg-border'}`}
+                className={`flex-1 h-px mx-3 mt-[-20px] transition-colors ${done ? 'bg-foreground/90' : 'bg-border'}`}
               />
             )}
           </div>
@@ -313,7 +313,7 @@ function StepBuilderCard({
     <div className="border border-border rounded-sm bg-white overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-muted/40 border-b border-border">
-        <div className="w-6 h-6 rounded-full bg-foreground text-background text-xs font-bold flex items-center justify-center shrink-0">
+        <div className="w-6 h-6 rounded-full bg-foreground/90 text-background text-xs font-bold flex items-center justify-center shrink-0">
           {step.step_number}
         </div>
         <span className={`inline-flex items-center px-2 py-0.5 rounded-sm border text-xs font-medium ${STEP_TYPE_COLORS[localForm.step_type]}`}>
