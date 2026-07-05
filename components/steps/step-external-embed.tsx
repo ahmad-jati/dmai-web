@@ -14,28 +14,28 @@ type Props = {
 
 export function StepExternalEmbed({ url, onNext, onPrev }: Props) {
   return (
-    <div className="w-full max-w-xl mx-auto h-full flex-1 gap-5 flex justify-between items-center flex-col">
+    <div className="w-full max-w-xl mx-auto h-full flex-1 gap-6 flex justify-between items-center flex-col">
 
-      <div className="flex flex-col items-center justify-center gap-6 w-full h-full bg-celeste rounded-xl group hover:bg-celeste/80 hover:cursor-pointer">
-        <div className="relative w-full h-full flex flex-col items-center justify-center rounded-xl">
+      <div className="flex flex-col items-center justify-start gap-6 w-full h-full rounded-xl group hover:cursor-pointer flex-1">
+        <div className="relative w-full max-h-100 h-full flex flex-col gap-6 items-center justify-center rounded-xl bg-gray-100">
           <Image
-            src={"/tropicaline/compress/Play.png"}
+            src={"/mentimeter_logo.png"}
             alt={'Aktivitas'}
-            fill
-            unoptimized
+            width={500}
+            height={500}
             priority
-            className="object-cover w-full h-full rounded-xl"
+            className="object-contain w-40 h-40 aspect-square"
           />
-          <div className="flex absolute inset-0 flex-col justify-center items-center gap-6 bg-foreground/30 rounded-xl">
+          <div className="flex flex-col justify-center items-center gap-3 rounded-xl">
             <Link
               href={url as Route}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-3 rounded-full bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-all">
+              className="flex items-center gap-2 px-6 py-2 rounded-full bg-foreground/90 text-background font-semibold text-sm hover:bg-foreground/90 transition-all">
               <ArrowSquareOutIcon weight="bold" className="w-4 h-4" />
               Buka Aktivitas
             </Link>
-            <p className="text-xs text-background text-center font-medium">Link akan terbuka di tab baru</p>
+            <p className="text-xs text-muted-foreground text-center font-medium">Link akan terbuka di tab baru</p>
 
           </div>
         </div>
@@ -46,7 +46,10 @@ export function StepExternalEmbed({ url, onNext, onPrev }: Props) {
           <Button
             type="button"
             onClick={onPrev}
-            className="bg-foreground/90 hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+            className=" 
+            2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
+            hover:bg-foreground/80 hover:text-background text-foreground
+            dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
             Sebelumnya
@@ -56,7 +59,11 @@ export function StepExternalEmbed({ url, onNext, onPrev }: Props) {
           type="button"
           onClick={onNext}
           variant={'ghost'}
-          className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+          className="
+          2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
+          bg-foreground/90 hover:bg-foreground/80 text-background
+          dark:bg-foreground dark:text-background 
+          disabled:dark:bg-muted/20 disabled:dark:text-white/50"
         >
           Selanjutnya
           <ArrowRightIcon weight="bold" className="w-4 h-4" />

@@ -33,6 +33,8 @@ import {
   TrashIcon,
   ArrowUpRightIcon,
   WarningCircleIcon,
+  LockSimpleIcon,
+  LockSimpleOpenIcon,
 } from '@phosphor-icons/react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -223,6 +225,39 @@ export function SessionDetailView({
   const coverRef = useRef<HTMLInputElement>(null!)
 
   const isDirty = metaChanged(session, form, coverFile)
+  
+  const [isLocked, setIsLocked] = useState(session.is_locked)
+  const [togglingLock, setTogglingLock] = useState(false)
+
+  const handleLockToggle = async () => {
+    setTogglingLock(true)
+    const supabase = createClient()
+    const newLocked = !isLocked
+
+    const { error } = await supabase
+      .from('sessions')
+      .update({ is_locked: newLocked })
+      .eq('id', session.id)
+
+    if (error) {
+      toast.error('Gagal mengubah status', { description: error.message })
+    } else {
+      setIsLocked(newLocked)
+      onSessionUpdated({ ...session, is_locked: newLocked, steps })
+      toast.success(
+        newLocked
+          ? `Sesi ${session.session_name.toUpperCase()} dikunci`
+          : `Sesi ${session.session_name.toUpperCase()} dibuka`,
+        {
+          description: newLocked
+            ? 'User tidak akan bisa mengakses sesi ini sampai dibuka kembali.'
+            : 'Sesi ini sekarang bisa diakses oleh user.',
+          icon: newLocked ? '🔒' : '🔓',
+        }
+      )
+    }
+    setTogglingLock(false)
+  }
 
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -393,7 +428,7 @@ export function SessionDetailView({
   )
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4">
       <Button
         variant="link"
         size="sm"
@@ -417,6 +452,28 @@ export function SessionDetailView({
             <ArrowUpRightIcon className="w-4 h-4 group-hover:inline hidden" />
           </Link>
 
+          <Button
+            onClick={handleLockToggle}
+            disabled={togglingLock}
+            variant="outline"
+            className={[
+              'w-fit rounded-sm gap-2 [&_svg]:size-4',
+              isLocked
+                ? 'text-muted-foreground bg-muted/40 border-border hover:bg-muted/80'
+                : 'bg-celeste border-border hover:bg-celeste/80',
+              togglingLock ? 'text-muted-foreground bg-muted/20 pointer-events-none' : '',
+            ].join(' ')}
+          >
+            {togglingLock ? (
+              <Spinner className="shrink-0 text-foreground" />
+            ) : isLocked ? (
+              <LockSimpleIcon weight="fill" className="w-4 h-4" />
+            ) : (
+              <LockSimpleOpenIcon weight="fill" className="w-4 h-4" />
+            )}
+            {isLocked ? 'Sesi Terkunci' : 'Sesi Terbuka'}
+          </Button>
+
           <div className="flex flex-col gap-2">
             <Label>Gambar Cover</Label>
             <div className="w-full aspect-square rounded-sm overflow-hidden border border-border bg-muted">
@@ -439,7 +496,7 @@ export function SessionDetailView({
               variant="outline"
               size="sm"
               onClick={() => coverRef.current?.click()}
-              className="w-fit rounded-sm gap-2 [&_svg]:size-4 bg-background hover:bg-lemon text-foreground"
+              className="w-fit rounded-sm gap-2 [&_svg]:size-4 bg-celeste border-border hover:bg-celeste/80 text-foreground"
             >
               <ImageIcon className="w-4 h-4" />
               {coverPreview ? 'Ganti Cover' : 'Upload Cover'}
@@ -517,7 +574,7 @@ export function SessionDetailView({
           <Button
             onClick={handleSaveMeta}
             disabled={saving || !isDirty}
-            className="rounded-sm gap-2 [&_svg]:size-4 bg-background hover:bg-lemon text-foreground w-full disabled:bg-muted-foreground/10"
+            className="rounded-sm gap-2 [&_svg]:size-4 bg-foreground/90 text-background hover:bg-foreground/70 w-full disabled:bg-muted-foreground/20"
           >
             {saving ? (
               <Spinner className="shrink-0 text-foreground" />
@@ -528,9 +585,9 @@ export function SessionDetailView({
           </Button>
 
           <Button
-            variant="outline"
+            variant={'destructive'}
             onClick={() => setDeleteSessionOpen(true)}
-            className="rounded-sm gap-2 [&_svg]:size-4 w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
+            className="rounded-sm gap-2 [&_svg]:size-4 w-full "
           >
             <TrashIcon className="w-4 h-4" />
             Hapus Sesi Ini
@@ -546,7 +603,7 @@ export function SessionDetailView({
             <Button
               size="sm"
               onClick={() => setAddStepOpen(true)}
-              className="rounded-sm gap-1.5 [&_svg]:size-3.5 bg-background hover:bg-lemon text-foreground"
+              className="rounded-sm gap-1.5 [&_svg]:size-3.5 bg-celeste hover:bg-celeste/80 text-foreground"
             >
               <PlusIcon className="w-3.5 h-3.5" />
               Tambah Step
@@ -557,11 +614,11 @@ export function SessionDetailView({
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40">
-                  <TableHead className="w-12 text-center">No</TableHead>
-                  <TableHead className='w-40 max-w-40'>Judul</TableHead>
-                  <TableHead className="w-36">Tipe</TableHead>
-                  <TableHead className="w-20 text-center">Durasi</TableHead>
-                  <TableHead className="text-center w-28">Aksi</TableHead>
+                  <TableHead className="w-5 text-center">No</TableHead>
+                  <TableHead className="w-10">Tipe</TableHead>
+                  <TableHead className='w-full'>Judul</TableHead>
+                  <TableHead className="w-10 text-center">Durasi</TableHead>
+                  <TableHead className="w-10">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -570,7 +627,6 @@ export function SessionDetailView({
                     <TableCell className="text-center font-semibold text-sm text-muted-foreground">
                       {step.step_number}
                     </TableCell>
-                    <TableCell className="font-medium text-sm w-40 max-w-40 wrap-break-word whitespace-normal">{step.title}</TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-sm border text-xs font-medium ${
@@ -580,23 +636,24 @@ export function SessionDetailView({
                         {STEP_TYPE_LABELS[step.step_type ?? 'narration']}
                       </span>
                     </TableCell>
+                    <TableCell className="font-medium text-sm w-40 max-w-40 wrap-break-word whitespace-normal">{step.title}</TableCell>
                     <TableCell className="text-center text-sm">{step.duration_seconds}s</TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
-                          className="rounded-sm gap-1 bg-background hover:bg-celeste text-foreground [&_svg]:size-3.5 px-2"
+                          className="rounded-sm text-sm gap-1 bg-celeste hover:bg-celeste/80 text-foreground [&_svg]:size-3.5 px-4"
                           onClick={() => {
                             setEditingStep(step)
                             setStepEditorOpen(true)
                           }}
                         >
-                          <PencilSimpleIcon className="w-3.5 h-3.5" />
+                          <PencilSimpleIcon />
                           Edit
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           className="rounded-sm gap-1 hover:bg-destructive/10 hover:border-destructive/40 hover:text-destructive [&_svg]:size-3.5 px-2"
                           onClick={() => {

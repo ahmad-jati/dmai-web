@@ -22,7 +22,7 @@ import {
   WarningCircleIcon,
 } from '@phosphor-icons/react'
 import Image from 'next/image'
-import { StepTypeForm, BodyPart, newKey, FormQuestion } from './step-type-form'
+import { StepTypeForm, newKey, FormQuestion } from './step-type-form'
 import { SessionMeta, StepType, STEP_TYPE_LABELS, STEP_TYPE_COLORS, NarrationSubStep } from './types'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -76,6 +76,31 @@ function formatDuration(totalSec: number) {
   if (mins === 0) return `${secs} detik`
   if (secs === 0) return `${mins} menit`
   return `${mins} menit ${secs} detik`
+}
+
+/**
+ * Safety net: recursively strip anything that should never reach the database —
+ * live File/Blob objects and leftover blob: preview URLs (which only make sense
+ * client-side). This is a defense-in-depth pass, run right before every insert,
+ * so that even if an upload step is skipped/misses somewhere upstream we never
+ * silently persist an unusable blob: URL into step_config.
+ */
+function stripRuntimeArtifacts(value: unknown): unknown {
+  if (value instanceof File || value instanceof Blob) return undefined
+  if (typeof value === 'string' && value.startsWith('blob:')) return undefined
+  if (Array.isArray(value)) {
+    return value.map(stripRuntimeArtifacts).filter((v) => v !== undefined)
+  }
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (['audio_file', 'image_file', 'audio_preview', 'image_preview'].includes(k)) continue
+      const stripped = stripRuntimeArtifacts(v)
+      if (stripped !== undefined) out[k] = stripped
+    }
+    return out
+  }
+  return value
 }
 
 // ─── Stepper Header ────────────────────────────────────────────────────────────
@@ -253,15 +278,11 @@ function StepBuilderCard({
   total,
   onChange,
   onRemove,
-  bodyParts,
-  bodyPartsLoading,
 }: {
   step: DraftStep
   total: number
   onChange: (updated: DraftStep) => void
   onRemove: () => void
-  bodyParts: BodyPart[]
-  bodyPartsLoading: boolean
 }) {
   const [localForm, setLocalForm] = useState({
     id: step._key,
@@ -335,8 +356,6 @@ function StepBuilderCard({
         <StepTypeForm
           form={localForm}
           setForm={handleChange}
-          bodyParts={bodyParts}
-          bodyPartsLoading={bodyPartsLoading}
         />
       </div>
     </div>
@@ -348,13 +367,9 @@ function StepBuilderCard({
 function StepsBuilderStep({
   steps,
   setSteps,
-  bodyParts,
-  bodyPartsLoading,
 }: {
   steps: DraftStep[]
   setSteps: React.Dispatch<React.SetStateAction<DraftStep[]>>
-  bodyParts: BodyPart[]
-  bodyPartsLoading: boolean
 }) {
   const totalSec = calcTotalDurationSec(steps)
 
@@ -376,8 +391,6 @@ function StepsBuilderStep({
             key={step._key}
             step={step}
             total={steps.length}
-            bodyParts={bodyParts}
-            bodyPartsLoading={bodyPartsLoading}
             onChange={(updated) =>
               setSteps((prev) => prev.map((s) => (s._key === step._key ? updated : s)))
             }
@@ -546,23 +559,6 @@ export function NewSessionStepper() {
     draftStepsRef.current = draftSteps
   }, [draftSteps])
 
-  // Body parts — fetched once on mount
-  const [bodyParts, setBodyParts] = useState<BodyPart[]>([])
-  const [bodyPartsLoading, setBodyPartsLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchBodyParts = async () => {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('body_parts')
-        .select('id, part_key, label_id, region, sort_order')
-        .order('sort_order', { ascending: true })
-      if (!error && data) setBodyParts(data as BodyPart[])
-      setBodyPartsLoading(false)
-    }
-    fetchBodyParts()
-  }, [])
-
   const totalSec = calcTotalDurationSec(draftSteps)
   const autoStats = {
     totalSteps: draftSteps.length,
@@ -635,7 +631,16 @@ export function NewSessionStepper() {
       for (const draft of currentDraftSteps) {
         const descriptionValue = draft.description.trim() || null
 
-        if (draft.step_type === 'narration' && Array.isArray(draft.step_config?.sub_steps)) {
+        // FIX: guard with `?? []` so a narration step with no sub-steps yet never
+        // silently falls through to the generic JSON.stringify branch below (which
+        // does NOT upload files — it only strips them, leaking blob: preview urls
+        // for anything that DOES have sub_steps but somehow isn't detected as an array).
+        const rawSubSteps: NarrationSubStep[] =
+          draft.step_type === 'narration' && Array.isArray(draft.step_config?.sub_steps)
+            ? (draft.step_config.sub_steps as NarrationSubStep[])
+            : []
+
+        if (draft.step_type === 'narration') {
           const { data: insertedStep, error: stepErr } = await supabase
             .from('session_steps')
             .insert({
@@ -653,7 +658,6 @@ export function NewSessionStepper() {
           if (stepErr || !insertedStep) { console.error('Step insert error:', stepErr); continue }
 
           const stepId = insertedStep.id as string
-          const rawSubSteps = draft.step_config.sub_steps as NarrationSubStep[]
 
           const uploadedSubSteps = await Promise.all(
             rawSubSteps.map(async (sub, i) => {
@@ -667,6 +671,8 @@ export function NewSessionStepper() {
                 if (!error) {
                   const { data } = supabase.storage.from('session-assets').getPublicUrl(path)
                   audioUrl = data.publicUrl
+                } else {
+                  console.error('[upload sub audio]', error)
                 }
               }
 
@@ -677,18 +683,15 @@ export function NewSessionStepper() {
                 if (!error) {
                   const { data } = supabase.storage.from('session-assets').getPublicUrl(path)
                   imageUrl = data.publicUrl
+                } else {
+                  console.error('[upload sub image]', error)
                 }
               }
 
-              const { audio_file: _af, image_file: _if, audio_preview: _ap, image_preview: _ip, ...rest } = sub
-              const cleanSub: Record<string, unknown> = { ...rest, audio_url: audioUrl, image_url: imageUrl }
-              for (const k of Object.keys(cleanSub)) {
-                const v = cleanSub[k]
-                if (v instanceof File || (typeof v === 'string' && v.startsWith('blob:'))) {
-                  delete cleanSub[k]
-                }
-              }
-              return cleanSub
+              // Safety net: strip File/Blob refs and any leftover blob: preview urls
+              // before this ever touches the database.
+              const clean = stripRuntimeArtifacts({ ...sub, audio_url: audioUrl, image_url: imageUrl }) as Record<string, unknown>
+              return clean
             })
           )
 
@@ -700,12 +703,9 @@ export function NewSessionStepper() {
           continue
         }
 
-        // Non-narration steps
-        const cleanConfig: Record<string, unknown> = JSON.parse(
-          JSON.stringify(draft.step_config ?? {}, (_, v) =>
-            v instanceof File || v instanceof Blob ? undefined : v
-          )
-        )
+        // Non-narration steps — still run through the same runtime-artifact
+        // safety net (covers stray blob:/File values in any step_config shape).
+        const cleanConfig = stripRuntimeArtifacts(draft.step_config ?? {}) as Record<string, unknown>
 
         const { error: stepErr } = await supabase
           .from('session_steps')
@@ -751,8 +751,6 @@ export function NewSessionStepper() {
           <StepsBuilderStep
             steps={draftSteps}
             setSteps={setDraftSteps}
-            bodyParts={bodyParts}
-            bodyPartsLoading={bodyPartsLoading}
           />
         )}
         {currentStep === 2 && (

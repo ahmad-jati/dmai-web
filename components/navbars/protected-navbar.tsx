@@ -24,7 +24,6 @@ function getGreeting() {
   return "Good night";
 }
 
-// Hitung lebar scrollbar sekali, reuse terus
 function getScrollbarWidth() {
   if (typeof window === "undefined") return 0;
   return window.innerWidth - document.documentElement.clientWidth;
@@ -61,14 +60,9 @@ export function ProtectedNavbar() {
     return () => clearInterval(interval);
   }, []);
 
-  // Saat dropdown open/close, kompensasi scrollbar width di navbar
-  // supaya tidak ikut geser waktu Radix lock body scroll
   useEffect(() => {
-    const scrollbarWidth = getScrollbarWidth();
-
-    if (dropdownOpen && scrollbarWidth > 0) {
-      // Radix akan tambah padding-right ke body sebesar scrollbarWidth,
-      // navbar fixed tidak kena efek itu jadi kita kompensasi manual
+    if (dropdownOpen) {
+      const scrollbarWidth = getScrollbarWidth();
       document.documentElement.style.setProperty(
         "--navbar-scrollbar-offset",
         `${scrollbarWidth}px`
@@ -79,13 +73,6 @@ export function ProtectedNavbar() {
         "0px"
       );
     }
-
-    return () => {
-      document.documentElement.style.setProperty(
-        "--navbar-scrollbar-offset",
-        "0px"
-      );
-    };
   }, [dropdownOpen]);
 
   const logout = async () => {

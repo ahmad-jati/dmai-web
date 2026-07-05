@@ -40,7 +40,6 @@ export function LoginForm({
         } else {
           setError(error.message);
         }
-        // Only stop loading on error
         setIsLoading(false);
         return;
       }
@@ -131,7 +130,7 @@ export function LoginForm({
             <div className="w-full flex justify-center">
               <Button
                 type="submit"
-                className={`max-w-80 w-full bg-celeste flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5 dark:bg-primary!`}
+                className={`max-w-80 w-full bg-celeste hover:bg-celeste/90 flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5 dark:bg-primary! disabled:bg-celeste`}
                 disabled={isLoading}
               >
               {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin dark:text-foreground" />}
@@ -150,7 +149,7 @@ export function LoginForm({
             Belum punya akun?{" "}
             <Link
               href={'/sign-up'}
-              className="hover:underline underline-offset-3 font-bold text-green dark:text-primary"
+              className="hover:underline underline-offset-3 font-bold text-foreground dark:text-primary"
             >
               Daftar disini
             </Link>

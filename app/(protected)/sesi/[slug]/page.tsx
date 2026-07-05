@@ -25,7 +25,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         <SessionDetail slug={slug} />
       </Suspense>
 
-      <Section className="bg-pink">
+      <Section className="bg-pink dark:bg-card">
         <OtherSessionList excludeSlug={slug} />
       </Section>
     </div>
@@ -46,7 +46,7 @@ async function SessionDetail({ slug }: { slug: string }) {
 
   return (
     <div className="relative h-full w-full">
-      <Section className={cn("bg-celeste h-full w-full flex gap-10 items-center", isLocked && "pointer-events-none select-none")}>
+      <Section className={cn("bg-celeste h-full w-full flex gap-10 items-center dark:bg-card", isLocked && "pointer-events-none select-none")}>
         <div className="flex flex-col lg:items-start items-center lg:justify-between gap-4 lg:w-120 w-full h-full">
 
           {/* Mobile title + meta */}
@@ -105,11 +105,11 @@ async function SessionDetail({ slug }: { slug: string }) {
             <div className="flex-col gap-1 items-start justify-start text-muted-foreground lg:flex hidden">
               <div className="flex items-center gap-1">
                 <LightbulbIcon className="w-4 h-4" weight="fill" />
-                <p className="font-medium xs:text-p/5 text-xs/3.5">{session.total_instruction} Instruksi</p>
+                <p className="font-medium xs:text-sm/5 text-xs/3.5">{session.total_instruction} Instruksi</p>
               </div>
               <div className="flex items-center gap-1">
                 <TimerIcon className="w-4 h-4" weight="fill" />
-                <p className="font-medium xs:text-p/5 text-xs/3.5">{session.duration}</p>
+                <p className="font-medium xs:text-sm/5 text-xs/3.5">{session.duration}</p>
               </div>
               <CompletionCount count={completionCount} />
           </div>
@@ -128,10 +128,10 @@ async function SessionDetail({ slug }: { slug: string }) {
               <Link href={`/sesi/${slug}/latihan` as Route} className="flex items-center gap-2">
                 <Button
                   variant={"default"}
-                  className="flex gap-2 items-center [&_svg]:size-3 dark:bg-primary lg:text-base bg-white text-foreground"
+                  className="flex gap-2 items-center [&_svg]:size-3 dark:bg-primary lg:text-sm bg-white hover:bg-white/90 text-foreground rounded-lg"
                 >
                   Mulai Sesi
-                  <PlayIcon className="w-5 h-5" weight="fill" />
+                  {/* <PlayIcon className="w-5 h-5" weight="fill" /> */}
                 </Button>
               </Link>
             )}
@@ -147,7 +147,7 @@ async function SessionDetail({ slug }: { slug: string }) {
           </div>
         </div>
         <div className="flex-1 lg:block hidden">
-          <div className="rounded-4xl p-3 border border-muted-foreground bg-amber-50">
+          <div className="rounded-4xl p-3 border border-muted-foreground bg-amber-50 dark:bg-transparent dark:p-0 dark:border-0">
             <div className="h-70 overflow-hidden rounded-3xl bg-muted-foreground/10">
               <Image
                 src={session.image_cover}

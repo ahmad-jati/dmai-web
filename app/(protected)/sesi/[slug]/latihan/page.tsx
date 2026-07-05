@@ -45,7 +45,7 @@ function ResultScreen({
   const duration = fmtDuration(startedAt, completedAt)
 
   return (
-    <div className="w-full md:rounded-5xl rounded-xl border border-foreground md:p-8 xs:p-6 p-4 bg-celeste">
+    <div className="w-full md:rounded-5xl rounded-xl border border-foreground md:p-8 xs:p-6 p-4 bg-celeste dark:bg-background">
       <div className="flex flex-col items-center justify-center gap-7  w-full">
         <div className="flex flex-col items-center gap-1 text-center max-w-lg">
           <p className="text-xs font-semibold uppercase text-muted-foreground">Kamu telah menyelesaikan sesi</p>
@@ -144,9 +144,9 @@ export default function ExercisePage({ params }: Props) {
 
   useEffect(() => {
     if (!sessionId) return
-    for (const key of Object.keys(sessionStorage)) {
+    for (const key of Object.keys(localStorage)) {
       if (key.startsWith('dmai_form_draft_') && key !== `dmai_form_draft_${sessionId}`) {
-        sessionStorage.removeItem(key)
+        localStorage.removeItem(key)
       }
     }
   }, [sessionId])
@@ -276,7 +276,7 @@ export default function ExercisePage({ params }: Props) {
         })())
       }
       await Promise.all(promises)
-      try { sessionStorage.removeItem(`dmai_form_draft_${session.id}`) } catch {}
+      try { localStorage.removeItem(`dmai_form_draft_${session.id}`) } catch {}
     }
 
     const refreshed = await fetchSessionBySlug(slug, user.id)
