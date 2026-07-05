@@ -62,7 +62,7 @@ const ThemeSwitcher = () => {
                 key="light"
                 size={ICON_SIZE}
                 // className={" size-50"}
-                weight="fill"
+                // weight="fill"
                 />
               <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Light</p>
             </div>
@@ -73,7 +73,7 @@ const ThemeSwitcher = () => {
                 key="dark"
                 size={ICON_SIZE}
                 className={""}
-                weight="fill"
+                // weight="fill"
               />
               <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Dark</p>
             </div>
@@ -84,7 +84,7 @@ const ThemeSwitcher = () => {
                 key="system"
                 size={ICON_SIZE}
                 className={""}
-                weight="fill"
+                // weight="fill"
                 />
               <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">System</p>
             </div>
@@ -97,15 +97,15 @@ const ThemeSwitcher = () => {
           onValueChange={(e) => setTheme(e)}
         >
           <DropdownMenuRadioItem className="flex gap-2" value="light">
-            <SunIcon size={ICON_SIZE} className="" weight="fill"/>{" "}
+            <SunIcon size={ICON_SIZE} className="" />{" "}
             <span>Light</span>
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem className="flex gap-2" value="dark">
-            <MoonIcon size={ICON_SIZE} className="" weight="fill"/>{" "}
+            <MoonIcon size={ICON_SIZE} className="" />{" "}
             <span>Dark</span>
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem className="flex gap-2" value="system">
-            <LaptopIcon size={ICON_SIZE} className="" weight="fill"/>{" "}
+            <LaptopIcon size={ICON_SIZE} className="" />{" "}
             <span>System</span>
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>

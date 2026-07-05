@@ -81,8 +81,8 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
                     className={cn(
                       'px-2 py-2 rounded-lg text-xs font-medium border transition-all text-center hover:cursor-pointer',
                       selected.includes(part.key)
-                        ? 'border-foreground/40 bg-celeste shadow-sm font-semibold'
-                        : 'hover:bg-celeste bg-celeste/20'
+                        ? 'border-foreground/40 bg-celeste dark:bg-card shadow-sm font-semibold'
+                        : 'hover:bg-celeste bg-celeste/20 hover:dark:bg-card dark:bg-card/20'
                     )}
                   >
                     {part.label}
@@ -102,10 +102,10 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
                 type="button"
                 onClick={() => handleSensation(s)}
                 className={cn(
-                  'px-3 py-1.5 2md:rounded-full rounded-lg 2xs:text-sm text-xs font-medium border transition-all hover:cursor-pointer',
+                  'px-3 py-1.5 rounded-lg 2xs:text-sm text-xs font-medium border transition-all hover:cursor-pointer',
                   sensation === s
-                    ? 'border-foreground/40 bg-celeste shadow-sm'
-                    : 'hover:bg-celeste bg-celeste/20'
+                    ? 'border-foreground/40 bg-celeste dark:bg-card shadow-sm font-semibold'
+                    : 'hover:bg-celeste bg-celeste/20 hover:dark:bg-card dark:bg-card/20'
                 )}
               >
                 {s}
@@ -123,7 +123,7 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
             onChange={(e) => handleNote(e.target.value)}
             rows={2}
             placeholder="Deskripsikan lebih lanjut jika perlu..."
-            className="w-full rounded-xl border border-border bg-white dark:bg-popover text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-colors"
+            className="w-full rounded-xl border border-border bg-white dark:text-background text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-colors"
           />
         </div>
       </div>
@@ -133,7 +133,10 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
         <Button
           type="button"
           onClick={onPrev}
-          className="hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground  rounded-sm text-sm 2md:h-9 h-8!"
+          className=" 
+            2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
+            hover:bg-foreground/80 hover:text-background text-foreground
+            dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background"
         >
           <ArrowLeftIcon weight="bold" className="w-4 h-4" />
           Sebelumnya
@@ -144,7 +147,11 @@ export function StepBodyMap({ onNext, onPrev, initialValues, onDraftChange }: Pr
         onClick={() => onNext({ selected_parts: selected, sensation, note })}
         disabled={selected.length === 0}
         variant={'ghost'}
-        className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground  rounded-sm text-sm 2md:h-9 h-8! disabled:opacity-40 disabled:cursor-not-allowed"
+        className="
+          2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
+          bg-foreground/90 hover:bg-foreground/80 text-background
+          dark:bg-foreground dark:text-background 
+          disabled:dark:bg-muted/20 disabled:dark:text-white/50"
       >
         Selanjutnya
         <ArrowRightIcon weight="bold" className="w-4 h-4" />

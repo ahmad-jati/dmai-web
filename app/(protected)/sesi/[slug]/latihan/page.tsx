@@ -45,7 +45,7 @@ function ResultScreen({
   const duration = fmtDuration(startedAt, completedAt)
 
   return (
-    <div className="w-full md:rounded-5xl rounded-xl border border-foreground md:p-8 xs:p-6 p-4 bg-celeste">
+    <div className="w-full md:rounded-5xl rounded-xl border border-foreground md:p-8 xs:p-6 p-4 bg-celeste dark:bg-background">
       <div className="flex flex-col items-center justify-center gap-7  w-full">
         <div className="flex flex-col items-center gap-1 text-center max-w-lg">
           <p className="text-xs font-semibold uppercase text-muted-foreground">Kamu telah menyelesaikan sesi</p>

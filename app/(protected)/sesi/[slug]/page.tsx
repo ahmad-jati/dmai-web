@@ -25,7 +25,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         <SessionDetail slug={slug} />
       </Suspense>
 
-      <Section className="bg-pink">
+      <Section className="bg-pink dark:bg-card">
         <OtherSessionList excludeSlug={slug} />
       </Section>
     </div>
@@ -46,7 +46,7 @@ async function SessionDetail({ slug }: { slug: string }) {
 
   return (
     <div className="relative h-full w-full">
-      <Section className={cn("bg-celeste h-full w-full flex gap-10 items-center", isLocked && "pointer-events-none select-none")}>
+      <Section className={cn("bg-celeste h-full w-full flex gap-10 items-center dark:bg-card", isLocked && "pointer-events-none select-none")}>
         <div className="flex flex-col lg:items-start items-center lg:justify-between gap-4 lg:w-120 w-full h-full">
 
           {/* Mobile title + meta */}
@@ -147,7 +147,7 @@ async function SessionDetail({ slug }: { slug: string }) {
           </div>
         </div>
         <div className="flex-1 lg:block hidden">
-          <div className="rounded-4xl p-3 border border-muted-foreground bg-amber-50">
+          <div className="rounded-4xl p-3 border border-muted-foreground bg-amber-50 dark:bg-transparent dark:p-0 dark:border-0">
             <div className="h-70 overflow-hidden rounded-3xl bg-muted-foreground/10">
               <Image
                 src={session.image_cover}

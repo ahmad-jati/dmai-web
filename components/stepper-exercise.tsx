@@ -567,7 +567,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           </div>
 
           {/* White card shell */}
-          <div className="flex flex-col w-full rounded-2xl bg-white dark:bg-popover border border-border shadow-sm flex-1 p-4 gap-3">
+          <div className="flex flex-col w-full rounded-2xl bg-white dark:bg-white/14 border border-border shadow-sm flex-1 p-4 gap-3">
 
             {/* Step type + sub-step indicator */}
             <div className="flex items-center justify-between gap-2 shrink-0">
@@ -766,7 +766,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           </div>
 
           {/* White card shell */}
-          <div className="flex flex-col w-full rounded-4xl bg-white dark:bg-popover border border-border shadow-sm flex-1 overflow-hidden p-6 gap-6">
+          <div className="flex flex-col w-full rounded-4xl bg-white dark:bg-white/14 border border-border shadow-sm flex-1 overflow-hidden p-6 gap-6">
 
             {/* Top — image + info column */}
             <div className="flex gap-6 flex-1 min-h-0">
@@ -1055,7 +1055,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           </div>
         </div>
 
-        <div className='flex w-full md:rounded-4xl rounded-2xl bg-white dark:bg-popover border border-border shadow-sm flex-1'>
+        <div className='flex w-full md:rounded-4xl rounded-2xl bg-white dark:bg-white/14 border border-border shadow-sm flex-1'>
          <div className='flex flex-col items-center w-full p-6 gap-6'>
             {/* Step title */}
             {step.title && (
@@ -1101,7 +1101,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             </span>
           </div>
         </div>
-        <div className="flex w-full rounded-4xl bg-white dark:bg-popover border border-border shadow-sm flex-1">
+        <div className="flex w-full rounded-4xl bg-white dark:bg-white/14 border border-border shadow-sm flex-1">
           <div className="flex flex-col items-start py-6 w-full gap-6 flex-1">
             {/* Step title */}
             {step.title && (

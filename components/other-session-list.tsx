@@ -63,7 +63,7 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
           scroll={true}
           className={`
             group flex flex-col items-start gap-3
-            2md:rounded-[20px] rounded-lg w-full overflow-hidden transition-shadow p-3
+            2md:rounded-[20px] rounded-2xl w-full overflow-hidden transition-shadow p-3
             lg:bg-transparent bg-background
             ${session.is_locked 
               ? "cursor-not-allowed opacity-70" 
@@ -78,7 +78,7 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
               </p>
           </div>
           <div className="flex flex-col gap-3 w-full">
-            <div className="relative w-full lg:h-60 3md:h-40 sm:h-60 xs:h-44 h-34 rounded-sm overflow-hidden">
+            <div className="relative w-full lg:h-60 3md:h-40 sm:h-60 xs:h-44 h-34 rounded-xl overflow-hidden">
               <Image
                 src={session.image_cover}
                 alt={`session ${session.session_name}`}
@@ -86,11 +86,11 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
                 unoptimized
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
-                className={`w-full h-full object-cover bg-muted-foreground/10 transition-transform duration-300 ${!session.is_locked && " rounded-sm"}`}
+                className={`w-full h-full object-cover bg-muted-foreground/10 transition-transform duration-300 ${!session.is_locked && " rounded-xl"}`}
               />
 
               {session.is_locked && (
-                <div className="absolute inset-0 flex flex-col items-center gap-3 justify-center dark:bg-black/40 bg-background/20 backdrop-blur-sm z-10 animate-fade-in rounded-sm">
+                <div className="absolute inset-0 flex flex-col items-center gap-3 justify-center dark:bg-black/40 bg-background/20 backdrop-blur-sm z-10 animate-fade-in rounded-xl">
                   <div className="w-16 h-16 rounded-full bg-foreground/20 flex items-center justify-center">
                     <LockSimpleIcon className="w-8 h-8 text-foreground" weight="fill" />
                   </div>
@@ -100,8 +100,9 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
                 </div>
               )}
 
-              <div className="absolute bottom-4 right-4 rounded-sm p-2 flex flex-col xs:gap-1 gap-0 transition items-end 
-              md:bg-muted-foreground/40 bg-background md:text-background text-muted-foreground group-hover:bg-background/86  group-hover:text-muted-foreground group-hover:dark:text-foreground              
+              <div className="absolute bottom-4 right-4 rounded-lg p-2 flex flex-col xs:gap-1 gap-0 transition items-end 
+              md:bg-muted-foreground/40 bg-background md:text-background text-muted-foreground dark:text-foreground dark:bg-secondary/90
+              group-hover:bg-background/86  group-hover:text-muted-foreground group-hover:dark:bg-secondary/90              
               ">
                 <span className="flex items-center gap-1">
                   <p className="md:text-sm/5 xs:text-xs/4 text-2xs font-medium">
