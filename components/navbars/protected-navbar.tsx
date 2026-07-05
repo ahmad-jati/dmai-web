@@ -60,6 +60,21 @@ export function ProtectedNavbar() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (dropdownOpen) {
+      const scrollbarWidth = getScrollbarWidth();
+      document.documentElement.style.setProperty(
+        "--navbar-scrollbar-offset",
+        `${scrollbarWidth}px`
+      );
+    } else {
+      document.documentElement.style.setProperty(
+        "--navbar-scrollbar-offset",
+        "0px"
+      );
+    }
+  }, [dropdownOpen]);
+
   const logout = async () => {
     sessionStorage.removeItem("user_full_name");
     const supabase = createClient();
