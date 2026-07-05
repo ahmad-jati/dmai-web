@@ -55,7 +55,7 @@ async function OtherSessionListServer({ excludeSlug }: { excludeSlug?: string })
   const sorted = [...filtered].sort((a, b) => a.week_number - b.week_number)
 
   return (
-    <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 2xs:gap-3.5 gap-2 w-full">
+    <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 2xs:gap-3.5 gap-2 w-full h-fit">
       {sorted.map((session) => (
         <Link
           key={session.slug}
