@@ -20,7 +20,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const { slug } = await params
 
   return (
-    <div className="flex flex-col gap-8 w-full lg:h-full h-fit">
+    <div className="flex flex-col gap-8 w-full h-fit">
       <Suspense fallback={<SessionDetailSkeleton />}>
         <SessionDetail slug={slug} />
       </Suspense>
@@ -45,7 +45,7 @@ async function SessionDetail({ slug }: { slug: string }) {
   console.log(session)
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative w-full">
       <Section className={cn("bg-celeste h-full w-full flex gap-10 items-center dark:bg-card", isLocked && "pointer-events-none select-none")}>
         <div className="flex flex-col lg:items-start items-center lg:justify-between gap-4 lg:w-120 w-full h-full">
 

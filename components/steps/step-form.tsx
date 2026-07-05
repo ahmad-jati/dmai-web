@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
@@ -24,6 +24,8 @@ type Props = {
   showPrev?: boolean
   initialValues?: Record<string, unknown>
   isLastForm?: boolean
+  /** Fired whenever an answer changes, so the parent can persist an in-progress draft (not just on submit). */
+  onDraftChange?: (responses: Record<string, unknown>) => void
 }
 const EMOJIS = [
   { emoji: '😞', label: 'Sangat buruk' },
@@ -37,16 +39,16 @@ function EmojiScale({ field, value, onChange }: {
   field: FormField; value: number | undefined; onChange: (v: number) => void
 }) {
   return (
-    <div className="flex flex-col 2md:gap-1.5 gap-0.5 w-full">
-      <label className="2md:text-base text-sm font-medium text-foreground flex gap-2">{field.label} <span className='text-destructive text-xl'>*</span></label>
+    <div className="flex flex-col gap-3 w-full">
+      <label className="2md:text-base text-sm font-medium text-foreground text-pretty leading-snug flex gap-3">{field.label}</label>
       <div className="grid 2xs:grid-cols-5 grid-cols-3 gap-2">
         {EMOJIS.map((e, i) => (
           <button key={i} type="button" onClick={() => onChange(i + 1)}
             className={cn(
               'flex flex-col items-center gap-1.5 flex-1 sm:py-3 py-2 border rounded-xl transition-all hover:cursor-pointer group',
               value === i + 1
-                ? 'border-foreground/40 bg-celeste shadow-sm'
-                : 'hover:bg-celeste bg-celeste/20'
+                ? 'border-foreground/40 bg-celeste dark:bg-card shadow-sm'
+                : 'hover:bg-celeste bg-celeste/20 dark:bg-card/20 hover:dark:bg-card'
             )}>
             <span className={cn('text-xl transition-transform duration-150', value === i + 1 ? 'scale-115' : 'group-hover:scale-115')}>
               {e.emoji}
@@ -67,10 +69,10 @@ function SliderField({ field, value, onChange }: {
   const current = value ?? 0
 
   return (
-    <div className="flex flex-col 2md:gap-1.5 gap-0.5 w-full">
-      <div className="flex justify-between items-center mb-1">
-        <label className="2md:text-base text-sm font-medium text-foreground flex gap-2">{field.label} <span className='text-destructive text-xl'>*</span></label>
-        <span className="2md:text-sm text-xs font-bold text-muted-foreground border border-muted-foreground bg-muted/20 2md:px-2 px-2 py-1 2md:rounded-lg rounded-sm w-fit text-center"> 
+    <div className="flex flex-col 2md:gap-6 gap-3 w-full">
+      <div className="flex justify-between gap-3 items-center mb-1">
+        <label className="2md:text-base text-sm font-medium text-foreground  text-pretty leading-snug flex gap-3">{field.label}</label>
+        <span className="2md:text-sm text-xs font-bold text-muted-foreground dark:border-0 border border-muted-foreground bg-muted/20 dark:bg-card/40 2md:px-2 px-2 py-1 2md:rounded-lg rounded-sm w-fit text-center"> 
           {current}
         </span>
       </div>
@@ -79,7 +81,7 @@ function SliderField({ field, value, onChange }: {
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full h-2 rounded-full cursor-pointer bg-white dark:text-background!"
       />
-      <div className="flex justify-between text-xs text-muted-foreground">
+      <div className="flex justify-between text-xs text-muted-foreground font-medium">
         <span>{min}</span>
         <span>{max}</span>
       </div>
@@ -91,8 +93,8 @@ function TextInputField({ field, value, onChange }: {
   field: FormField; value: string | undefined; onChange: (v: string) => void
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="2md:text-base text-sm font-medium text-foreground flex gap-2 p-0!">{field.label} <span className='text-destructive text-xl'>*</span></label>
+    <div className="flex flex-col gap-3">
+      <label className="2md:text-base text-sm font-medium text-foreground text-pretty leading-snug flex gap-2">{field.label}</label>
       <textarea
         value={value ?? ''} 
         onChange={(e) => onChange(e.target.value)}
@@ -104,37 +106,20 @@ function TextInputField({ field, value, onChange }: {
   )
 }
 
-function CheckboxGroupField({ field, value, onChange }: {
-  field: FormField; value: string[] | undefined; onChange: (v: string[]) => void
-}) {
-  const selected = value ?? []
-  const toggle = (opt: string) =>
-    selected.includes(opt) ? onChange(selected.filter((s) => s !== opt)) : onChange([...selected, opt])
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="2md:text-base text-sm font-medium text-foreground flex gap-2">{field.label} <span className='text-destructive text-xl'>*</span></label>
-      <div className="flex flex-wrap gap-2">
-        {(field.options ?? []).map((opt) => (
-          <button key={opt} type="button" onClick={() => toggle(opt)}
-            className={cn(
-              'px-4 py-2 rounded-full text-sm font-medium border transition-all',
-              selected.includes(opt)
-                ? 'bg-foreground text-background border-foreground'
-                : 'bg-background border-border text-foreground hover:border-foreground/50 hover:bg-muted/50'
-            )}>
-            {opt}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLastForm }: Props) {
+export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLastForm, onDraftChange }: Props) {
   const [responses, setResponses] = useState<Record<string, unknown>>(initialValues ?? {})
   const getKey = (field: FormField) => field._key ?? field.id ?? field.label
   const setField = (field: FormField, value: unknown) =>
     setResponses((prev) => ({ ...prev, [getKey(field)]: value }))
+
+  const isMountedRef = useRef(false)
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true
+      return
+    }
+    onDraftChange?.(responses)
+  }, [responses]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const allAnswered = fields.every((f) => {
     if (f.type === 'text_input' || f.type === 'textarea') {
@@ -150,7 +135,7 @@ export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLa
 
   return (
     <div className='w-full 2md:max-w-xl max-w-lg mx-auto h-full flex-1 flex justify-between flex-col gap-6'>
-      <div className="flex flex-col 2md:gap-6 gap-3 flex-1 h-full">
+      <div className="flex flex-col 2md:gap-8 gap-6 flex-1 h-full">
         {fields.map((field) => {
           const key = getKey(field)
 
