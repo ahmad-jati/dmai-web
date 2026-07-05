@@ -12,13 +12,34 @@ import { LaptopIcon, MoonIcon, SunIcon } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
+function getScrollbarWidth() {
+  if (typeof window === "undefined") return 0;
+  return window.innerWidth - document.documentElement.clientWidth;
+}
+
 const ThemeSwitcher = () => {
   const [mounted, setMounted] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (dropdownOpen) {
+      const scrollbarWidth = getScrollbarWidth();
+      document.documentElement.style.setProperty(
+        "--navbar-scrollbar-offset",
+        `${scrollbarWidth}px`
+      );
+    } else {
+      document.documentElement.style.setProperty(
+        "--navbar-scrollbar-offset",
+        "0px"
+      );
+    }
+  }, [dropdownOpen]);
 
   if (!mounted) {
     return null;
@@ -27,7 +48,7 @@ const ThemeSwitcher = () => {
   const ICON_SIZE = 12;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size={"sm"} className="
           text-foreground hover:bg-background hover:border hover:border-foreground 
