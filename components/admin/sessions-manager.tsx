@@ -86,10 +86,6 @@ export function SessionsManager() {
     setActiveSession(updated)
   }, [])
 
-  const handleLockToggled = useCallback((id: string, is_locked: boolean) => {
-    setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, is_locked } : s)))
-  }, [])
-
   const handleSessionDeleted = useCallback((id: string) => {
     setSessions((prev) => prev.filter((s) => s.id !== id))
     setActiveSession(null)
@@ -132,7 +128,6 @@ export function SessionsManager() {
             key={s.id}
             session={s}
             onClick={() => setActiveSession(s)}
-            onLockToggled={handleLockToggled}
           />
         ))}
       </div>

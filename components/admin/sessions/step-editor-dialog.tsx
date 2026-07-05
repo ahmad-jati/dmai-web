@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -13,7 +12,7 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { FloppyDiskIcon } from '@phosphor-icons/react'
 import { StepTypeForm } from './step-type-form'
-import { SessionStep, STEP_TYPE_LABELS, STEP_TYPE_COLORS, BodyPart, NarrationSubStep } from './types'
+import { SessionStep, STEP_TYPE_LABELS, STEP_TYPE_COLORS, NarrationSubStep } from './types'
 
 function parseConfig(raw: unknown): Record<string, unknown> {
   if (!raw) return {}
@@ -38,8 +37,6 @@ type StepEditorDialogProps = {
 export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDialogProps) {
   const [form, setForm] = useState<SessionStep | null>(null)
   const [saving, setSaving] = useState(false)
-  const [bodyParts, setBodyParts] = useState<BodyPart[]>([])
-  const [bodyPartsLoading, setBodyPartsLoading] = useState(false)
 
   // Reset + normalize whenever the target step changes
   useEffect(() => {
@@ -63,23 +60,6 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
 
     setForm({ ...step, step_config: normalizedConfig })
   }, [step])
-
-  // Fetch body_parts once on first open
-  useEffect(() => {
-    if (!open || bodyParts.length > 0) return
-    const load = async () => {
-      setBodyPartsLoading(true)
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('body_parts')
-        .select('id, part_key, label_id, region, sort_order')
-        .order('sort_order', { ascending: true })
-        .returns<BodyPart[]>()
-      if (!error && data) setBodyParts(data)
-      setBodyPartsLoading(false)
-    }
-    load()
-  }, [open])
 
   const handleFormChange = useCallback((patch: Partial<SessionStep>) => {
     setForm((prev) => (prev ? { ...prev, ...patch } : prev))
@@ -117,7 +97,7 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
             </span>
             {subStepCount !== null && (
               <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-sm border border-border">
-                {subStepCount} sub-step{subStepCount !== 1 ? 's' : ''}
+                {subStepCount} sub-step{subStepCount !== 1 ? '' : ''}
               </span>
             )}
           </div>
@@ -126,29 +106,27 @@ export function StepEditorDialog({ step, open, onSave, onClose }: StepEditorDial
         <StepTypeForm
           form={form}
           setForm={handleFormChange}
-          bodyParts={bodyParts}
-          bodyPartsLoading={bodyPartsLoading}
         />
 
         <DialogFooter className="gap-2 pt-2">
           <Button
             variant="outline"
             onClick={onClose}
-            className="rounded-sm text-sm hover:bg-destructive/50"
+            className="rounded-sm text-sm hover:bg-muted/30"
           >
             Batal
           </Button>
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-sm gap-2 text-sm [&_svg]:size-4 bg-background hover:bg-lemon text-foreground"
+            className="rounded-sm gap-2 text-sm [&_svg]:size-4 bg-foreground/90 hover:bg-foreground/80 text-background"
           >
             {saving ? (
               <Spinner className="shrink-0 text-foreground" />
             ) : (
               <FloppyDiskIcon className="w-4 h-4" />
             )}
-            {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+            {saving ? 'Menyimpan...' : 'Simpan Perubahan'}  
           </Button>
         </DialogFooter>
       </DialogContent>

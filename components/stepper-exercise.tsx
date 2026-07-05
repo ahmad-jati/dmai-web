@@ -947,7 +947,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               ) : (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground  rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Berikutnya
                   <ArrowRightIcon weight="bold" />
