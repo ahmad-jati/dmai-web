@@ -110,7 +110,7 @@ export function AdminSidebar() {
           />
         </SidebarGroup>
 
-        <SidebarGroup label="Respons">
+        <SidebarGroup label="Respons Sesi">
           <SidebarLink
             href="/admin/session-responses"
             icon={<ClipboardTextIcon className="w-4 h-4" />}

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
  
 export default function Page() {
   return (
-    <div className="flex flex-col gap-8 w-full">
+    <div className="flex flex-col gap-8 w-full ">
       <Section className="bg-lemon dark:bg-card">
         <HeroHomepage />
       </Section>

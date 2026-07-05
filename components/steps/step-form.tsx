@@ -25,7 +25,6 @@ type Props = {
   initialValues?: Record<string, unknown>
   isLastForm?: boolean
 }
-
 const EMOJIS = [
   { emoji: '😞', label: 'Sangat buruk' },
   { emoji: '😕', label: 'Buruk' },
@@ -78,7 +77,7 @@ function SliderField({ field, value, onChange }: {
       <input
         type="range" min={min} max={max} value={current}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-2 rounded-full cursor-pointer  "
+        className="w-full h-2 rounded-full cursor-pointer bg-white dark:text-background!"
       />
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>{min}</span>
@@ -99,7 +98,7 @@ function TextInputField({ field, value, onChange }: {
         onChange={(e) => onChange(e.target.value)}
         rows={3} 
         placeholder="Tulis jawabanmu di sini..."
-        className="w-full rounded-xl border border-border bg-white dark:bg-popover text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-foreground/10 focus:border-foreground/40 transition-colors"
+        className="w-full rounded-xl border border-border bg-white dark:text-background! text-foreground placeholder:text-muted-foreground px-4 py-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-foreground/10 focus:border-foreground/40 transition-colors"
       />
     </div>
   )
@@ -150,7 +149,7 @@ export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLa
   })
 
   return (
-    <div className='w-full 2md:max-w-xl max-w-lg mx-auto h-full flex-1 flex justify-between flex-col'>
+    <div className='w-full 2md:max-w-xl max-w-lg mx-auto h-full flex-1 flex justify-between flex-col gap-6'>
       <div className="flex flex-col 2md:gap-6 gap-3 flex-1 h-full">
         {fields.map((field) => {
           const key = getKey(field)
@@ -203,12 +202,15 @@ export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLa
         })}
 
       </div>
-      <div className={cn('flex gap-1.5 mt-2 w-full justify-center')}>
+      <div className={cn('flex gap-1.5 w-full justify-center')}>
         {showPrev && onPrev && (
           <Button 
             type="button" 
             onClick={onPrev} 
-            className="bg-foreground/90 hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background  2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+            className=" 
+            2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
+            hover:bg-foreground/80 hover:text-background text-foreground
+            dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
             Sebelumnya
@@ -219,7 +221,11 @@ export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLa
           onClick={() => onNext(responses)}
           disabled={!allAnswered}
           variant={'ghost'}
-          className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+          className="
+          2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
+          bg-foreground/90 hover:bg-foreground/80 text-background
+          dark:bg-foreground dark:text-background 
+          disabled:dark:bg-muted/20 disabled:dark:text-white/50"
         >
           {isLastForm ? 'Selesai' : 'Selanjutnya'}
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
