@@ -17,14 +17,14 @@ export function StepExternalEmbed({ url, onNext, onPrev }: Props) {
     <div className="w-full max-w-xl mx-auto h-full flex-1 gap-6 flex justify-between items-center flex-col">
 
       <div className="flex flex-col items-center justify-start gap-6 w-full h-full rounded-xl group hover:cursor-pointer flex-1">
-        <div className="relative w-full max-h-100 h-full flex flex-col gap-6 items-center justify-center rounded-xl bg-gray-100">
+        <div className="relative w-full max-h-100 h-full flex flex-col gap-6 items-center justify-center rounded-xl bg-gray-100 py-6">
           <Image
             src={"/mentimeter_logo.png"}
             alt={'Aktivitas'}
             width={500}
             height={500}
             priority
-            className="object-contain w-40 h-40 aspect-square"
+            className="object-contain w-28 h-28 aspect-square"
           />
           <div className="flex flex-col justify-center items-center gap-3 rounded-xl">
             <Link
