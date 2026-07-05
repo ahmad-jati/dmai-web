@@ -25,7 +25,10 @@ export function MainNavbar() {
   }, [])
 
   return (
-    <nav className="w-full flex justify-center items-center py-4 bg-white dark:bg-secondary sm:rounded-b-5xl rounded-b-xl border border-foreground border-t-0">
+    <nav 
+      id="navbar-public"
+      className="w-full flex justify-center items-center py-4 bg-white dark:bg-secondary sm:rounded-b-5xl rounded-b-xl border border-foreground border-t-0"
+    >
       <Link
         href={href as Route}
         className="hover:font-bold font-semibold sm:text-app-name text-h2 text-foreground"
