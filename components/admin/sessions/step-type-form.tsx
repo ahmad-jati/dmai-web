@@ -625,6 +625,7 @@ export function StepTypeForm({
             placeholder={
               form.step_type === 'video' ? 'e.g. Video Edukasi'
               : form.step_type === 'pre_form' ? 'e.g. Form Check-in Awal'
+              : form.step_type === 'form' ? 'e.g. Form Sesi' 
               : form.step_type === 'post_form' ? 'e.g. Form Check-in Akhir'
               : form.step_type === 'body_map' ? 'e.g. Pemetaan Tubuh'
               : form.step_type === 'external_embed' ? 'e.g. Aktivitas Mentimeter'
@@ -666,6 +667,8 @@ export function StepTypeForm({
                 ? 'Instruksi tambahan sebelum pengguna memilih bagian tubuh...'
                 : form.step_type === 'pre_form'
                 ? 'Instruksi pengisian form awal untuk pengguna...'
+                : form.step_type === 'form'
+                ? 'Instruksi pengisian form untuk pengguna...'
                 : form.step_type === 'post_form'
                 ? 'Instruksi pengisian form akhir untuk pengguna...'
                 : ''
@@ -682,7 +685,7 @@ export function StepTypeForm({
           onTotalDurationChange={(total) => setForm({ duration_seconds: total })}
         />
       )}
-      {(form.step_type === 'pre_form' || form.step_type === 'post_form') && (
+      {(form.step_type === 'pre_form' || form.step_type === 'post_form' || form.step_type === 'form') && (
         <FormStepConfig config={form.step_config as FormStepConfigData} onChange={updateConfig} />
       )}
       {form.step_type === 'video' && (

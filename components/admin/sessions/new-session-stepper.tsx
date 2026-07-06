@@ -475,11 +475,12 @@ function ReviewStep({
           <div className="flex flex-col gap-2">
             {steps.map((step) => {
               let configSummary: React.ReactNode = null
-              if (step.step_type === 'pre_form' || step.step_type === 'post_form') {
+              if (step.step_type === 'pre_form' || step.step_type === 'post_form' || step.step_type === 'form') {
                 const qs = (step.step_config.questions as FormQuestion[]) ?? []
                 configSummary = qs.length > 0
                   ? <p className="text-xs text-muted-foreground">{qs.length} pertanyaan: {qs.map(q => q.label || '(kosong)').join(' · ')}</p>
                   : <p className="text-xs text-destructive italic">Belum ada pertanyaan</p>
+                  
               } else if (step.step_type === 'video') {
                 const url = step.step_config.youtube_url as string
                 configSummary = url
