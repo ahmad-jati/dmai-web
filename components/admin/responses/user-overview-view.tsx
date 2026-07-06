@@ -23,6 +23,12 @@ const EMOJI_MAP: Record<number, { emoji: string; label: string }> = {
   5: { emoji: "😊", label: "Sangat baik" },
 }
 
+const FORM_TYPE_LABELS: Record<string, string> = {
+  pre_form: "Form Check-in",
+  form: "Form Saat Sesi",
+  post_form: "Form Refleksi",
+}
+
 // ─── Answer renderers ─────────────────────────────────────────────────────────
 
 function renderAnswerValue(value: string | number | string[] | null, type?: string) {
@@ -143,21 +149,42 @@ function PrePostColumns({ preSteps, postSteps }: { preSteps: FormStep[]; postSte
 
 function BodyMapSection({ bm }: { bm: BodyMapResponse }) {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-foreground/12 p-3">
-      <p className="text-xs font-semibold text-foreground uppercase tracking-wider bg-muted/20 w-fit rounded-md px-2 py-2 mb-2">Body Map</p>
-      {bm.selected_parts.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {bm.selected_parts.map((part, i) => (
-            <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-foreground/8 border border-foreground/12">
-              {bodyPartLabelMap.get(part) ?? part}
-            </span>
-          ))}
+    <div className="flex flex-col gap-1.5 mb-4">
+      
+      <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider w-fit bg-muted/30 px-2 py-0.5 rounded-md border border-foreground/5">
+        Body Map
+      </span>
+
+      <div className="flex flex-col gap-2 rounded-lg border border-foreground/12 p-3">
+        <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
+          Bagian tubuh yang terasa lelah      
+        </p>
+        
+        <div className="flex flex-col items-start justify-between gap-2 pt-1.5 pb-2 border-b border-border/50 last:border-0 text-xs font-medium">
+          <p className="text-muted-foreground">Anggota Tubuh </p>
+          
+          {bm.selected_parts.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {bm.selected_parts.map((part, i) => (
+                <span key={i} className="px-2 py-0.5 rounded-full text-xs bg-foreground/8 border border-foreground/12">
+                  {bodyPartLabelMap.get(part) ?? part}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
-      )}
-      {bm.sensation && (
-        <p className="text-xs"><span className="text-muted-foreground">Sensasi </span><span className="font-medium capitalize">{bm.sensation}</span></p>
-      )}
-      {bm.note && <p className="text-xs text-foreground/80 bg-foreground/4 rounded px-2 py-1.5 leading-relaxed">{bm.note}</p>}
+
+        <div className="flex flex-col items-start justify-between gap-2 py-1.5 border-b border-border/50 last:border-0 text-xs font-medium">
+          <p className="text-muted-foreground">Sensasi </p>
+          <p className="font-medium capitalize">{bm.sensation ? bm.sensation : '-'}</p>
+        </div>
+
+        <div className="flex flex-col items-start justify-between gap-2 py-1.5 border-b border-border/50 last:border-0 text-xs font-medium">
+          <p className="text-muted-foreground">Catatan tambahan: </p>
+          <p className="font-medium capitalize">{bm.note? bm.note : '-'}</p>
+        </div>
+      </div>
+
     </div>
   )
 }
@@ -179,6 +206,9 @@ function ResponsePanel({ record }: { record: SessionHistoryRecord }) {
   const sortedOther = [...otherSteps].sort((a, b) => a.step_number - b.step_number)
   const hasAny = hasCompare || sortedOther.length > 0 || record.body_map_responses.length > 0
 
+  console.log(record)
+  console.log(sortedOther)
+
   if (!hasAny) {
     return (
       <div className="flex py-4 items-center justify-center h-full text-sm text-muted-foreground italic">
@@ -190,13 +220,22 @@ function ResponsePanel({ record }: { record: SessionHistoryRecord }) {
   return (
     <div className="grid grid-cols-2 gap-3 p-4">
       {sortedOther.map((step, i) => (
-        <div key={i} className="flex flex-col rounded-lg border border-foreground/12 p-3">
-          <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 bg-muted/20 w-fit rounded-md px-2 py-2">
-            {step.step_number === 1 ? `Form Check-in` : `Form Reflection`}
-          </p>
-          {step.answers.map((ans, ai) => (
-            <CompactAnswerRow key={ai} label={ans.label} value={ans.value} type={ans.type} />
-          ))}
+        <div key={i} className="flex flex-col gap-1.5 mb-4">
+          
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider w-fit bg-muted/30 px-2 py-0.5 rounded-md border border-foreground/5">
+            {FORM_TYPE_LABELS[step.step_type ?? ""] ?? "Form"}
+          </span>
+
+          <div className="flex flex-col rounded-lg border border-foreground/12 p-3">
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
+              {step.step_title || (step.step_number === 1 ? `Form Check-in` : `Form Reflection`)}
+            </p>
+
+            {step.answers.map((ans, ai) => (
+              <CompactAnswerRow key={ai} label={ans.label} value={ans.value} type={ans.type} />
+            ))}
+          </div>
+
         </div>
       ))}
       {record.body_map_responses.map((bm, i) => (
@@ -313,7 +352,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
       ])]
 
       const { data: stepsData } = stepIds.length > 0
-        ? await supabase.from("session_steps").select("id, title, step_config").in("id", stepIds)
+        ? await supabase.from("session_steps").select("id, title, step_type,  step_config").in("id", stepIds)
         : { data: [] }
 
       const stepMap = new Map((stepsData ?? []).map((s) => [s.id, s]))
@@ -326,6 +365,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
         formByCompletion.get(fr.completion_id)!.push({
           step_number: fr.step_number,
           step_title: step?.title ?? null,
+          step_type: step?.step_type ?? null,
           answers: questions.map((q) => ({
             label: q.label,
             value: (fr.responses as Record<string, string | number | string[] | null>)?.[q._key] ?? null,
@@ -411,7 +451,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
             ) : (
               grouped.map((group) => (
                 <div key={group.label}>
-                  <div className="px-3 py-1.5 bg-gray-100 border-b border-border/50 sticky top-0">
+                  <div className="px-3 py-1.5 bg-gray-100 border-b border-border/50 sticky top-0 ">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group.label}</p>
                   </div>
                   {group.items.map((r) => {
@@ -420,7 +460,7 @@ export function UserOverviewView({ userId }: { userId: string }) {
                       <button
                         key={r.id}
                         onClick={() => setSelectedId(r.id)}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left border-b border-border/40 transition-colors hover:bg-muted/40 ${isActive ? "bg-muted/40" : ""}`}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left border-b border-border/40 transition-colors hover:bg-muted/40 hover:cursor-pointer ${isActive ? "bg-muted/40" : ""}`}
                       >
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm font-medium truncate text-foreground`}>

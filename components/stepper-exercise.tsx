@@ -139,6 +139,7 @@ function resolveImage(sub: SubStep): string {
 const STEP_TYPE_LABEL: Record<StepType, string> = {
   narration: 'Panduan Suara',
   pre_form: 'Form Sebelum Sesi',
+  form: 'Form Saat Sesi',
   post_form: 'Form Setelah Sesi',
   video: 'Video',
   body_map: 'Body Map',
@@ -885,6 +886,19 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
         )
       }
       case 'pre_form': {
+        const fields = getFormFields(config)
+        return (
+          <StepForm
+            fields={fields}
+            onNext={(responses) => { handleFormResponse(step.id, responses); goNext() }}
+            onPrev={showPrev ? goPrev : undefined}
+            showPrev={showPrev}
+            initialValues={formResponses[step.id]}
+            onDraftChange={(draft) => handleFormResponse(step.id, draft)}
+          />
+        )
+      }
+      case 'form': {
         const fields = getFormFields(config)
         return (
           <StepForm
