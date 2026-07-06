@@ -4,7 +4,7 @@ export function CompletionCount({ count }: { count: number | null }) {
   return (
     <div className="flex items-center gap-1">
       <HeartIcon className="w-4 h-4" weight="fill" />
-      <p className="font-medium xs:text-p/5 text-xs/3.5">
+      <p className="font-medium xs:text-sm/5 text-xs/3.5">
         {count === null
           ? "Masuk untuk melihat progres sesi ini"
           : count === 0

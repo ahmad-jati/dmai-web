@@ -314,6 +314,8 @@ html, body {
 body.exercise-fullscreen .app-navbar,
 body.exercise-fullscreen .app-footer,
 body.exercise-fullscreen #navbar-app,
+body.exercise-fullscreen #navbar-public,
+body.exercise-fullscreen #navbar-dummy,
 body.exercise-fullscreen #footer-app {
   display: none;
 }

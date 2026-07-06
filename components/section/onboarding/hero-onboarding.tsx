@@ -50,7 +50,7 @@ export function HeroOnboarding() {
         <Link href={'/login' as Route} className="flex gap-2 items-center">
           <Button 
             variant={'default'}
-            className="[&_svg]:size-3.5 hover:bg-background/80 dark:bg-primary"
+            className="[&_svg]:size-3.5 hover:bg-white/80 dark:bg-primary"
             >
               COBA SEKARANG
               <ArrowRightIcon/>

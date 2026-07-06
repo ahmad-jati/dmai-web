@@ -3,6 +3,7 @@
 export type StepType =
   | 'pre_form'
   | 'post_form'
+  | 'form'
   | 'video'
   | 'narration'
   | 'body_map'
@@ -122,6 +123,7 @@ export type ExternalEmbedStepConfigData = {
 export const STEP_TYPE_LABELS: Record<StepType, string> = {
   narration: 'Panduan Suara',
   pre_form: 'Form sebelum sesi',
+  form: 'Form Saat Sesi',
   post_form: 'Form setelah sesi',
   video: 'Video Edukasi',
   body_map: 'Body Map',
@@ -132,9 +134,10 @@ export const STEP_TYPE_LABELS: Record<StepType, string> = {
 export const STEP_TYPE_COLORS: Record<StepType, string> = {
   narration: 'bg-blue-100 text-blue-700 border-blue-200',
   pre_form: 'bg-teal-50 text-teal-800 border-teal-200',
+  form: 'bg-olive-300 text-olive-800 border-olive-800',
   post_form: 'bg-violet-100 text-violet-700 border-violet-200',
-  video: 'bg-purple-100 text-purple-700 border-purple-200',
+  video: 'bg-indigo-100 text-indigo-700 border-indigo-200',
   body_map: 'bg-green-100 text-green-700 border-green-200',
   external_embed: 'bg-orange-100 text-orange-700 border-orange-200',
-  game: 'bg-pink-100 text-pink-700 border-pink-200',
+  game: 'bg-rose-100 text-rose-700 border-pink-200',
 }

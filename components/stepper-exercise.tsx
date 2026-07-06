@@ -7,29 +7,25 @@ import { Button } from '@/components/ui/button'
 import {
   RepeatIcon, SpeakerSlashIcon, SpeakerHighIcon,
   PauseIcon, PlayIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon,
-  RepeatOnceIcon, MusicNotesIcon, CaretDownIcon,
+  RepeatOnceIcon,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
 import { useBGMPlayer } from '@/lib/hooks/useBGMPlayer'
 import { useNarrationPlayback } from '@/lib/hooks/useNarrationPlayback'
 import { useExerciseFullscreen } from '@/lib/hooks/useExerciseFullscreen'
 import { usePresence } from '@/lib/hooks/usePresence'
 import type { PresencePayload } from '@/lib/hooks/usePresence'
 import { markPresenceActive } from '@/lib/hooks/usePresence'
-import { Spinner } from '@/components/ui/spinner'
 import { SessionLoadingCard } from '@/components/session-loading-card'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu'
+
+import type { BgmTrack } from './stepper-session/bgm-dropdown'
+import { SessionHeader } from './stepper-session/session-header'
+import { SessionFooter } from './stepper-session/session-footer'
 
 import { StepVideo } from './steps/step-video'
 import { StepForm } from './steps/step-form'
+import type { FormField } from './steps/step-form'
 import { StepBodyMap } from './steps/step-body-map'
 import { StepExternalEmbed } from './steps/step-external-embed'
 import { StepGame } from './steps/step-game'
@@ -40,13 +36,7 @@ import type { SessionInstruction } from '@/lib/data-detail-session.client'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-type Track = {
-  id: string
-  title: string
-  composer: string | null
-  audio_url: string
-  duration_seconds: number | null
-}
+type Track = BgmTrack
 
 type SubStep = {
   _key: string
@@ -64,7 +54,31 @@ type StoredDraft = {
   savedAt: number
 }
 
+type BodyMapResponse = {
+  selected_parts: string[]
+  sensation: string | null
+  note: string
+}
+
+type VideoStepConfig = {
+  youtube_url: string
+  credit: string
+}
+
+type ExternalEmbedStepConfig = {
+  url: string
+  embed_url: string
+}
+
 const STALE_MS = 3 * 24 * 60 * 60 * 1000 // 3 hari
+
+// Step types where the BGM should pause while the step is active, and
+// resume automatically once the user navigates away from it (Next/Prev).
+const BGM_PAUSE_STEP_TYPES: ReadonlySet<StepType> = new Set(['video', 'external_embed'])
+
+function shouldPauseBgmForStepType(stepType: StepType): boolean {
+  return BGM_PAUSE_STEP_TYPES.has(stepType)
+}
 
 type Props = {
   instructions: SessionInstruction[]
@@ -83,7 +97,6 @@ function isNarrationStep(type: StepType) {
 }
 
 function parseConfig(config: unknown): Record<string, unknown> {
-  console.log(config)
   if (!config) return {}
   if (typeof config === 'string') {
     try { return JSON.parse(config) } catch { return {} }
@@ -98,6 +111,26 @@ function getSubSteps(config: Record<string, unknown>): SubStep[] {
   return raw as SubStep[]
 }
 
+function getVideoConfig(config: Record<string, unknown>): VideoStepConfig {
+  return {
+    youtube_url: typeof config.youtube_url === 'string' ? config.youtube_url : '',
+    credit: typeof config.credit === 'string' ? config.credit : '',
+  }
+}
+
+function getExternalEmbedConfig(config: Record<string, unknown>): ExternalEmbedStepConfig {
+  return {
+    url: typeof config.url === 'string' ? config.url : '',
+    embed_url: typeof config.embed_url === 'string' ? config.embed_url : '',
+  }
+}
+
+function getFormFields(config: Record<string, unknown>): FormField[] {
+  const raw = config.fields ?? config.questions
+  if (!Array.isArray(raw)) return []
+  return raw as FormField[]
+}
+
 // Resolve image: prefer image_url (supabase), fall back to image_preview (blob/local)
 function resolveImage(sub: SubStep): string {
   return sub.image_url || sub.image_preview || ''
@@ -106,14 +139,13 @@ function resolveImage(sub: SubStep): string {
 const STEP_TYPE_LABEL: Record<StepType, string> = {
   narration: 'Panduan Suara',
   pre_form: 'Form Sebelum Sesi',
+  form: 'Form Saat Sesi',
   post_form: 'Form Setelah Sesi',
   video: 'Video',
   body_map: 'Body Map',
   external_embed: 'Aktivitas',
   game: 'Mini Game',
 }
-
-// ─── Loading Screen ─────────────────────────────────────────────────────────────
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
 
@@ -130,8 +162,8 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const [narrationKey, setNarrationKey] = useState(0)
   const [formResponses, setFormResponses] = useState<Record<string, Record<string, unknown>>>({})
 
-  // sessionStorage keys for this session
-  const sessionStorageKey = `dmai_form_draft_${sessionId}`
+  // localStorage keys for this session
+  const localStorageKey = `dmai_form_draft_${sessionId}`
   const startedAtKey = `dmai_started_at_${sessionId}`
 
   // Sub-step index — for narration steps with multiple sub_steps
@@ -192,7 +224,6 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const circumference = 2 * Math.PI * 44
   const progress = isTimed ? Math.min((elapsed / activeDuration) * 100, 100) : 0
   const strokeDashoffset = circumference * (1 - progress / 100)
-  const currentTrack = tracks[currentTrackIndex]
   const formResponsesRef = useRef<Record<string, Record<string, unknown>>>({})
   const currentStepRef = useRef(0)
 
@@ -213,11 +244,11 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(sessionStorageKey)
+      const saved = localStorage.getItem(localStorageKey)
       if (saved) {
         const parsed: StoredDraft = JSON.parse(saved)
         if (Date.now() - parsed.savedAt > STALE_MS) {
-          localStorage.removeItem(sessionStorageKey)
+          localStorage.removeItem(localStorageKey)
           localStorage.removeItem(startedAtKey)
         } else {
           setFormResponses(parsed.responses)
@@ -229,7 +260,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
         }
       }
     } catch {}
-  }, [sessionStorageKey, startedAtKey])
+  }, [localStorageKey, startedAtKey])
 
   useEffect(() => {
     try {
@@ -241,13 +272,13 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
   const persistDraft = useCallback(() => {
     try {
-      localStorage.setItem(sessionStorageKey, JSON.stringify({
+      localStorage.setItem(localStorageKey, JSON.stringify({
         responses: formResponsesRef.current,
         currentStep: currentStepRef.current,
         savedAt: Date.now(),
       }))
     } catch {}
-  }, [sessionStorageKey])
+  }, [localStorageKey])
 
   const handleFormResponse = useCallback((stepId: string, responses: Record<string, unknown>) => {
     formResponsesRef.current = { ...formResponsesRef.current, [stepId]: responses }
@@ -290,13 +321,14 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     for (const [stepId, stepResponses] of entries) {
       const stepInstruction = instructions.find((i) => i.id === stepId)
       if (stepInstruction?.step_type === 'body_map') {
+        const bodyMapResponse = stepResponses as Partial<BodyMapResponse>
         bodyMapRows.push({
           completion_id: completionId,
           user_id: userId,
           step_id: stepId,
-          selected_parts: (stepResponses.selected_parts as string[]) ?? [],
-          sensation: (stepResponses.sensation as string | null)?.toLowerCase() ?? null,
-          note: (stepResponses.note as string) ?? '',
+          selected_parts: bodyMapResponse.selected_parts ?? [],
+          sensation: bodyMapResponse.sensation?.toLowerCase() ?? null,
+          note: bodyMapResponse.note ?? '',
         })
       } else {
         formRows.push({
@@ -315,11 +347,10 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     if (formRows.length > 0) {
       promises.push(
         (async () => {
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('session_form_responses')
             .insert(formRows)
 
-          console.log(data)
           if (error) {
             console.error('[FormResponses] persist error:', error)
           }
@@ -330,11 +361,10 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     if (bodyMapRows.length > 0) {
       promises.push(
         (async () => {
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('session_body_map_responses')
             .insert(bodyMapRows)
 
-            console.log(data)
           if (error) {
             console.error('[BodyMapResponses] persist error:', error)
           }
@@ -343,9 +373,9 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     }
 
     await Promise.all(promises)
-    try { localStorage.removeItem(sessionStorageKey) } catch {}
+    try { localStorage.removeItem(localStorageKey) } catch {}
     try { localStorage.removeItem(startedAtKey) } catch {}
-  }, [instructions, sessionId, sessionStorageKey, startedAtKey])
+  }, [instructions, sessionId, localStorageKey, startedAtKey])
 
   const handleBack = () => {
     if (onBack) onBack()
@@ -398,14 +428,6 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     }
   }, [currentStep, isTimed, hasSubSteps, currentSubStep])
 
-  const jumpToStep = (i: number) => {
-    setIsLooping(false)
-    narrationStartedRef.current = false
-    setCurrentStep(i)
-    setCurrentSubStep(0)
-    setElapsed(0)
-  }
-
   // ── 1. Fetch BGM ────────────────────────────────────────────────────────────
   useEffect(() => {
     const init = async () => {
@@ -422,42 +444,47 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
       } catch (err) {
         console.error('[BGM] init error:', err)
       } finally {
-        // Delay 2500ms
         setTimeout(() => setIsReady(true), 1500)
-        // setIsReady(true)
       }
     }
     init()
   }, [bgmLoad])
 
-  // ── 2. BGM: play on narration, pause on others ──────────────────────────────
+  // ── 2. BGM: auto-plays across every step, pauses on video/external_embed ────
+  // Resumes automatically once currentStep/step type changes away from the
+  // pause list — i.e. when the user hits Next/Prev out of a video or embed step.
   useEffect(() => {
     if (!isReady) return
-    if (isTimed) {
-      if (!bgmStartedRef.current) {
-        const tryPlay = async () => {
-          try { await bgmPlay(); bgmStartedRef.current = true } catch {}
-        }
-        tryPlay()
-        const onGesture = async () => {
-          if (bgmStartedRef.current) return
-          try { await bgmPlay(); bgmStartedRef.current = true } catch {}
-        }
-        document.addEventListener('click', onGesture, { once: true })
-        document.addEventListener('touchstart', onGesture, { once: true })
-        return () => {
-          document.removeEventListener('click', onGesture)
-          document.removeEventListener('touchstart', onGesture)
-        }
-      } else {
-        if (!isBGMStopped) bgmResume()
-      }
-    } else {
-      bgmPause()
-    }
-  }, [isReady, isTimed, currentStep, bgmPlay, bgmPause, bgmResume, isBGMStopped])
 
-  // ── 3. Sync play/pause button ───────────────────────────────────────────────
+    const pauseForThisStep = shouldPauseBgmForStepType(step.step_type)
+
+    if (pauseForThisStep) {
+      bgmPause()
+      return
+    }
+
+    if (!bgmStartedRef.current) {
+      const tryPlay = async () => {
+        try { await bgmPlay(); bgmStartedRef.current = true } catch {}
+      }
+      tryPlay()
+
+      const onGesture = async () => {
+        if (bgmStartedRef.current) return
+        try { await bgmPlay(); bgmStartedRef.current = true } catch {}
+      }
+      document.addEventListener('click', onGesture, { once: true })
+      document.addEventListener('touchstart', onGesture, { once: true })
+      return () => {
+        document.removeEventListener('click', onGesture)
+        document.removeEventListener('touchstart', onGesture)
+      }
+    }
+
+    if (!isBGMStopped) bgmResume()
+  }, [isReady, step.step_type, currentStep, bgmPlay, bgmPause, bgmResume, isBGMStopped])
+
+  // ── 3. Sync play/pause button (narration only — the only step with a timer/control) ──
   useEffect(() => {
     if (!isTimed) return
     if (isPlaying === prevIsPlayingRef.current) return
@@ -526,116 +553,61 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const totalSecs = activeDuration % 60
   const totalTime = `${totalMins}:${totalSecs.toString().padStart(2, '0')}`
 
-  // ── BGM display ──────────────────────────────────────────────────────────────
-  const bgmLabel = isBGMStopped ? 'Tanpa Musik' : currentTrack?.title ?? 'Musik Latar'
-  const bgmSublabel = (!isBGMStopped && currentTrack?.composer) ? currentTrack.composer : null
+  const handleSelectTrack = useCallback((index: number) => {
+    const track = tracks[index]
+    if (!track) return
+    setCurrentTrackIndex(index)
+    bgmSwitchTrack(track.audio_url)
+  }, [tracks, bgmSwitchTrack])
 
   if (!isReady) return <SessionLoadingCard sessionName={sessionName} sessionImageCover={sessionImageCover} label="Mempersiapkan sesi…" />
 
   // ── Sub-step indicator (for narration with multiple sub_steps) — text, not dots ──
-  const SubStepIndicator = ({ variant = 'onImage' }: { variant?: 'onImage' | 'plain' }) => {
+  // Plain function, not a component — see renderNonNarrationContent note above for why.
+  const renderSubStepIndicator = (variant: 'onImage' | 'plain' = 'onImage') => {
     if (!hasSubSteps || subSteps.length <= 1) return null
     return (
       <span className={cn('text-xs font-semibold px-2.5 py-1 rounded-full tabular-nums shrink-0',
         variant === 'onImage'
           ? 'text-white/90 bg-black/35 backdrop-blur-sm'
-          : 'text-muted-foreground border border-border')}>
+          : 'text-foreground border border-border dark:border-background')}>
         {currentSubStep + 1}/{subSteps.length}
       </span>
     )
   }
 
   // ════════════════════════════════════════════════════════
-  // NARRATION LAYOUT — same shell as non-narration (white card, plain top bar)
+  // NARRATION LAYOUT
   // ════════════════════════════════════════════════════════
   if (isTimed) {
     return (
       <>
         {/* ── MOBILE narration ── */}
         <div className="2md:hidden fixed inset-0 z-55 p-4 overflow-y-auto flex flex-col">
-          {/* Top bar — matches non-narration */}
-          <div className="flex items-center justify-between w-full gap-2 py-2">
-            <Button onClick={handleBack} variant="link" size="sm"
-              className="[&_svg]:size-4 gap-1.5 px-3 text-foreground">
-              <ArrowLeftIcon weight="bold" /> Kembali
-            </Button>
-            <div className="bg-white dark:bg-popover border border-foreground/20 px-3 py-1.5 rounded-lg flex items-center">
-              <span className="sm:text-sm text-xs font-semibold text-muted-foreground">
-                Tahap {currentStep + 1} / {totalSteps}
-              </span>
-            </div>
-          </div>
+          <SessionHeader
+            onBack={handleBack}
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            tracks={tracks}
+            currentTrackIndex={currentTrackIndex}
+            isBGMStopped={isBGMStopped}
+            onSelectTrack={handleSelectTrack}
+            onStop={bgmStop}
+          />
 
-          {/* White card shell */}
-          <div className="flex flex-col w-full rounded-2xl bg-white dark:bg-popover border border-border shadow-sm flex-1 p-4 gap-3">
+          <div className="flex flex-col w-full rounded-2xl bg-white dark:bg-white/14 border border-border shadow-sm flex-1 p-4 gap-3">
 
-            {/* Step type + sub-step indicator */}
             <div className="flex items-center justify-between gap-2 shrink-0">
               <span className="text-xs font-bold text-foreground uppercase tracking-wide">{STEP_TYPE_LABEL[step.step_type]}</span>
-              <SubStepIndicator variant="plain" />
+              {renderSubStepIndicator('plain')}
             </div>
 
-            {/* BGM button */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="group flex items-center gap-3 px-4 py-2 lg:mb-0 mb-2 rounded-lg bg-gray-100 dark:bg-celeste text-foreground/80 hover:bg-muted/40 hover:cursor-pointer transition-all duration-150 ease-out w-full shrink-0 h-13"
-                >
-                  <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
-                  <div className="flex flex-1 flex-col min-w-0 text-left">
-                    <span className="text-xs font-semibold leading-tight truncate">{bgmLabel}</span>
-                    {bgmSublabel && <span className="text-xs leading-tight truncate font-medium text-muted-foreground">{bgmSublabel}</span>}
-                  </div>
-                  <CaretDownIcon weight="bold" className="w-4 h-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="center"
-                sideOffset={8}
-                style={{ width: 'var(--radix-dropdown-menu-trigger-width)' }}
-                className="bg-gray-100 dark:bg-celeste text-foreground border border-border rounded-lg p-2.5 flex flex-col gap-0.5 z-9999 group"
-              >
-                <span className="text-xs font-bold tracking-[0.18em] uppercase px-2 pb-1.5">Musik Latar</span>
-                {tracks.map((track, index) => (
-                  <DropdownMenuItem
-                    key={track.id}
-                    onSelect={() => { setCurrentTrackIndex(index); bgmSwitchTrack(track.audio_url) }}
-                    className={cn(
-                      'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-md cursor-pointer',
-                      index === currentTrackIndex && !isBGMStopped
-                        ? 'border-foreground/40 bg-celeste dark:bg-foreground/20 shadow-sm'
-                        : 'hover:bg-foreground hover:dark:bg-foreground/20')}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-muted-foreground/40" />
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-semibold text-foreground">{track.title}</span>
-                      {track.composer && <span className="text-xs text-foreground">{track.composer}</span>}
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator className="m-1 bg-muted-foreground/25 dark:bg-background/20" />
-                <DropdownMenuItem
-                  onSelect={() => bgmStop()}
-                  className={cn(
-                    'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg cursor-pointer ',
-                    isBGMStopped 
-                        ? 'border-foreground/40 bg-celeste dark:bg-foreground/20 shadow-sm'
-                        : 'hover:bg-foreground hover:dark:bg-foreground/20')}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-muted-foreground/40" />
-                  <span className="text-xs font-semibold text-foreground dark:bg-foregound">Tanpa Musik</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Image */}
             <div className="relative w-full rounded-2xl overflow-hidden bg-muted aspect-video shrink-0">
               {activeImage && (
                 <Image src={activeImage} alt={activeTitle} fill unoptimized priority className="object-cover object-center" />
               )}
             </div>
 
-            {/* Teks Narasi */}
             <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto bg-gray-100 p-3 rounded-xl">
               <p className='text-sm font-semibold text-muted-foreground'>Teks Narasi</p>
               <p className="text-base/5 font-semibold text-foreground text-pretty">{activeTitle}</p>
@@ -644,7 +616,6 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               )}
             </div>
 
-            {/* Progress ring + timer / Ulangi + Mute */}
             <div className="flex items-center justify-between gap-3 shrink-0 my-2">
               <div className="flex items-center gap-3">
                 <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
@@ -670,13 +641,13 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               <div className="grid grid-cols-1 items-end gap-1.5">
                 <Button
                   onClick={() => setIsLooping((l) => !l)}
-                  variant="default"
+                  variant="ghost"
                   size={'sm'}
                   className={cn(
-                    "[&_svg]:size-3.5 rounded-sm text-xs h-7!",
+                    "[&_svg]:size-3.5 rounded-sm text-xs h-7! border-none",
                     isLooping
-                      ? 'hover:bg-celeste bg-celeste/20'
-                      : 'border-foreground/40 bg-celeste shadow-sm'
+                      ? 'bg-celeste hover:bg-celeste/80'
+                      : 'bg-gray-200 dark:bg-background/20 hover:dark:bg-background/60 hover:bg-muted/60'
                   )}
                 >
                   {isLooping ? (
@@ -689,13 +660,13 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
                 <Button
                   onClick={() => setIsMuted((m) => !m)}
-                  variant="default"
+                  variant="ghost"
                   size={'sm'}
                   className={cn(
                     "[&_svg]:size-3.5 rounded-sm text-xs h-7!",
                     isMuted
-                      ? 'hover:bg-celeste bg-celeste/20'
-                      : 'border-foreground/40 bg-celeste shadow-sm'
+                      ? 'bg-celeste hover:bg-celeste/80'
+                      : 'bg-gray-200 dark:bg-background/20 hover:dark:bg-background/60 hover:bg-muted/60'
                   )}
                 >
                   {isMuted ? (
@@ -708,13 +679,12 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               </div>
             </div>
 
-            {/* Bottom action row */}
             <div className="flex items-center justify-center gap-2 shrink-0">
               <Button
                 onClick={goPrev}
                 disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
                 variant="ghost"
-                className="hover:bg-foreground/90 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!
+                className="hover:bg-foreground/90 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground rounded-sm text-sm 2md:h-9 h-8!
                 border border-foreground
                 "
               >
@@ -725,7 +695,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Selesai
                   <CheckIcon weight="bold" />
@@ -742,36 +712,26 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             </div>
           </div>
 
-          <div className="w-full flex justify-center mt-3">
-            <h3 className="text-sm text-muted-foreground font-semibold text-right uppercase">DMAI SESI - {sessionName}</h3>
-          </div>
+          <SessionFooter sessionName={sessionName} />
         </div>
 
-        {/* ── DESKTOP narration — matches non-narration shell ── */}
+        {/* ── DESKTOP narration ── */}
         <div className="hidden 2md:flex flex-col gap-2 fixed inset-0 z-55 lg:px-28 px-12 py-8 overflow-y-auto">
-          {/* Top bar */}
-          <div className="flex items-center justify-between w-full gap-2 py-2">
-            <Button onClick={handleBack} variant="link" size="sm"
-              className="[&_svg]:size-4 gap-1.5 px-3 text-foreground">
-              <ArrowLeftIcon weight="bold" /> Kembali
-            </Button>
-            <div className="flex-1 truncate w-full flex justify-center">
-              <h3 className="text-p text-foreground font-semibold text-right uppercase">DMAI SESI - {sessionName}</h3>
-            </div>
-            <div className="bg-white dark:bg-popover border border-foreground/20 px-3 py-1.5 rounded-lg flex items-center">
-              <span className="text-sm font-semibold text-muted-foreground">
-                Tahap {currentStep + 1} / {totalSteps}
-              </span>
-            </div>
-          </div>
+          <SessionHeader
+            onBack={handleBack}
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            tracks={tracks}
+            currentTrackIndex={currentTrackIndex}
+            isBGMStopped={isBGMStopped}
+            onSelectTrack={handleSelectTrack}
+            onStop={bgmStop}
+          />
 
-          {/* White card shell */}
-          <div className="flex flex-col w-full rounded-4xl bg-white dark:bg-popover border border-border shadow-sm flex-1 overflow-hidden p-6 gap-6">
+          <div className="flex flex-col w-full rounded-4xl bg-white dark:bg-white/14 border border-border shadow-sm flex-1 overflow-hidden p-6 gap-6">
 
-            {/* Top — image + info column */}
             <div className="flex gap-6 flex-1 min-h-0">
 
-              {/* Left — image */}
               <div className="flex-1 relative rounded-3xl overflow-hidden bg-muted">
                 {activeImage && (
                   <Image
@@ -785,70 +745,14 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                 )}
               </div>
 
-              {/* Right — info column */}
               <div className="w-90 shrink-0 flex flex-col gap-4">
 
-                {/* Step type + sub-step indicator */}
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-bold text-foreground uppercase tracking-wide">{STEP_TYPE_LABEL[step.step_type]}</span>
-                  <SubStepIndicator variant="plain" />
+                  {renderSubStepIndicator('plain')}
                 </div>
 
-                {/* BGM button */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className="group flex items-center gap-3 px-4 py-2 lg:mb-0 mb-2 rounded-lg bg-gray-100 dark:bg-celeste text-foreground/80 hover:bg-muted/40 hover:cursor-pointer transition-all duration-150 ease-out w-full shrink-0 h-13"
-                    >
-                      <MusicNotesIcon weight="fill" className={cn('w-3.5 h-3.5 shrink-0', isBGMStopped ? 'opacity-40' : 'opacity-100')} />
-                      <div className="flex flex-1 flex-col min-w-0 text-left">
-                        <span className="text-xs font-semibold leading-tight truncate">{bgmLabel}</span>
-                        {bgmSublabel && <span className="text-xs leading-tight truncate font-medium text-muted-foreground">{bgmSublabel}</span>}
-                      </div>
-                      <CaretDownIcon weight="bold" className="w-4 h-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="center"
-                    sideOffset={8}
-                    style={{ width: 'var(--radix-dropdown-menu-trigger-width)' }}
-                    className="bg-gray-100 dark:bg-celeste text-foreground border border-border rounded-lg p-2.5 flex flex-col gap-0.5 z-9999 group"
-                  >
-                    <span className="text-xs font-bold tracking-[0.18em] uppercase px-2 pb-1.5">Musik Latar</span>
-                    {tracks.map((track, index) => (
-                      <DropdownMenuItem
-                        key={track.id}
-                        onSelect={() => { setCurrentTrackIndex(index); bgmSwitchTrack(track.audio_url) }}
-                        className={cn(
-                          'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-md cursor-pointer',
-                          index === currentTrackIndex && !isBGMStopped
-                            ? 'border-foreground/40 bg-celeste dark:bg-foreground/20 shadow-sm'
-                            : 'hover:bg-foreground hover:dark:bg-foreground/20')}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-muted-foreground/40" />
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-semibold text-foreground">{track.title}</span>
-                          {track.composer && <span className="text-xs text-foreground">{track.composer}</span>}
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                    <DropdownMenuSeparator className="m-1 bg-muted-foreground/25 dark:bg-background/20" />
-                    <DropdownMenuItem
-                      onSelect={() => bgmStop()}
-                      className={cn(
-                        'flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg cursor-pointer ',
-                        isBGMStopped 
-                            ? 'border-foreground/40 bg-celeste dark:bg-foreground/20 shadow-sm'
-                            : 'hover:bg-foreground hover:dark:bg-foreground/20')}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-muted-foreground/40" />
-                      <span className="text-xs font-semibold text-foreground dark:bg-foregound">Tanpa Musik</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Title + description */}
-                <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto bg-gray-100 dark:bg-celeste p-3 rounded-xl">
+                <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto bg-gray-100 dark:bg-background/40 p-3 rounded-xl">
                   <p className='text-sm font-semibold text-muted-foreground'>Teks Narasi</p>
                   <p className="sm:text-xl/5.5 text-lg/4 font-semibold text-foreground max-w-2xl">{activeTitle}</p>
                   {activeDescription && (
@@ -857,7 +761,6 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                 </div>
 
                 <div className="flex justify-between gap-4">
-                  {/* Progress ring + timer */}
                   <div className="flex items-center gap-4">
                     <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
                       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" aria-hidden="true">
@@ -867,7 +770,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                           transform="rotate(-90 50 50)" style={{ transition: 'stroke-dashoffset 1s linear' }} />
                       </svg>
                       <button onClick={() => setIsPlaying((p) => !p)}
-                        className="relative z-10 w-13 h-13 rounded-full flex items-center justify-center bg-celeste transition-all hover:cursor-pointer hover:scale-105 active:scale-95">
+                        className="relative z-10 w-13 h-13 rounded-full flex items-center justify-center bg-celeste dark:bg-background/40 transition-all hover:cursor-pointer hover:scale-105 active:scale-95">
                         {isPlaying ? <PauseIcon weight="fill" className="w-6 h-6" /> : <PlayIcon weight="fill" className="w-6 h-6" />}
                       </button>
                     </div>
@@ -882,14 +785,14 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
                   <div className="grid grid-cols-1 items-end gap-2">
                     <Button
                       onClick={() => setIsLooping((l) => !l)}
-                      variant="default"
+                      variant="ghost"
                       size={'sm'}
                       className={cn(
-                        "2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm h-7.5! ",
+                        "[&_svg]:size-3.5 rounded-sm text-xs h-7!",
                         isLooping
-                          ? 'hover:bg-celeste bg-celeste/20'
-                          : 'border-foreground/40 bg-celeste shadow-sm'
-                      )}
+                          ? 'bg-celeste dark:bg-background hover:bg-celeste/80'
+                          : 'bg-gray-200 dark:bg-background/20 hover:dark:bg-background/60 hover:bg-muted/60'
+                          )}
                     >
                       {isLooping ? (
                         <RepeatOnceIcon weight="fill" />
@@ -901,13 +804,13 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
 
                     <Button
                       onClick={() => setIsMuted((m) => !m)}
-                      variant="default"
+                      variant="ghost"
                       size={'sm'}
                       className={cn(
                         "2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm h-7.5!",
                         isMuted
-                          ? 'hover:bg-celeste bg-celeste/20'
-                          : 'border-foreground/40 bg-celeste shadow-sm'
+                          ? 'bg-celeste hover:bg-celeste/80'
+                          : 'bg-gray-200 dark:bg-background/20 hover:dark:bg-background/60 hover:bg-muted/60'
                       )}
                     >
                       {isMuted ? (
@@ -922,13 +825,12 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               </div>
             </div>
 
-            {/* Bottom — action buttons, full row */}
             <div className="flex items-center justify-center gap-2 shrink-0">
               <Button
                 onClick={goPrev}
                 disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
                 variant="ghost"
-                className="bg-foreground/90 hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!
+                className="hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground rounded-sm text-sm 2md:h-9 h-8!
                 border border-foreground
                 "
               >
@@ -939,7 +841,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Selesai
                   <CheckIcon weight="bold" />
@@ -947,13 +849,17 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               ) : (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground  rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Berikutnya
                   <ArrowRightIcon weight="bold" />
                 </Button>
               )}
             </div>
+          </div>
+
+          <div className="w-full flex justify-center lg:px-30 px-14">
+            <SessionFooter sessionName={sessionName} />
           </div>
         </div>
 
@@ -962,44 +868,60 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   }
 
   // ════════════════════════════════════════════════════════
-  // NON-NARRATION LAYOUT — clean shell, BGM paused
+  // NON-NARRATION LAYOUT — BGM keeps playing except on video/external_embed
   // ════════════════════════════════════════════════════════
 
-  const NonNarrationContent = () => {
+  const renderNonNarrationContent = () => {
     const config = parseConfig(step.step_config)
-    console.log(config)
     switch (step.step_type) {
-      case 'video':
+      case 'video': {
+        const videoConfig = getVideoConfig(config)
         return (
           <StepVideo
-            youtubeUrl={(config.youtube_url as string) ?? ''}
-            youtubeKredit={(config.credit as string) ?? ''}
+            youtubeUrl={videoConfig.youtube_url}
+            youtubeKredit={videoConfig.credit}
             onNext={goNext}
             onPrev={showPrev ? goPrev : undefined}
           />
         )
+      }
       case 'pre_form': {
-        const fields = (config.fields ?? config.questions ?? []) as unknown[]
+        const fields = getFormFields(config)
         return (
           <StepForm
-            fields={fields as never}
+            fields={fields}
             onNext={(responses) => { handleFormResponse(step.id, responses); goNext() }}
             onPrev={showPrev ? goPrev : undefined}
             showPrev={showPrev}
             initialValues={formResponses[step.id]}
+            onDraftChange={(draft) => handleFormResponse(step.id, draft)}
+          />
+        )
+      }
+      case 'form': {
+        const fields = getFormFields(config)
+        return (
+          <StepForm
+            fields={fields}
+            onNext={(responses) => { handleFormResponse(step.id, responses); goNext() }}
+            onPrev={showPrev ? goPrev : undefined}
+            showPrev={showPrev}
+            initialValues={formResponses[step.id]}
+            onDraftChange={(draft) => handleFormResponse(step.id, draft)}
           />
         )
       }
       case 'post_form': {
-        const fields = (config.fields ?? config.questions ?? []) as unknown[]
+        const fields = getFormFields(config)
         return (
           <StepForm
-            fields={fields as never}
+            fields={fields}
             onNext={(responses) => { handleFormResponse(step.id, responses); goNext() }}
             onPrev={showPrev ? goPrev : undefined}
             showPrev={showPrev}
             initialValues={formResponses[step.id]}
             isLastForm={isLastStep}
+            onDraftChange={(draft) => handleFormResponse(step.id, draft)}
           />
         )
       }
@@ -1008,18 +930,20 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
           <StepBodyMap
             onNext={(response) => { handleFormResponse(step.id, response as Record<string, unknown>); goNext() }}
             onPrev={showPrev ? goPrev : undefined}
-            initialValues={formResponses[step.id] as { selected_parts: string[]; sensation: string | null; note: string } | undefined}
+            initialValues={formResponses[step.id] as BodyMapResponse | undefined}
             onDraftChange={(draft) => handleFormResponse(step.id, draft as Record<string, unknown>)}
           />
         )
-      case 'external_embed':
+      case 'external_embed': {
+        const embedConfig = getExternalEmbedConfig(config)
         return (
           <StepExternalEmbed
-            url={(config.url as string) ?? (config.embed_url as string) ?? ''}
+            url={embedConfig.url || embedConfig.embed_url}
             onNext={goNext}
             onPrev={showPrev ? goPrev : undefined}
           />
         )
+      }
       case 'game':
         return (
           <StepGame
@@ -1037,27 +961,19 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     <>
       {/* MOBILE non-narration */}
       <div className="2md:hidden fixed inset-0 p-4 overflow-y-auto flex flex-col">
-        {/* Top bar */}
-        <div className="flex items-center justify-between w-full gap-2 py-2">
-          <Button
-            onClick={handleBack}
-            variant="link"
-            size="sm"
-            className="[&_svg]:size-4 gap-1.5 px-3 text-foreground "
-          >
-            <ArrowLeftIcon weight="bold" />
-            Kembali
-          </Button>
-          <div className="bg-white dark:bg-popover border border-foreground/20 px-3 py-1.5 rounded-lg flex items-center">
-            <span className="sm:text-sm text-xs font-semibold text-muted-foreground">
-              Tahap {currentStep + 1} / {totalSteps}
-            </span>
-          </div>
-        </div>
+        <SessionHeader
+          onBack={handleBack}
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          tracks={tracks}
+          currentTrackIndex={currentTrackIndex}
+          isBGMStopped={isBGMStopped}
+          onSelectTrack={handleSelectTrack}
+          onStop={bgmStop}
+        />
 
-        <div className='flex w-full md:rounded-4xl rounded-2xl bg-white dark:bg-popover border border-border shadow-sm flex-1'>
-         <div className='flex flex-col items-center w-full p-6 gap-2'>
-            {/* Step title */}
+        <div className='flex w-full md:rounded-4xl rounded-2xl bg-white dark:bg-white/14 border border-border shadow-sm flex-1'>
+         <div className='flex flex-col items-center w-full p-6 gap-6'>
             {step.title && (
               <div className="flex flex-col items-center gap-1.5 w-full text-center xs:max-w-2xl">
                 <p className="text-base/4.5 font-semibold text-foreground">{step.title}</p>
@@ -1067,43 +983,30 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               </div>
             )}
 
-            {/* Content */}
             <div className="flex-1 flex flex-col justify-start w-full">
-              <NonNarrationContent />
+              {renderNonNarrationContent()}
             </div>
           </div>
         </div>
 
-        <div className="w-full flex justify-center mt-3">
-          <h3 className="text-sm text-muted-foreground font-semibold text-right uppercase">DMAI SESI - {sessionName}</h3>
-        </div>
+        <SessionFooter sessionName={sessionName} />
       </div>
 
       {/* DESKTOP non-narration */}
       <div className="hidden 2md:flex flex-col gap-2 fixed inset-0 lg:px-28 px-12 py-8 overflow-y-auto">
-        {/* Top bar */}
-        <div className="flex items-center justify-between w-full gap-2 py-2">
-          <Button
-            onClick={handleBack}
-            variant="link"
-            size="sm"
-            className="[&_svg]:size-4 gap-1.5 px-3 text-foreground "
-          >
-            <ArrowLeftIcon weight="bold" />
-            Kembali
-          </Button>
-          <div className="flex-1 truncate w-full flex justify-center">
-            <h3 className="text-p text-foreground font-semibold text-right uppercase">DMAI SESI - {sessionName}</h3>
-          </div>
-          <div className="bg-white dark:bg-popover border border-foreground/20 px-3 py-1.5 rounded-lg flex items-center">
-            <span className="text-sm font-semibold text-muted-foreground">
-              Tahap {currentStep + 1} / {totalSteps}
-            </span>
-          </div>
-        </div>
-        <div className="flex w-full rounded-4xl bg-white dark:bg-popover border border-border shadow-sm flex-1">
-          <div className="flex flex-col items-start py-6 w-full gap-6 flex-1">
-            {/* Step title */}
+        <SessionHeader
+          onBack={handleBack}
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          tracks={tracks}
+          currentTrackIndex={currentTrackIndex}
+          isBGMStopped={isBGMStopped}
+          onSelectTrack={handleSelectTrack}
+          onStop={bgmStop}
+        />
+
+        <div className="flex w-full rounded-4xl bg-white dark:bg-white/14 border border-border shadow-sm flex-1">
+          <div className="flex flex-col items-center py-6 px-6 w-full gap-6 flex-1">
             {step.title && (
               <div className="flex flex-col items-center gap-1.5 w-full text-center">
                 <p className="sm:text-2xl/6.5 text-xl/5.5 font-semibold text-foreground max-w-2xl">{step.title}
@@ -1114,13 +1017,16 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               </div>
             )}
 
-            {/* Content */}
             <div className="flex items-start justify-start w-full flex-1">
-              <NonNarrationContent />
+              {renderNonNarrationContent()}
             </div>
 
           </div>
 
+        </div>
+
+        <div className="w-full flex justify-center lg:px-30 px-14">
+          <SessionFooter sessionName={sessionName} />
         </div>
       </div>
     </>

@@ -206,7 +206,7 @@ export function UserResponseManager() {
               {pagedGrouped.map((group) => (
                 <>
                   <tr key={`header-${group.label}`} className="bg-muted/20 border-b border-border/50">
-                    <td colSpan={6} className="px-4 py-1.5">
+                    <td colSpan={7} className="px-4 py-1.5">
                       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">{group.label}</span>
                     </td>
                   </tr>

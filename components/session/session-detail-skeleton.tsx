@@ -4,7 +4,7 @@ import { Section } from "@/components/layout/section-wrapper"
 export function SessionDetailSkeleton() {
   return (
     <div className="relative h-full w-full">
-      <Section className="bg-celeste h-full w-full flex gap-10 items-center">
+      <Section className="bg-celeste dark:bg-card h-full w-full flex gap-10 items-center">
         <div className="flex flex-col lg:items-start items-center lg:justify-between gap-4 lg:w-120 w-full h-full">
           {/* Mobile title + meta */}
           <div className="lg:hidden flex flex-col gap-2 items-center w-full">

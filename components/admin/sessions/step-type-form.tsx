@@ -24,7 +24,6 @@ import {
   SlidersIcon,
   SmileyIcon,
   ListChecksIcon,
-  PersonIcon,
   MusicNotesIcon,
 } from '@phosphor-icons/react'
 import Image from 'next/image'
@@ -98,7 +97,7 @@ function DurationInput({
       <Label>{label}</Label>
       {readOnly ? (
         <div className="flex items-center h-9 px-3 rounded-sm border border-border bg-muted text-sm text-muted-foreground">
-          {value > 0 ? `${value}d · ${formatDurSec(value)}` : '0'}
+          {value > 0 ? `${formatDurSec(value)}` : '0'}
         </div>
       ) : (
         <Input
@@ -316,7 +315,6 @@ function NarrationStepConfig({ config, onChange, onTotalDurationChange }: Narrat
   const totalDuration = subSteps.reduce((acc, s) => acc + (s.duration_seconds || 0), 0)
 
   const commit = (updated: NarrationSubStep[]) => {
-    console.log('commit dipanggil, sub_steps:', updated)  // ← tambah ini
     setSubSteps(updated)
     onChange({ sub_steps: updated })
     onTotalDurationChange(updated.reduce((acc, s) => acc + (s.duration_seconds || 0), 0))
@@ -456,7 +454,7 @@ function FormStepConfig({ config, onChange }: FormStepConfigProps) {
                       key={t.value}
                       onClick={() => updateQ(q._key, { type: t.value })}
                       className={[
-                        'flex items-center gap-1 px-2 py-1 rounded-sm border text-xs font-medium transition-colors border-border',
+                        'flex items-center gap-1 px-2 py-1 rounded-sm border text-xs font-medium transition-colors border-border hover:cursor-pointer',
                         q.type === t.value
                           ? 'bg-lemon text-foreground'
                           : 'bg-accent text-muted-foreground hover:border-foreground/40',
@@ -471,7 +469,7 @@ function FormStepConfig({ config, onChange }: FormStepConfigProps) {
             </div>
             <button
               onClick={() => removeQ(q._key)}
-              className="mt-2 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-destructive shrink-0"
+              className="mt-2 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-destructive shrink-0 hover:cursor-pointer"
             >
               <TrashIcon className="w-3.5 h-3.5" />
             </button>
@@ -483,7 +481,7 @@ function FormStepConfig({ config, onChange }: FormStepConfigProps) {
         <Button
           onClick={addQ}
           size={'sm'}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 text-xs text-foreground hover:bg-foreground/90 hover:text-background transition-colors [&_svg]:size-3.5 py-2!"
         >
           <PlusIcon className="w-3.5 h-3.5" />
           Tambah pertanyaan
@@ -534,36 +532,6 @@ function VideoStepConfig({ config, onChange }: VideoStepConfigProps) {
   )
 }
 
-// ─── Body map step config ──────────────────────────────────────────────────────
-
-type BodyMapStepConfigProps = {
-  config: BodyMapStepConfigData
-  onChange: (patch: Partial<BodyMapStepConfigData>) => void
-}
-
-function BodyMapStepConfig({ config, onChange }: BodyMapStepConfigProps) {
-
-  return (
-    <div className="flex flex-col gap-3 ">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-        <PersonIcon className="w-4 h-4" />
-        Konfigurasi Body Map
-      </p>
-      <div className="flex flex-col gap-1.5">
-        <Label>Label Pertanyaan</Label>
-        <Input
-          value={config.section_label ?? ''}
-          onChange={(e) => onChange({ ...config, section_label: e.target.value })}
-          placeholder="e.g. Pilih bagian tubuh yang terasa lelah/tegang saat ini"
-          className="text-sm"
-        />
-        <p className="text-xs text-muted-foreground">Pertanyaan ini akan muncul di atas peta tubuh.</p>
-      </div>
-     
-    </div>
-  )
-}
-
 // ─── External embed step config ────────────────────────────────────────────────
 
 type ExternalEmbedStepConfigProps = {
@@ -605,8 +573,6 @@ function ExternalEmbedStepConfig({ config, onChange }: ExternalEmbedStepConfigPr
 type StepTypeFormProps = {
   form: SessionStep
   setForm: (patch: Partial<SessionStep>) => void
-  bodyParts?: BodyPart[]
-  bodyPartsLoading?: boolean
 }
 
 export function StepTypeForm({
@@ -621,9 +587,8 @@ export function StepTypeForm({
     | Partial<ExternalEmbedStepConfigData>
 
   const updateConfig = (patch: StepConfigPatch) => {
-  console.log('updateConfig patch:', patch)  // ← tambah ini
-  setForm({ step_config: { ...form.step_config, ...patch } })
-}
+    setForm({ step_config: { ...form.step_config, ...patch } })
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -660,6 +625,7 @@ export function StepTypeForm({
             placeholder={
               form.step_type === 'video' ? 'e.g. Video Edukasi'
               : form.step_type === 'pre_form' ? 'e.g. Form Check-in Awal'
+              : form.step_type === 'form' ? 'e.g. Form Sesi' 
               : form.step_type === 'post_form' ? 'e.g. Form Check-in Akhir'
               : form.step_type === 'body_map' ? 'e.g. Pemetaan Tubuh'
               : form.step_type === 'external_embed' ? 'e.g. Aktivitas Mentimeter'
@@ -701,6 +667,8 @@ export function StepTypeForm({
                 ? 'Instruksi tambahan sebelum pengguna memilih bagian tubuh...'
                 : form.step_type === 'pre_form'
                 ? 'Instruksi pengisian form awal untuk pengguna...'
+                : form.step_type === 'form'
+                ? 'Instruksi pengisian form untuk pengguna...'
                 : form.step_type === 'post_form'
                 ? 'Instruksi pengisian form akhir untuk pengguna...'
                 : ''
@@ -717,17 +685,11 @@ export function StepTypeForm({
           onTotalDurationChange={(total) => setForm({ duration_seconds: total })}
         />
       )}
-      {(form.step_type === 'pre_form' || form.step_type === 'post_form') && (
+      {(form.step_type === 'pre_form' || form.step_type === 'post_form' || form.step_type === 'form') && (
         <FormStepConfig config={form.step_config as FormStepConfigData} onChange={updateConfig} />
       )}
       {form.step_type === 'video' && (
         <VideoStepConfig config={form.step_config as VideoStepConfigData} onChange={updateConfig} />
-      )}
-      {form.step_type === 'body_map' && (
-        <BodyMapStepConfig
-          config={form.step_config as BodyMapStepConfigData}
-          onChange={updateConfig}
-        />
       )}
       {form.step_type === 'external_embed' && (
         <ExternalEmbedStepConfig config={form.step_config as ExternalEmbedStepConfigData} onChange={updateConfig} />

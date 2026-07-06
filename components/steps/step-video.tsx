@@ -70,40 +70,42 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
   console.log(youtubeUrl)
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full flex-1">
-      <div className="w-full max-w-2xl sm:h-full h-300 2md:aspect-video rounded-2xl overflow-hidden shadow-sm bg-black relative flex-1">
-        {!started && videoId && (
-          <YoutubeThumbnail videoId={videoId} onClick={() => setStarted(true)} />
-        )}
-        {videoId && started && (
-          <iframe
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
-            title="Video Edukasi"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            loading='eager'
-            className="w-full h-full"
-          />
-        )}
-        {!videoId && (
-          <div className="w-full h-full flex items-center justify-center text-white/60 text-sm">
-            URL video tidak valid
-          </div>
-        )}
-      </div>
+    <div className="w-full 2md:max-w-2xl  mx-auto h-full flex-1 flex justify-between flex-col gap-6">
+      <div className="flex flex-col items-center gap-6 flex-1 ">
+        <div className="w-full 2md:max-h-100 sm:h-100 h-[60%] 2md:rounded-2xl rounded-xl overflow-hidden shadow-sm relative bg-muted/30">
+          {!started && videoId && (
+            <YoutubeThumbnail videoId={videoId} onClick={() => setStarted(true)} />
+          )}
+          {videoId && started && (
+            <iframe
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+              title="Video Edukasi"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              loading='eager'
+              className="w-full h-full"
+            />
+          )}
+          {!videoId && (
+            <div className="w-full h-full flex items-center justify-center text-white/60 text-sm">
+              URL video tidak valid
+            </div>
+          )}
+        </div>
 
-      <div className='flex 2md:flex-row flex-col items-center 2md:gap-2 gap-1 text-sm/4.5 text-muted-foreground font-medium text-center max-w-2xl'>
-        <p className="">
-          Sumber: 
-        </p>
-        <Link
-          href={youtubeUrl as Route}
-          target="_blank"
-          rel="noopener noreferrer"
-          className='hover:underline underline-offset-2'
-        >
-          {youtubeKredit}
-        </Link>
+        <div className='flex 2md:flex-row flex-col items-start justify-center 2md:gap-2 gap-1 text-sm/4.5 text-muted-foreground font-medium max-w-2xl'>
+          <p className="">
+            Sumber: 
+          </p>
+          <Link
+            href={youtubeUrl as Route}
+            target="_blank"
+            rel="noopener noreferrer"
+            className='hover:underline underline-offset-2'
+          >
+            {youtubeKredit}
+          </Link>
+        </div>
       </div>
 
       <div className="flex items-center justify-center gap-1.5">
@@ -111,7 +113,10 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
           <Button
             type="button"
             onClick={onPrev}
-            className="bg-foreground/90 hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+            className=" 
+            2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
+            hover:bg-foreground/80 hover:text-background text-foreground
+            dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background"
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
             Sebelumnya
@@ -121,7 +126,11 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
           type="button"
           onClick={onNext}
           variant={'ghost'}
-          className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground 2md:rounded-lg rounded-sm text-sm 2md:h-9 h-8!"
+          className="
+          2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
+          bg-foreground/90 hover:bg-foreground/80 text-background
+          dark:bg-foreground dark:text-background 
+          disabled:dark:bg-muted/20 disabled:dark:text-white/50"
         >
           Selanjutnya
           <ArrowRightIcon weight="bold" className="w-4 h-4" />
