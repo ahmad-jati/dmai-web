@@ -101,6 +101,7 @@ export type FormAnswer = {
 export type FormStep = {
   step_number: number
   step_title: string | null
+  step_type: string | null
   answers: FormAnswer[]
 }
 
