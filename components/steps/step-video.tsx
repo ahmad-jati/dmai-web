@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import Image from 'next/image'
+import { useEffect, useRef, useState } from 'react'
 import { PlayIcon, ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
 import { Button } from '../ui/button'
 import Link from 'next/link'
@@ -12,13 +11,29 @@ type Props = {
   youtubeKredit: string
   onNext: () => void
   onPrev?: () => void
+  autoAdvanceOnComplete?: boolean 
 }
 
-const THUMB_QUALITIES = ['maxresdefault', 'hqdefault', 'mqdefault', 'default'] as const
+const THUMB_QUALITIES = ['hqdefault', 'mqdefault', 'default'] as const
 
 function getYoutubeId(url: string): string | null {
   const match = url.match(/(?:v=|youtu\.be\/)([^&\n?#]+)/)
   return match?.[1] ?? null
+}
+
+function getPlayRange(url: string): { start: number; end: number | null } {
+  try {
+    const u = new URL(url)
+    const start = Number(u.searchParams.get('start') ?? 0)
+    const endParam = u.searchParams.get('end')
+    const end = endParam ? Number(endParam) : null
+    return {
+      start: Number.isFinite(start) ? start : 0,
+      end: end && Number.isFinite(end) ? end : null,
+    }
+  } catch {
+    return { start: 0, end: null }
+  }
 }
 
 function getThumbnailUrl(videoId: string, quality: string): string {
@@ -43,16 +58,14 @@ function YoutubeThumbnail({ videoId, onClick }: { videoId: string; onClick: () =
       onClick={onClick}
     >
       {!allFailed ? (
-        <Image
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
           src={getThumbnailUrl(videoId, THUMB_QUALITIES[qualityIndex])}
           alt="thumbnail"
-          fill
-          unoptimized
           onError={handleError}
-          className="object-cover"
+          className="absolute inset-0 w-full h-full object-cover"
         />
       ) : (
-        // Placeholder kalau semua thumbnail gagal
         <div className="absolute inset-0 bg-neutral-900" />
       )}
       <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
@@ -63,40 +76,73 @@ function YoutubeThumbnail({ videoId, onClick }: { videoId: string; onClick: () =
   )
 }
 
-export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) {
+export function StepVideo({
+  youtubeUrl,
+  youtubeKredit,
+  onNext,
+  onPrev,
+  autoAdvanceOnComplete = false,
+}: Props) {
   const [started, setStarted] = useState(false)
+  const [completed, setCompleted] = useState(false)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
   const videoId = getYoutubeId(youtubeUrl)
-  console.log(youtubeKredit)
-  console.log(youtubeUrl)
+  const { start, end } = getPlayRange(youtubeUrl)
+
+  const playerRef = useRef<YTPlayer | null>(null)
+
+  useEffect(() => {
+  if (!started || !videoId || !end) return
+
+  function handleMessage(event: MessageEvent) {
+    if (event.origin !== 'https://www.youtube.com') return
+    try {
+      const data = JSON.parse(event.data)
+      // event "onStateChange" dengan info.playerState === 0 artinya ENDED
+      if (data.event === 'onStateChange' && data.info === 0) {
+        setCompleted(true)
+        if (autoAdvanceOnComplete) onNext()
+      }
+    } catch {
+      // bukan pesan JSON dari YouTube, abaikan
+    }
+  }
+
+  window.addEventListener('message', handleMessage)
+  return () => window.removeEventListener('message', handleMessage)
+}, [started, videoId, end, autoAdvanceOnComplete, onNext])
 
   return (
     <div className="w-full 2md:max-w-2xl  mx-auto h-full flex-1 flex justify-between flex-col gap-6">
       <div className="flex flex-col items-center gap-6 flex-1 ">
-        <div className="w-full 2md:max-h-100 sm:h-100 h-[60%] 2md:rounded-2xl rounded-xl overflow-hidden shadow-sm relative bg-muted/30">
+        <div className="w-full 2md:max-h-100 sm:h-100 h-[60%] 2md:rounded-2xl rounded-xl overflow-hidden shadow-sm relative bg-muted/30 text-muted-foreground">
           {!started && videoId && (
             <YoutubeThumbnail videoId={videoId} onClick={() => setStarted(true)} />
           )}
           {videoId && started && (
             <iframe
-              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+              ref={iframeRef}
+              id="yt-step-player"
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&enablejsapi=1&start=${start}${
+                end ? `&end=${end}` : ''
+              }`}
               title="Video Edukasi"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              loading='eager'
+              loading="eager"
               className="w-full h-full"
             />
           )}
           {!videoId && (
-            <div className="w-full h-full flex items-center justify-center text-white/60 text-sm">
+            <div className="w-full h-full flex items-center justify-center text-sm">
               URL video tidak valid
             </div>
           )}
         </div>
 
         <div className='flex 2md:flex-row flex-col items-start justify-center 2md:gap-2 gap-1 text-sm/4.5 text-muted-foreground font-medium max-w-2xl'>
-          <p className="">
-            Sumber: 
-          </p>
+          <p className="">Sumber:</p>
           <Link
             href={youtubeUrl as Route}
             target="_blank"
@@ -113,8 +159,7 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
           <Button
             type="button"
             onClick={onPrev}
-            className=" 
-            2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
+            className="2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
             hover:bg-foreground/80 hover:text-background text-foreground
             dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background"
           >
@@ -126,8 +171,7 @@ export function StepVideo({ youtubeUrl, youtubeKredit, onNext, onPrev }: Props) 
           type="button"
           onClick={onNext}
           variant={'ghost'}
-          className="
-          2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
+          className="2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
           bg-foreground/90 hover:bg-foreground/80 text-background
           dark:bg-foreground dark:text-background 
           disabled:dark:bg-muted/20 disabled:dark:text-white/50"

@@ -57,7 +57,7 @@ const ThemeSwitcher = () => {
         ">
           {theme === "light" ? (
             <div className="flex gap-2 items-center">
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Theme: </p>
+              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Tema: </p>
               <SunIcon
                 key="light"
                 size={ICON_SIZE}
