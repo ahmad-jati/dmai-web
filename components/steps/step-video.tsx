@@ -16,6 +16,15 @@ type Props = {
 
 const THUMB_QUALITIES = ['hqdefault', 'mqdefault', 'default'] as const
 
+const INTRO_TITLE = 'Halo Mindful Mate'
+const INTRO_BODY = `Selamat datang di sesi DMAI Education. Pada Episode Edukasi hari ini kita akan membahas tentang mengenali stres akademik, mindfulness, dan konsep here and now.
+
+Sebelum kita memulai perjalanan ini, izinkan saya mengajakmu melakukan satu hal yang sangat sederhana.
+
+Berhenti... sejenak.
+Tarik napas perlahan.
+Dan biarkan dirimu benar-benar hadir di sini.`
+
 function getYoutubeId(url: string): string | null {
   const match = url.match(/(?:v=|youtu\.be\/)([^&\n?#]+)/)
   return match?.[1] ?? null
@@ -53,10 +62,7 @@ function YoutubeThumbnail({ videoId, onClick }: { videoId: string; onClick: () =
   }
 
   return (
-    <div
-      className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer group"
-      onClick={onClick}
-    >
+    <div className="absolute inset-0 z-10 flex flex-col justify-end">
       {!allFailed ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -68,10 +74,26 @@ function YoutubeThumbnail({ videoId, onClick }: { videoId: string; onClick: () =
       ) : (
         <div className="absolute inset-0 bg-neutral-900" />
       )}
-      <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
-      <div className="relative z-10 w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-        <PlayIcon weight="fill" className="w-7 h-7 text-foreground" />
+
+      <div className="absolute inset-0 bg-black/80" />
+
+      <div className="relative z-10 px-5 py-6 2md:px-8 2md:py-8 h-full  overflow-y-auto flex flex-col justify-center">
+        <h2 className="text-white font-semibold text-base 2md:text-lg mb-2">
+          {INTRO_TITLE}
+        </h2>
+        <p className="text-white text-xs/3.5 2md:text-sm/4 whitespace-pre-line">
+          {INTRO_BODY}
+        </p>
       </div>
+
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label="Putar video"
+        className="absolute bottom-4 right-4 z-20 w-12 h-12 2md:w-14 2md:h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg hover:scale-105 hover:bg-white transition-transform"
+      >
+        <PlayIcon weight="fill" className="w-5 h-5 2md:w-6 2md:h-6 text-foreground" />
+      </button>
     </div>
   )
 }
@@ -99,13 +121,11 @@ export function StepVideo({
     if (event.origin !== 'https://www.youtube.com') return
     try {
       const data = JSON.parse(event.data)
-      // event "onStateChange" dengan info.playerState === 0 artinya ENDED
       if (data.event === 'onStateChange' && data.info === 0) {
         setCompleted(true)
         if (autoAdvanceOnComplete) onNext()
       }
     } catch {
-      // bukan pesan JSON dari YouTube, abaikan
     }
   }
 
@@ -114,9 +134,13 @@ export function StepVideo({
 }, [started, videoId, end, autoAdvanceOnComplete, onNext])
 
   return (
-    <div className="w-full 2md:max-w-2xl  mx-auto h-full flex-1 flex justify-between flex-col gap-6">
-      <div className="flex flex-col items-center gap-6 flex-1 ">
-        <div className="w-full 2md:max-h-100 sm:h-100 h-[60%] 2md:rounded-2xl rounded-xl overflow-hidden shadow-sm relative bg-muted/30 text-muted-foreground">
+    <div className="w-full 2md:max-w-2xl mx-auto h-full flex-1 flex justify-between flex-col gap-6">
+      <div className="flex flex-col items-center gap-6 flex-1">
+        <div
+          className={`w-full 2md:rounded-2xl rounded-xl overflow-hidden shadow-sm relative bg-muted/30 text-muted-foreground transition-all duration-300  2md:max-h-100 sm:h-100 h-[60%]
+            
+          `}
+        >
           {!started && videoId && (
             <YoutubeThumbnail videoId={videoId} onClick={() => setStarted(true)} />
           )}
