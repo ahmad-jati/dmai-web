@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "DMAI — Digital Mindful Autogenic Intervention",
   description: "A calm mindfulness platform for guided reflective training sessions.",
   icons: {
-    icon: "/dmai-icon.png",
+    icon: "/logo.png",
   },
 };
 

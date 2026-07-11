@@ -12,16 +12,16 @@ export default function Page() {
   return (
     <div className="flex h-full w-full">
       <Section className="relative flex w-full gap-2 items-center justify-center min-h-[calc(74svh-64px)] md:min-h-[calc(82dvh-52px)] overflow-hidden bg-white dark:bg-background">
-        <div className="absolute inset-0 z-5 bg-linear-to-t from-transparent via-white/50 to-white dark:from-transparent dark:via-background/70 dark:to-background" />
+        <div className="absolute inset-0 z-5 bg-linear-to-t from-transparent via-white/40 to-white dark:from-transparent dark:via-background/70 dark:to-background" />
         <Image
-          src="/lummi/lake.png"
+          src="/lummi/lake-b.png"
           alt=""
           fill
           priority
           sizes="100vw"
-          className="object-cover z-0"
+          className="object-cover object-bottom z-0"
         />
-        <div className="absolute inset-0 z-5 bg-linear-to-t from-transparent via-white/90 to-white dark:from-transparent dark:via-background/70 dark:to-background" />
+        <div className="absolute inset-0 z-5 bg-linear-to-t from-transparent via-white/10 to-white dark:from-transparent dark:via-background/70 dark:to-background" />
 
         <div className="relative z-10 w-full max-w-md flex flex-col gap-8 items-center px-4 sm:py-0 py-6">
           <div className="w-full flex flex-col gap-2 px-4 text-foreground">

@@ -35,17 +35,6 @@ export function TrainingOverviewOnboarding() {
         <p className="sm:text-p/5 xs:text-sm/4 text-xs/3.5 text-center font-medium">Setiap sesi dirancang khusus untuk membantumu lebih dalam memahami, menerima, dan mengubah apa yang kamu rasakan.</p>
       </div>
       <div className="flex gap-4 items-start h-full w-full">
-        {/* <div className="w-89 xl:h-119 h-full xl:block hidden">
-          <Image
-            src={'/tropicaline/compress/Being-okay.png'}
-            alt="Being Okay (Tropicaline Illustrations)"
-            width={2000}
-            height={2000}
-            priority
-            unoptimized
-            className="w-full h-full object-cover"
-          />
-        </div> */}
 
         <div className="flex-1 flex flex-col gap-6 ">
           <div className="xl:flex flex-col gap-3 hidden">

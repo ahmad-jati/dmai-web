@@ -58,10 +58,10 @@
 
   --green: hsla(172, 19%, 70%, 1);
   --green-soft: hsla(122, 24%, 80.4%, 1);
-  --celeste: hsla(165, 18.8%, 87.5%, 1);
+  --celeste: #d9e5e2;
 
   --lavender: hsla(230, 23.1%, 89.8%, 1);
-  --pink: hsla(331, 42.9%, 87.6%, 1);
+  --pink: #edd2df;
   --lemon: hsla(74, 61.5%, 78.6%, 1);
 
   --red: hsla(0, 54.4%, 51%, 1);
