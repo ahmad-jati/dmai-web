@@ -67,12 +67,7 @@ export function LoginForm({
 
   return (
     <div className='flex flex-col items-center sm:gap-8 gap-4'>
-      <div className="flex flex-col gap-2 lg:px-0 sm:px-10 xs:px-6 px-2">
-        <h2 className="xs:text-h2/7 text-xl/5.5 font-semibold lg:text-left text-center text-pretty">Good to see you again.</h2>
-        <p className="xs:text-p/5 text-sm/4 font-medium lg:text-left text-center sm:max-w-120 text-pretty">
-          Terima kasih sudah kembali dan memberi ruang untuk dirimu sendiri hari ini. Mari lanjutkan sesi dengan tenang.
-        </p>
-      </div>
+      
       <div className="w-full">
         <form onSubmit={handleLogin} className="w-full flex flex-col justify-center items-center">
           <div className="flex flex-col sm:gap-6 gap-4 w-full">
@@ -130,7 +125,7 @@ export function LoginForm({
             <div className="w-full flex justify-center">
               <Button
                 type="submit"
-                className={`max-w-80 w-full bg-celeste hover:bg-celeste/90 flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5 dark:bg-primary! disabled:bg-celeste`}
+                className={`max-w-80 w-full bg-sky-200/70 hover:bg-sky-300/60 flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5 dark:bg-primary! disabled:bg-sky-200`}
                 disabled={isLoading}
               >
               {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin dark:text-foreground" />}

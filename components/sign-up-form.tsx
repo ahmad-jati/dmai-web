@@ -76,15 +76,6 @@ export function SignUpForm({
       </Dialog>
 
       <div className='flex flex-col items-center sm:gap-8 gap-4'>
-        <div className="flex flex-col gap-4">
-          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold md:text-left text-center text-pretty">
-            Let&apos;s prepare your account.
-          </h2>
-          <p className="xs:text-p/5 text-sm/4 font-medium md:text-left text-center text-pretty">
-            Buat ruang kecil untuk dirimu hari ini, lalu jalani setiap sesi latihan sesuai dengan kenyamananmu sendiri.
-          </p>
-        </div>
-
         <div className="w-full">
           <form onSubmit={handleSignUp} className="w-full flex flex-col justify-center items-center">
             <div className="flex flex-col sm:gap-6 gap-4 w-full">
@@ -155,7 +146,7 @@ export function SignUpForm({
               <div className="w-full flex justify-center">
                 <Button
                   type="submit"
-                  className="max-w-80 w-full bg-tangerine hover:bg-tangerine/90 dark:bg-primary flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5"
+                  className="max-w-80 w-full bg-yellow-100 hover:bg-yellow-200! dark:bg-primary flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5"
                   disabled={isLoading}
                 >
                   {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin" />}

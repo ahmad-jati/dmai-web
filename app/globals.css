@@ -4,8 +4,8 @@
 
 :root {
   /* light mode */
-  --background: hsla(38, 40.7%, 94.7%, 1);
-  --foreground: hsla(60, 3.6%, 11%, 1);
+  --background: #f7f3ec;
+  --foreground: #1d1d1b;
 
   --card: hsla(38, 40.7%, 94.7%, 1);
   --card-foreground: hsla(60, 3.6%, 11%, 1);

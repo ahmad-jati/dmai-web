@@ -56,21 +56,20 @@ const ThemeSwitcher = () => {
   const ActiveIcon = activeOption.icon;
 
   return (
-    <div className="flex w-40 flex-col gap-2 rounded-xl bg-background p-3">
-      <p className="text-xs font-medium text-muted-foreground">Tema</p>
+    <div className="flex w-32 flex-col gap-0.5 rounded-2xl">
+      <p className="text-xs font-medium">Tema</p>
 
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="ghost"
             size="sm"
-            className="flex h-auto items-center justify-between gap-2 p-0 text-foreground hover:bg-transparent dark:text-secondary-foreground"
+            className="flex h-auto items-center justify-between gap-2 px-4 py-2 text-foreground transition-colors dark:text-secondary-foreground [&_svg]:size-4 rounded-md border-muted-foreground bg-background hover:bg-background w-full"
           >
             <span className="flex items-center gap-2">
-              <ActiveIcon size={ICON_SIZE} />
+              <ActiveIcon size={ICON_SIZE} weight="fill"/>
               <span className="text-sm font-semibold">{activeOption.label}</span>
             </span>
-            <CaretDownIcon size={10} />
+            <CaretDownIcon size={6} />
           </Button>
         </DropdownMenuTrigger>
 
