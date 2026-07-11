@@ -4,11 +4,11 @@ import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
 
 export function Footer() {
   return (
-    <footer id="footer-app" className=" z-40 w-full  bg-white dark:bg-secondary text-foreground md:rounded-t-5xl rounded-t-xl border border-foreground border-b-0">
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5 px-6 py-6 md:px-10">
-        <div className="flex flex-col items-center md:items-start text-center md:text-left gap-1.5 max-w-md">
+    <footer id="footer-app" className=" z-40 w-full bg-white dark:bg-secondary text-foreground 2md:rounded-t-5xl rounded-t-xl border border-foreground border-b-0">
+      <div className="flex flex-col 2md:flex-row 2md:items-start items-center 2md:justify-between gap-5 px-6 py-6 2md:px-10">
+        <div className="flex flex-col items-center 2md:items-start 2md:text-left text-center gap-1.5 md:max-w-lg max-w-md">
           <h5 className="sm:text-h2/7 xs:text-xl/5.5 text-lg/5 font-semibold">
-            Digital Mindful Autogenic Intervention
+            DMAI (Digital Mindful Autogenic Intervention)
           </h5>
 
           <p className="text-sm/5 font-medium text-muted-foreground">
@@ -26,7 +26,7 @@ export function Footer() {
           </Link>
         </div>
 
-        <div className="flex flex-col items-center md:items-end gap-2">
+        <div className="flex flex-col items-center 2md:items-end gap-2 2md:pt-0 pt-3">
           <div className="flex-1">
             <ThemeSwitcher />
           </div>

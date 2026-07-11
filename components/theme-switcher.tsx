@@ -57,7 +57,7 @@ const ThemeSwitcher = () => {
 
   return (
     <div className="flex w-32 flex-col gap-0.5 rounded-2xl">
-      <p className="text-xs font-medium">Tema</p>
+      <p className="text-xs font-medium 2md:text-left text-center">Tema</p>
 
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
