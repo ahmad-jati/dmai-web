@@ -11,13 +11,13 @@ type Props = {
 
 export function SessionLoadingCard({ sessionName, sessionImageCover, label = 'Mempersiapkan sesi…' }: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-background grid-bg">
-      <div className="flex flex-col items-center gap-3 px-6 lg:py-12 py-8 bg-white dark:bg-popover border border-muted-foreground rounded-2xl sm:w-fit w-full shadow-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-background grid-bg w-full">
+      <div className="flex flex-col items-center gap-3 px-6 lg:py-12 py-8 bg-white dark:bg-popover border border-muted-foreground rounded-2xl shadow-sm max-w-lg sm:w-full w-[80%]">
         <p className="text-p text-muted-foreground -mb-2 text-center font-semibold">DMAI - Sesi</p>
         <h3 className="md:text-h1/8 text-2xl/7 text-center font-semibold">
           {sessionName ?? 'Memuat sesi…'}
         </h3>
-        <div className="relative sm:w-100 w-full xs:h-60 h-40 2xs:rounded-3xl rounded-xl overflow-hidden mt-3 bg-muted-foreground/10">
+        <div className="relative sm:w-100 w-full xs:h-60 h-40 rounded-xl overflow-hidden mt-3 bg-muted-foreground/10">
           {sessionImageCover ? (
             <Image
               src={sessionImageCover}

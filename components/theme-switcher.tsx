@@ -8,7 +8,12 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LaptopIcon, MoonIcon, SunIcon } from "@phosphor-icons/react";
+import {
+  CaretDownIcon,
+  LaptopIcon,
+  MoonIcon,
+  SunIcon,
+} from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
@@ -16,6 +21,14 @@ function getScrollbarWidth() {
   if (typeof window === "undefined") return 0;
   return window.innerWidth - document.documentElement.clientWidth;
 }
+
+const ICON_SIZE = 12;
+
+const THEME_OPTIONS = [
+  { value: "light", label: "Terang", icon: SunIcon },
+  { value: "dark", label: "Gelap", icon: MoonIcon },
+  { value: "system", label: "Sistem", icon: LaptopIcon },
+] as const;
 
 const ThemeSwitcher = () => {
   const [mounted, setMounted] = useState(false);
@@ -27,90 +40,51 @@ const ThemeSwitcher = () => {
   }, []);
 
   useEffect(() => {
-    if (dropdownOpen) {
-      const scrollbarWidth = getScrollbarWidth();
-      document.documentElement.style.setProperty(
-        "--navbar-scrollbar-offset",
-        `${scrollbarWidth}px`
-      );
-    } else {
-      document.documentElement.style.setProperty(
-        "--navbar-scrollbar-offset",
-        "0px"
-      );
-    }
+    const scrollbarWidth = dropdownOpen ? getScrollbarWidth() : 0;
+    document.documentElement.style.setProperty(
+      "--navbar-scrollbar-offset",
+      `${scrollbarWidth}px`
+    );
   }, [dropdownOpen]);
 
   if (!mounted) {
     return null;
   }
 
-  const ICON_SIZE = 12;
+  const activeOption =
+    THEME_OPTIONS.find((option) => option.value === theme) ?? THEME_OPTIONS[2];
+  const ActiveIcon = activeOption.icon;
 
   return (
-    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size={"sm"} className="
-          text-foreground hover:bg-background hover:border hover:border-foreground 
-          dark:text-secondary-foreground  
-          p-4
-        ">
-          {theme === "light" ? (
-            <div className="flex gap-2 items-center">
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Theme: </p>
-              <SunIcon
-                key="light"
-                size={ICON_SIZE}
-                // className={" size-50"}
-                // weight="fill"
-                />
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Light</p>
-            </div>
-          ) : theme === "dark" ? (
-            <div className="flex gap-2 items-center ">
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Theme: </p>
-              <MoonIcon
-                key="dark"
-                size={ICON_SIZE}
-                className={""}
-                // weight="fill"
-              />
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Dark</p>
-            </div>
-          ) : (
-            <div className="flex gap-2 items-center ">
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">Theme: </p>
-              <LaptopIcon
-                key="system"
-                size={ICON_SIZE}
-                className={""}
-                // weight="fill"
-                />
-              <p className="sm:text-p/5 xs:text-sm/4 text-xs/3 font-medium ">System</p>
-            </div>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-content" align="start">
-        <DropdownMenuRadioGroup
-          value={theme}
-          onValueChange={(e) => setTheme(e)}
-        >
-          <DropdownMenuRadioItem className="flex gap-2" value="light">
-            <SunIcon size={ICON_SIZE} className="" />{" "}
-            <span>Light</span>
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem className="flex gap-2" value="dark">
-            <MoonIcon size={ICON_SIZE} className="" />{" "}
-            <span>Dark</span>
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem className="flex gap-2" value="system">
-            <LaptopIcon size={ICON_SIZE} className="" />{" "}
-            <span>System</span>
-          </DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex w-32 flex-col gap-0.5 rounded-2xl">
+      <p className="text-xs font-medium 2md:text-left text-center">Tema</p>
+
+      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="sm"
+            className="flex h-auto items-center justify-between gap-2 px-4 py-2 text-foreground transition-colors dark:text-secondary-foreground [&_svg]:size-4 rounded-md border-muted-foreground bg-background hover:bg-background w-full"
+          >
+            <span className="flex items-center gap-2">
+              <ActiveIcon size={ICON_SIZE} weight="fill"/>
+              <span className="text-sm font-semibold">{activeOption.label}</span>
+            </span>
+            <CaretDownIcon size={6} />
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent className="w-content" align="start">
+          <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+            {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+              <DropdownMenuRadioItem key={value} className="flex gap-2" value={value}>
+                <Icon size={ICON_SIZE} />
+                <span>{label}</span>
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 };
 
