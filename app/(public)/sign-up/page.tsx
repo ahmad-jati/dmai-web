@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Section } from "@/components/layout/section-wrapper";
 import { SignUpForm } from "@/components/sign-up-form";
 import Image from "next/image";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Sign Up — DMAI",
@@ -16,7 +17,7 @@ export default function Page() {
         <div className="absolute inset-0 z-5 bg-linear-to-t from-transparent via-white/50 to-white dark:from-transparent dark:via-background/70 dark:to-background" />
         <Image
           src="/lummi/countryside.png"
-          alt=""
+          alt="Countryside drawing from Lummi"
           fill
           priority
           sizes="100vw"
@@ -31,9 +32,19 @@ export default function Page() {
               Buat ruang kecil untuk dirimu hari ini, lalu jalani setiap sesi latihan sesuai dengan kenyamananmu sendiri.
             </p>
           </div>
-          <div className="w-full bg-white/40 dark:bg-card/40 backdrop-blur-sm backdrop-saturate-150 rounded-4xl lg:rounded-3xl border border-neutral-200 dark:border-neutral-700 shadow-xl shadow-neutral-200/60 dark:shadow-none p-6">
+          <div className="w-full bg-white/40 dark:bg-card/40 backdrop-blur-sm backdrop-saturate-150 md:rounded-4xl rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-xl shadow-neutral-200/60 dark:shadow-none p-6">
             <SignUpForm />
           </div>
+
+          <p className="text-muted-foreground text-center font-medium -my-4 text-sm/4 group hover:cursor-pointer"> Tranquil Countryside Art from 
+            <Link
+              href={'https://www.lummi.ai/illustration/tranquil-countryside-art-qacmz'}
+              target="_blank"
+              className="pl-1 group-hover:underline underline-offset-2 group-hover:font-bold"
+            >
+              Daniel Norin
+            </Link>
+          </p>
         </div>
       </Section>
     </div>

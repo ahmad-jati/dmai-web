@@ -37,7 +37,7 @@ export function NotFoundContent({
         <div className=" 2xs:w-60 w-40 h-fit xs:px-0 p-4 aspect-square  rounded-xl">
           <Image
             src={"open-doodles/ReadingDoodle.svg"}
-            alt=""
+            alt="Open Doodles - Reading Doodle By Pablo Stanley"
             width={2000}
             height={2000}
             unoptimized

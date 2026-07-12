@@ -30,8 +30,8 @@ export function HeroOnboarding() {
       >
         <div className="md:w-102 md:h-74 sm:h-74 w-full xs:h-60 h-44">
           <Image
-            src={'open-doodles/FloatDoodle.svg'}
-            alt="Being Happy 2 (Tropicaline Illustrations)"
+            src={'/open-doodles/FloatDoodle.svg'}
+            alt="Open Doodles - Float Doodle By Pablo Stanley"
             width={2000}
             height={2000}
             unoptimized

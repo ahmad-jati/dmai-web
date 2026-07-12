@@ -10,7 +10,7 @@ export function HeroHomepage() {
       <div className="md:w-102 md:h-78 sm:h-82 w-full h-fit">
         <Image
           src={'open-doodles/MeditatingDoodle.svg'}
-          alt="Parachute (Tropicaline Illustrations)"
+          alt="Open Doodles - Meditating Doodle By Pablo Stanley"
           width={2000}
           height={2000}
           priority

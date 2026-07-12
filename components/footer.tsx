@@ -1,8 +1,19 @@
+"use client";
+
 import { ThemeSwitcher } from "./theme-switcher";
 import Link from "next/link";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { usePathname } from "next/navigation";
 
 export function Footer() {
+  const pathname = usePathname();
+
+  const handleAboutClick = () => {
+    if (pathname === "/tentang") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <footer id="footer-app" className=" z-40 w-full bg-white dark:bg-secondary text-foreground 2md:rounded-t-5xl rounded-t-xl border border-foreground border-b-0">
       <div className="flex flex-col 2md:flex-row 2md:items-start items-center 2md:justify-between gap-5 px-6 py-6 2md:px-10">
@@ -19,6 +30,7 @@ export function Footer() {
 
           <Link
             href="/tentang"
+            onClick={handleAboutClick}
             className="mt-0.5 text-sm font-medium text-foreground hover:underline underline-offset-2 flex gap-1 items-center"
           >
             Selengkapnya tentang DMAI 
@@ -30,8 +42,6 @@ export function Footer() {
           <div className="flex-1">
             <ThemeSwitcher />
           </div>
-
-          
         </div>
       </div>
 

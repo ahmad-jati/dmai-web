@@ -114,14 +114,14 @@ function DashboardSkeleton() {
       <div className="flex lg:gap-6 gap-3 items-start w-full lg:items-center animate-pulse">
         <div className="flex flex-col lg:gap-6 gap-4 w-full min-h-90 h-full overflow-hidden">
           <div className="grid xs:grid-cols-2 grid-cols-1 gap-3 w-full">
-            <div className="h-16 bg-foreground/8 rounded-xl flex-1" />
-            <div className="h-16 bg-foreground/8 rounded-xl flex-1" />
+            <div className="h-16 bg-foreground/8 dark:bg-background rounded-xl flex-1 border border-foreground/10" />
+            <div className="h-16 bg-foreground/8 dark:bg-background rounded-xl flex-1 border border-foreground/10" />
           </div>
           {Array.from({ length: 2 }).map((_, gi) => (
             <div key={gi} className="flex flex-col gap-3">
               <div className="h-3.5 bg-foreground/10 rounded w-24" />
-              <div className="grid lg:grid-cols-4 md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-2">
-                {Array.from({ length: 4 }).map((_, i) => (
+              <div className="grid 2md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-2">
+                {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="h-20 bg-background rounded-xl border border-foreground/10" />
                 ))}
               </div>
@@ -145,7 +145,7 @@ function StatCard({
   value: string
 }) {
   return (
-    <div className="flex items-center gap-3 bg-background dark:bg-secondary rounded-xl border border-foreground/15 px-4 py-3 flex-1 min-w-0">
+    <div className="flex items-center gap-3 bg-background rounded-xl border border-foreground/15 px-4 py-3 flex-1 min-w-0">
       <div className="text-foreground/50 shrink-0">{icon}</div>
       <div className="flex flex-col min-w-0">
         <p className="text-xs text-muted-foreground font-medium truncate">{label}</p>
@@ -166,34 +166,26 @@ function CompletionCard({
 
   return (
     <div
-      className="flex flex-col gap-2 bg-background rounded-xl border border-foreground/15 px-4 py-3 hover:border-foreground/40 hover:shadow-sm transition-all text-left w-full group hover:cursor-pointer" 
+      className="flex flex-col gap-1.5 bg-background rounded-xl border border-foreground/15 px-4 py-3 hover:border-foreground/40 hover:shadow-sm transition-all text-left w-full group hover:cursor-pointer"
     >
-      {/* Session name */}
       <Link
         href={`/sesi/${item.session_slug}` as Route}
-        className="font-semibold xs:text-p/5 text-xs/3.5 flex items-center gap-2 group-hover:underline underline-offset-3"
+        className="font-semibold xs:text-p/5 text-xs/3.5 flex items-start gap-1.5 group-hover:underline underline-offset-3"
       >
-        {item.session_name}
-        {/* <ArrowUpRightIcon className="w-5 h-5 group-hover:inline-block hidden"/> */}
+        <span className="line-clamp-2">{item.session_name}</span>
       </Link>
 
-      {/* Time row */}
-      <div className="flex flex-col items-start">
-        {item.started_at && (
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <ClockIcon className="w-3 h-3 shrink-0" />
-            <span className="text-xs font-medium">Mulai: {fmtClock(item.started_at)}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <CheckCircleIcon className="w-3 h-3 shrink-0 text-muted-foreground" />
-          <span className="text-xs font-medium">Selesai: {fmtClock(item.completed_at)}</span>
-        </div>
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <span className="text-xs font-medium flex gap-2 items-center">
+          <ClockIcon className="-mt-0.5"/>
+          {item.started_at
+            ? `${fmtClock(item.started_at)} - ${fmtClock(item.completed_at)}`
+            : fmtClock(item.completed_at)}
+        </span>
         {duration !== "—" && (
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <TimerIcon className="w-3 h-3 shrink-0" />
-            <span className="text-xs font-medium">Durasi: {duration}</span>
-          </div>
+          <>
+            <span className="text-xs text-foreground/45 text-right flex-1">{duration}</span>
+          </>
         )}
       </div>
     </div>
@@ -216,7 +208,7 @@ function DayGroup({
           ({group.items.length} sesi)
         </span>
       </div>
-      <div className="grid lg:grid-cols-4 md:grid-cols-3 2xs:grid-cols-2 grid-cols-1 gap-2">
+      <div className="grid 2md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-2">
         {group.items.map((item) => (
           <CompletionCard key={item.id} item={item} />
         ))}
@@ -324,7 +316,7 @@ export function UserHistory() {
               History Session
             </h2>
             <p className="xs:text-p/5 text-sm/4 sm:max-w-140 font-medium sm:text-left text-center text-pretty">
-              Semua sesi yang telah kamu selesaikan tersimpan di sini.
+              Semua riwayat sesi yang telah kamu selesaikan tersimpan di sini.
             </p>
           </div>
 
