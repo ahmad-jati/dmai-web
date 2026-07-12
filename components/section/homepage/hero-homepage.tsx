@@ -7,10 +7,10 @@ import { ArrowCircleDownIcon } from "@phosphor-icons/react";
 export function HeroHomepage() {
   return (
     <div className="flex  flex-col items-center sm:gap-8 gap-6 md:px-0 px-2 md:pb-0 pb-3">
-      <div className="md:w-102 md:h-76 sm:h-82 w-full xs:h-76 h-50">
+      <div className="md:w-102 md:h-78 sm:h-82 w-full h-fit">
         <Image
-          src={'/tropicaline/compress/parachute1.png'}
-          alt="Parachute (Tropicaline Illustrations)"
+          src={'open-doodles/MeditatingDoodle.svg'}
+          alt="Open Doodles - Meditating Doodle By Pablo Stanley"
           width={2000}
           height={2000}
           priority
@@ -20,7 +20,7 @@ export function HeroHomepage() {
       </div>
 
       <div className="flex-1 flex flex-col gap-3.5 items-center text-center text-foreground">
-        <h1 className="sm:text-h1/8 xs:text-[1.8rem]/8 text-2xl/6 font-semibold max-w-90">A Space to Slow Down</h1>
+        <h1 className="sm:text-h1/8 xs:text-[1.8rem]/8 text-2xl/6 font-semibold max-w-90">A Space to Slow Down.</h1>
         <p className="xs:text-p/5 text-sm/4 sm:max-w-140 font-medium text-pretty">
           Berikan dirimu waktu untuk berhenti sejenak, menenangkan pikiran, dan menjalani sesi dengan suasana yang lebih nyaman.
         </p>
@@ -28,7 +28,7 @@ export function HeroHomepage() {
 
       <Button
         variant={'default'}
-        className="flex gap-2 items-center [&_svg]:size-3.5 hover:bg-white/80 dark:bg-primary dark:border-none"
+        className="flex gap-2 items-center [&_svg]:size-4 hover:bg-white/80 dark:bg-primary dark:border-none"
         onClick={() => {
           document.getElementById("session-list")?.scrollIntoView({ behavior: "smooth" });
         }}
