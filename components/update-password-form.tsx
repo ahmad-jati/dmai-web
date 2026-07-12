@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Section } from "./layout/section-wrapper";
 import Image from "next/image";
-import { PasswordIcon, SpinnerIcon } from "@phosphor-icons/react";
+import { SpinnerIcon } from "@phosphor-icons/react";
 
 export function UpdatePasswordForm({
   ...props
@@ -16,13 +16,12 @@ export function UpdatePasswordForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionReady, setSessionReady] = useState(false);
+  const [sessionReady, setSessionReady] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
 
-    // Handle hash-based recovery tokens (older Supabase email flow)
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = hashParams.get("access_token");
     const refreshToken = hashParams.get("refresh_token");
@@ -38,12 +37,10 @@ export function UpdatePasswordForm({
       return;
     }
 
-    // Handle PKCE flow: session already set by /auth/confirm redirect
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSessionReady(true);
       } else {
-        // Listen for PASSWORD_RECOVERY event
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, session) => {
             if (event === "PASSWORD_RECOVERY" && session) {
@@ -75,16 +72,17 @@ export function UpdatePasswordForm({
 
   return (
     <div className="flex h-full">
-      <Section className="flex-1 flex lg:flex-row flex-col-reverse lg:items-center justify-center items-end lg:gap-8 gap-0 bg-white dark:bg-card">
-        <div className="lg:flex-1 w-full lg:w-120 flex flex-col gap-2 items-start text-foreground ">
-          <PasswordIcon className="text-foreground md:w-10 md:h-10 w-16 h-16" />
-          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold text-pretty">Set your new password</h2>
-          <p className="xs:text-p/5 text-sm/4 font-medium text-pretty -mt-1.5">
+      <Section className="flex-1 flex lg:flex-row flex-col-reverse items-center justify-center lg:gap-8 gap-4 bg-white dark:bg-card">
+        <div className="max-w-100 w-full flex flex-col gap-2 lg:items-start items-center text-foreground mb-0 lg:mb-6 px-2">
+          <h2 className="sm:text-h2/7 text-xl/5.5 font-semibold lg:text-left text-center">Set your new password</h2>
+          <p className="sm:text-p/5 text-sm/4 max-w-140 w-full font-medium lg:text-left text-center text-pretty">
             Masukkan password baru yang ingin kamu gunakan untuk kembali mengakses akunmu.
           </p>
 
           {!sessionReady && !error && (
-            <p className="font-medium text-muted-foreground sm:text-p/5 text-sm/4 italic">Memverifikasi sesi...</p>
+            <p className="font-medium text-muted-foreground sm:text-p/5 text-sm/4 italic">
+              Memverifikasi sesi...
+            </p>
           )}
 
           {error && (
@@ -93,9 +91,8 @@ export function UpdatePasswordForm({
 
           {sessionReady && (
             <form onSubmit={handleUpdatePassword} className="w-full">
-              <div className="flex flex-col gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Password Baru</Label>
+              <div className="flex flex-col lg:items-start items-center gap-3">
+                <div className="grid gap-2 w-full mt-3">
                   <Input
                     id="password"
                     type="password"
@@ -103,37 +100,31 @@ export function UpdatePasswordForm({
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="rounded-full pr-10 text-sm "
+                    className="rounded-full px-3 text-sm w-full"
                     disabled={isLoading}
                   />
                 </div>
-                  <Button
-                    type="submit"
-                    className={`2xs:max-w-66 w-full bg-lemon dark:bg-primary flex items-center gap-2 h-fit 2xs:[&_svg]:size-4 [&_svg]:size-3.5`}
-                    disabled={isLoading}
-                  >
+                <Button
+                  type="submit"
+                  className={`w-full lg:bg-orange-200 bg-orange-300/90 hover:bg-orange-300/90 dark:bg-primary flex items-center gap-2 h-fit`}
+                  disabled={isLoading}
+                >
                   {isLoading && <SpinnerIcon className="w-4 h-4 animate-spin" />}
-                  {isLoading ? (
-                    <span className="text-center leading-tight px-1">
-                      Memperbarui password kamu
-                    </span>
-                  ) : (
-                    "Simpan password baru"
-                  )}
+                  {isLoading ? "Memperbarui password..." : "Simpan Password Baru"}
                 </Button>
               </div>
             </form>
           )}
         </div>
 
-        <div className="lg:w-76 lg:h-106 md:w-76 xs:w-60 xs:px-0 px-6 h-fit">
+        <div className="lg:w-107 md:w-100 sm:w-86 xs:w-70 w-full h-fit xs:px-0 px-6">
           <Image
-            src={'/tropicaline/compress/Send.png'}
-            alt=""
+            src={'/open-doodles/CoffeeDoodle.svg'}
+            alt="Open Doodles - Coffe Doodle By Pablo Stanley"
             width={2000}
             height={2000}
-            unoptimized
             priority
+            unoptimized
             className="w-full h-full object-contain"
           />
         </div>

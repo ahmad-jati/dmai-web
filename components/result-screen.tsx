@@ -125,7 +125,7 @@ export function ResultScreen({
           <div className="2xs:rounded-3xl rounded-xl border border-foreground bg-background dark:border-none dark:p-0 p-2 sm:w-100 sm:h-60 xs:h-56 w-full h-36">
             <Image
               src={session.image_cover}
-              alt=""
+              alt={`Cover sesi ${session.session_name}`}
               width={2000}
               height={2000}
               priority
