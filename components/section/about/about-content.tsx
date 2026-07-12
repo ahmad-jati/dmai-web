@@ -3,9 +3,6 @@ import Link from "next/link"
 import { Section } from "@/components/layout/section-wrapper"
 import { Button } from "@/components/ui/button"
 import { Route } from "next"
-import { ImageSquare, PenNib, ShapesIcon } from "@phosphor-icons/react/dist/ssr"
-import { Icon } from "@phosphor-icons/react"
-import { Badge } from "@/components/ui/badge"
 
 type AttributionItem = {
   title: string
@@ -21,24 +18,25 @@ type AttributionRowProps = {
 
 function AttributionRow({ label, items }: AttributionRowProps) {
   return (
-    <div className="flex flex-col gap-2 items-start">
-      <div className="w-30">
-        <div className="rounded-sm text-sm px-3 py-1.5 bg-background font-semibold w-fit">
-        {label}
-      </div>
-      </div>
-      <div className="flex flex-col gap-2 flex-1 pl-3">
-        {items.map((item, index) => (
+    <div className="flex flex-col gap-2 flex-1">
+      {items.map((item, index) => (
+        <div
+          key={item.href + index}
+          className="flex md:flex-row flex-col gap-2 md:items-center items-start"
+        >
+          <div className="rounded-full text-xs px-3 py-1 bg-white/60 dark:bg-muted font-semibold w-fit shrink-0 text-muted-foreground dark:text-foreground">
+            {label}
+          </div>
+          
           <Link
-            key={item.href + index}
             href={item.href as Route}
             target="_blank"
-            className="text-sm/4 hover:cursor-pointer font-medium"
+            className="text-sm/4 hover:cursor-pointer font-medium md:pl-0 pl-3"
           >
-            {item.title} — karya {item.author}, dari {item.source}.
+            <span className="font-bold">{item.title}</span>, karya {item.author}. 
           </Link>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -158,15 +156,16 @@ export default function AboutContent() {
                 </p>
               </div>
 
-              <div className="mt-2 pt-6 border-t border-foreground/10">
-                <p className="font-semibold text-lg/4.5">
+              <div className="mt-2 bg-background md:rounded-2xl rounded-xl p-4 flex flex-col sm:items-start items-center">
+                <p className="font-semibold text-lg/4.5 sm:text-left text-center">
                   Bangun kebiasaan yang lebih tenang setiap hari.
                 </p>
-                <p className="text-sm/4 text-muted-foreground font-medium mb-4 mt-2">
+                <p className="text-sm/4 text-muted-foreground font-medium mb-4 mt-2 sm:text-left text-center">
                   Hanya beberapa menit untuk membantu mengurangi stres dan meningkatkan fokus.
                 </p>
                 <Link
                   href="/login"
+              
                 >
                   <Button
                     className="bg-foreground/90 hover:bg-foreground text-background border-none"
@@ -183,22 +182,22 @@ export default function AboutContent() {
           <div className=" flex lg:flex-row flex-col lg:gap-16 gap-8">
 
             <div className="text-center w-full lg:hidden flex flex-col items-center gap-2">
-              <h1 className="font-bold sm:text-2xl text-xl">Kredit & Atribusi Aset</h1>
+              <h4 className="font-bold sm:text-2xl text-xl">Atribusi Aset</h4>
               <p className="text-muted-foreground font-medium sm:text-base/4.5 text-sm/3.5 xs:mt-0 -mt-1">
                 Seluruh ilustrasi dan grafis pada website ini berasal dari sumber terbuka (open-source).
               </p>
             </div>
 
             <div className="text-left lg:flex hidden flex-col gap-2 lg:w-64 lg:shrink-0">
-              <h3 className="font-bold sm:text-2xl text-xl">
+              <h4 className="font-bold sm:text-2xl text-xl">
                 Kredit & Atribusi Aset
-              </h3>
+              </h4>
               <p className="text-muted-foreground font-medium text-base/4.5 max-w-lg">
                 Seluruh ilustrasi dan grafis pada website ini berasal dari sumber terbuka (open-source).
               </p>
             </div>
 
-            <div className="flex-1 flex flex-col gap-6">
+            <div className="flex-1 flex flex-col gap-2">
               <AttributionRow
                 label="Ilustrasi"
                 items={[
@@ -210,17 +209,17 @@ export default function AboutContent() {
               />
 
               <AttributionRow
-                label="Doodle"
+                label="Ikon Bunga"
                 items={[
-                  { title: "Running, Ice Cream, Coffee, Meditating, Reading, Float Doodle", author: "Pablo Stanley", source: "Open Doodles", href: "https://www.opendoodles.com/" },
+                  { title: "Bloom Organic Modern Shapes", author: "Noko Washiyama", source: "Figma Community", href: "https://www.figma.com/community/file/1506926724873525389/bloom-organic-modern-shpes" },
+                  { title: "Bloom Mod Floral Graphics", author: "Noko Washiyama", source: "Figma Community", href: "https://www.figma.com/community/file/1506973666049607884/bloom-mod-floral-graphics" },
                 ]}
               />
 
               <AttributionRow
-                label="Grafis & Ikon"
+                label="Doodle"
                 items={[
-                  { title: "Bloom - Organic Modern Shapes", author: "Noko Washiyama", source: "Figma Community", href: "https://www.figma.com/community/file/1506926724873525389/bloom-organic-modern-shpes" },
-                  { title: "Bloom — Mod Floral Graphics", author: "Noko Washiyama", source: "Figma Community", href: "https://www.figma.com/community/file/1506973666049607884/bloom-mod-floral-graphics" },
+                  { title: "Running, Ice Cream, Coffee, Meditating, Reading, Float Doodle", author: "Pablo Stanley", source: "Open Doodles", href: "https://www.opendoodles.com/" },
                 ]}
               />
             </div>
