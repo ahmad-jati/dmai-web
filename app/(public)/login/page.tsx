@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Login — DMAI",
+  title: "Login — DAMAI",
   description: "Masuk ke akun kamu dan mulai sesi mindfulness hari ini.",
 };
 

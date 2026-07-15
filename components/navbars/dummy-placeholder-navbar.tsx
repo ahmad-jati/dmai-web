@@ -7,7 +7,7 @@ export function DummyPlaceholderNavbar() {
       <p 
         className="hover:font-bold font-semibold sm:text-app-name text-h2 text-transparent"
       >
-        DMAI
+        DAMAI
       </p>
     </div>
   )

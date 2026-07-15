@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "User Responses — DMAI Admin",
+  title: "User Responses — DAMAI Admin",
 }
 
 export default function UserResponsesLayout({ children }: { children: React.ReactNode }) {
