@@ -50,7 +50,7 @@ export default function AboutContent() {
             <span className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
               Tentang Kami
             </span>
-            <h1 className="font-bold sm:text-4xl text-3xl">DMAI</h1>
+            <h1 className="font-bold sm:text-4xl text-3xl">DAMAI</h1>
             <p className="text-muted-foreground font-medium sm:text-xl/5.5 text-base/4 xs:mt-0 -mt-1">
               Digital Mindful Autogenic Intervention
             </p>
@@ -83,7 +83,7 @@ export default function AboutContent() {
               <span className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
                 Tentang Kami
               </span>
-              <h1 className="font-bold 2md:text-4xl">DMAI</h1>
+              <h1 className="font-bold 2md:text-4xl">DAMAI</h1>
               <p className="text-muted-foreground font-medium text-xl">
                 Digital Mindful Autogenic Intervention
               </p>

@@ -12,8 +12,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  
   return {
     title: session
-      ? `Latihan: ${session.session_name} — DMAI`
-      : "Latihan — DMAI",
+      ? `Latihan: ${session.session_name} — DAMAI`
+      : "Latihan — DAMAI",
     description: session?.detail_short ?? "Ikuti instruksi sesi dan rasakan manfaatnya.",
   };
 }

@@ -4,7 +4,7 @@ import { Section } from "@/components/layout/section-wrapper";
 import { SessionList } from "@/components/section/homepage/session-list";
  
 export const metadata: Metadata = {
-  title: "Beranda — DMAI",
+  title: "Beranda — DAMAI",
   description:
     "Jelajahi sesi mindfulness pilihanmu dan mulai hari dengan lebih tenang.",
 };

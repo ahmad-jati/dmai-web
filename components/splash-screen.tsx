@@ -57,7 +57,7 @@ export function SplashScreen() {
           className="text-h1 font-semibold tracking-tight"
           style={{ animation: 'splash-fadein 0.6s ease-out 0.3s both' }}
         >
-          DMAI
+          DAMAI
         </p>
         <p
           className="text-base text-muted-foreground font-medium"

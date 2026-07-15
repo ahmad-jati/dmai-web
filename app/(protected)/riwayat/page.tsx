@@ -3,7 +3,7 @@ import { Section } from "@/components/layout/section-wrapper"
 import { UserHistory } from "@/components/section/user-history/user-history"
 
 export const metadata: Metadata = {
-  title: "Riwayat — DMAI",
+  title: "Riwayat — DAMAI",
   description: "Lihat progres dan riwayat lengkap sesi mindfulness-mu.",
 }
 

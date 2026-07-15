@@ -73,7 +73,7 @@ export function AdminSidebar() {
     <aside className="w-60 h-full border-r border-border flex flex-col bg-background">
       {/* Brand */}
       <div className="px-6 py-5">
-        <p className="font-semibold text-h1 tracking-tight">DMAI</p>
+        <p className="font-semibold text-h1 tracking-tight">DAMAI</p>
         <p className="text-xs text-muted-foreground mt-0.5">Admin Panel</p>
       </div>
 

@@ -9,7 +9,7 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "DMAI — Digital Mindful Autogenic Intervention",
+  title: "DAMAI — Digital Mindful Autogenic Intervention",
   description: "A calm mindfulness platform for guided reflective training sessions.",
   icons: {
     icon: "/logo.png",
