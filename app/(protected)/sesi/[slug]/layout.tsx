@@ -12,12 +12,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  
   if (!session) {
     return {
-      title: "Sesi Tidak Ditemukan — DMAI",
+      title: "Sesi Tidak Ditemukan — DAMAI",
     };
   }
  
   return {
-    title: `${session.session_name} — DMAI`,
+    title: `${session.session_name} — DAMAI`,
     description: session.detail_short,
   };
 }

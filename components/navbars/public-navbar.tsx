@@ -33,7 +33,7 @@ export function MainNavbar() {
         href={href as Route}
         className="hover:font-bold font-semibold sm:text-app-name text-h2 text-foreground"
       >
-        DMAI
+        DAMAI
       </Link>
     </nav>
   )

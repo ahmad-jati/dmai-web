@@ -17,7 +17,7 @@ type Props = {
 const THUMB_QUALITIES = ['hqdefault', 'mqdefault', 'default'] as const
 
 const INTRO_TITLE = 'Halo Mindful Mate'
-const INTRO_BODY = `Selamat datang di sesi DMAI Education. Pada Episode Edukasi hari ini kita akan membahas tentang mengenali stres akademik, mindfulness, dan konsep here and now.
+const INTRO_BODY = `Selamat datang di sesi DAMAI Education. Pada Episode Edukasi hari ini kita akan membahas tentang mengenali stres akademik, mindfulness, dan konsep here and now.
 
 Sebelum kita memulai perjalanan ini, izinkan saya mengajakmu melakukan satu hal yang sangat sederhana.
 

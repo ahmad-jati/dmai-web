@@ -61,7 +61,7 @@ export function SignUpForm({
           <DialogHeader>
             <DialogTitle>Halo, {fullname}! 👋</DialogTitle>
             <DialogDescription>
-              Terima kasih telah bergabung dengan DMAI. Masuk untuk mulai mengakses sesi dan latihan yang tersedia.
+              Terima kasih telah bergabung dengan DAMAI. Masuk untuk mulai mengakses sesi dan latihan yang tersedia.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -6,7 +6,7 @@ import { AuthStateListener } from "@/components/auth-state-listener"
 import { MobileWarningDialog } from "@/components/admin/mobile-warning-dialog"
 
 export const metadata: Metadata = {
-  title: "User Info — DMAI Admin",
+  title: "User Info — DAMAI Admin",
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
