@@ -96,7 +96,7 @@ export function ProtectedNavbar() {
             href={"/beranda"}
             className="text-app-name hover:font-bold font-semibold"
           >
-            DMAI
+            DAMAI
           </Link>
 
           <div className="flex gap-3 items-center">

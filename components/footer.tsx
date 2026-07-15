@@ -19,7 +19,7 @@ export function Footer() {
       <div className="flex flex-col 2md:flex-row 2md:items-start items-center 2md:justify-between gap-5 px-6 py-6 2md:px-10">
         <div className="flex flex-col items-center 2md:items-start 2md:text-left text-center gap-1.5 md:max-w-lg max-w-md">
           <h5 className="sm:text-h2/7 xs:text-xl/5.5 text-lg/5 font-semibold">
-            DMAI (Digital Mindful Autogenic Intervention)
+            DAMAI (Digital Mindful Autogenic Intervention)
           </h5>
 
           <p className="text-sm/5 font-medium text-muted-foreground">
@@ -33,7 +33,7 @@ export function Footer() {
             onClick={handleAboutClick}
             className="mt-0.5 text-sm font-medium text-foreground hover:underline underline-offset-2 flex gap-1 items-center"
           >
-            Selengkapnya tentang DMAI 
+            Selengkapnya tentang DAMAI 
             <ArrowRightIcon/>
           </Link>
         </div>
@@ -47,7 +47,7 @@ export function Footer() {
 
       <div className="border-t border-t-muted-foreground/20 py-4 text-center">
         <p className="sm:text-p/5 text-sm/4 font-medium text-muted-foreground">
-         DMAI &copy; 2026
+         DAMAI &copy; 2026
         </p>
       </div>
     </footer>
