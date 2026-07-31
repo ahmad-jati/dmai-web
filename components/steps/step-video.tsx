@@ -137,7 +137,7 @@ export function StepVideo({
     <div className="w-full 2md:max-w-2xl mx-auto h-full flex-1 flex justify-between flex-col gap-6">
       <div className="flex flex-col items-center gap-6 flex-1">
         <div
-          className={`w-full 2md:rounded-2xl rounded-xl overflow-hidden shadow-sm relative bg-muted/30 text-muted-foreground transition-all duration-300  2md:max-h-100 sm:h-100 h-[60%]
+          className={`w-full 2md:rounded-2xl rounded-xl overflow-hidden shadow-sm relative bg-muted/30 text-muted-foreground transition-all duration-300  2md:max-h-100 sm:h-100 h-[76%]
             
           `}
         >
@@ -165,7 +165,7 @@ export function StepVideo({
           )}
         </div>
 
-        <div className='flex 2md:flex-row flex-col items-start justify-center 2md:gap-2 gap-1 text-sm/4.5 text-muted-foreground font-medium max-w-2xl'>
+        <div className='flex 2md:flex-row flex-col items-center justify-center 2md:gap-2 gap-1 text-sm/4.5 text-muted-foreground font-medium max-w-2xl text-center'>
           <p className="">Sumber:</p>
           <Link
             href={youtubeUrl as Route}
