@@ -608,13 +608,15 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               )}
             </div>
 
-            <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto bg-gray-100 p-3 rounded-xl">
+            <div className="flex flex-col gap-1.5 overflow-y-auto h-[calc(40svh-64px)] bg-gray-100 p-3 rounded-xl">
               <p className='text-sm font-semibold text-muted-foreground'>Teks Narasi</p>
               <p className="text-base/5 font-semibold text-foreground text-pretty">{activeTitle}</p>
               {activeDescription && (
                 <p className="text-sm/5 text-muted-foreground text-pretty">{activeDescription}</p>
               )}
             </div>
+
+            <div className="flex-1"></div>
 
             <div className="flex items-center justify-between gap-3 shrink-0 my-2">
               <div className="flex items-center gap-3">
