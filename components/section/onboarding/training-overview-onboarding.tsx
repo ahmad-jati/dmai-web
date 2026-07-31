@@ -18,11 +18,13 @@ function SkeletonCard() {
 
 export function TrainingOverviewOnboarding() {
   const [sessions, setSessions] = useState<SessionData[]>([])
+  const [totalSession, setTotalSession] =  useState(6)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchAllSessions().then((data) => {
       setSessions(data)
+      setTotalSession(data.length)
       setLoading(false)
     })
   }, [])
@@ -38,7 +40,7 @@ export function TrainingOverviewOnboarding() {
 
         <div className="flex-1 flex flex-col gap-6 ">
           <div className="xl:flex flex-col gap-3 hidden">
-            <h2 className="text-h2/7 font-semibold">Discover 7 mindful sessions designed to support your journey. </h2>
+            <h2 className="text-h2/7 font-semibold">Discover {totalSession} mindful sessions designed to support your journey. </h2>
             <p className="font-medium text-p/5">Setiap sesi dirancang khusus untuk membantumu lebih dalam memahami, menerima, dan mengubah apa yang kamu rasakan.</p>
           </div>
 
