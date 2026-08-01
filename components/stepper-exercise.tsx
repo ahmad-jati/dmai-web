@@ -161,6 +161,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const [isReady, setIsReady] = useState(false)
   const [narrationKey, setNarrationKey] = useState(0)
   const [formResponses, setFormResponses] = useState<Record<string, Record<string, unknown>>>({})
+  const [isFinishing, setIsFinishing] = useState(false)
 
   // localStorage keys for this session
   const localStorageKey = `dmai_form_draft_${sessionId}`
@@ -185,6 +186,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   const prevIsPlayingRef = useRef(isPlaying)
   const narrationStartedRef = useRef(false)
   const isMutedRef = useRef(isMuted)
+  const isFinishingRef = useRef(false)
 
   // ── Presence — user resolved once on mount ───────────────────────────────────
   const [presenceUserId, setPresenceUserId] = useState<string | null>(null)
@@ -398,6 +400,10 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
       setCurrentSubStep(0)
       setElapsed(0)
     } else {
+      if (isFinishingRef.current) return // guard: prevent double-fire (double click/tap) from creating two completions
+      isFinishingRef.current = true
+      setIsFinishing(true)
+
       setIsPlaying(false)
       bgmStop()
       markPresenceActive() // explicit reset — don't rely on unmount, parent may keep this mounted
@@ -412,6 +418,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
   }, [currentStep, totalSteps, onDone, bgmStop, isTimed, hasSubSteps, currentSubStep, subSteps.length, startedAtKey])
 
   const goPrev = useCallback(() => {
+    if (isFinishingRef.current) return // guard: don't allow navigating back once the session is finishing/submitting
     narrationStartedRef.current = false
     setIsLooping(false)
 
@@ -576,6 +583,9 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
     )
   }
 
+  console.log(isFinishing)
+  // console.log(currentStep === 0 && (!hasSubSteps || currentSubStep === 0))
+
   // ════════════════════════════════════════════════════════
   // NARRATION LAYOUT
   // ════════════════════════════════════════════════════════
@@ -684,7 +694,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             <div className="flex items-center justify-center gap-2 shrink-0">
               <Button
                 onClick={goPrev}
-                disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
+                // disabled={isFinishing || (currentStep === 0 && (!hasSubSteps || currentSubStep === 0))}
                 variant="ghost"
                 className="hover:bg-foreground/90 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground rounded-sm text-sm 2md:h-9 h-8!
                 border border-foreground
@@ -697,6 +707,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
                 <Button
                   onClick={goNext}
+                  disabled={isFinishing}
                   className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Selesai
@@ -830,7 +841,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
             <div className="flex items-center justify-center gap-2 shrink-0">
               <Button
                 onClick={goPrev}
-                disabled={currentStep === 0 && (!hasSubSteps || currentSubStep === 0)}
+                disabled={isFinishing}
                 variant="ghost"
                 className="hover:bg-foreground/80 hover:text-background dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-foreground rounded-sm text-sm 2md:h-9 h-8!
                 border border-foreground
@@ -843,6 +854,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               {isLastStep && (!hasSubSteps || currentSubStep === subSteps.length - 1) ? (
                 <Button
                   onClick={goNext}
+                  disabled={isFinishing}
                   className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground rounded-sm text-sm 2md:h-9 h-8!"
                 >
                   Selesai
@@ -851,7 +863,7 @@ export function StepperExercise({ instructions, sessionName, sessionSlug, sessio
               ) : (
                 <Button
                   onClick={goNext}
-                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground  rounded-sm text-sm 2md:h-9 h-8!"
+                  className="bg-foreground/90 hover:bg-foreground/80 2md:[&_svg]:size-4 [&_svg]:size-3.5 text-background hover:dark:text-background hover:dark:bg-foreground dark:bg-foreground  rounded-sm text-sm 2md:h-9 h-8!  disabled:text-red-400!"
                 >
                   Berikutnya
                   <ArrowRightIcon weight="bold" />
