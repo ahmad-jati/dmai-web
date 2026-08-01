@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '../ui/spinner'
 
 export type FormFieldType = 'emoji_scale' | 'slider' | 'textarea' | 'text_input' | 'checkbox_group'
 
@@ -108,6 +109,7 @@ function TextInputField({ field, value, onChange }: {
 
 export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLastForm, onDraftChange }: Props) {
   const [responses, setResponses] = useState<Record<string, unknown>>(initialValues ?? {})
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const getKey = (field: FormField) => field._key ?? field.id ?? field.label
   const setField = (field: FormField, value: unknown) =>
     setResponses((prev) => ({ ...prev, [getKey(field)]: value }))
@@ -132,6 +134,12 @@ export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLa
     }
     return responses[getKey(f)] !== undefined && responses[getKey(f)] !== null
   })
+
+  const handleSubmit = () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
+    onNext(responses)
+  }
 
   return (
     <div className='w-full 2md:max-w-xl max-w-lg mx-auto h-full flex-1 flex justify-between flex-col gap-6'>
@@ -192,28 +200,35 @@ export function StepForm({ fields, onNext, onPrev, showPrev, initialValues, isLa
           <Button 
             type="button" 
             onClick={onPrev} 
-            className=" 
-            2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
-            hover:bg-foreground/80 hover:text-background text-foreground
-            dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background"
+            className={cn(
+              '2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8! hover:bg-foreground/80 hover:text-background text-foreground dark:bg-transparent hover:dark:bg-foreground hover:dark:text-background',
+              isSubmitting 
+              ? "hidden"
+              : "flex"
+            )}
           >
             <ArrowLeftIcon weight="bold" className="w-4 h-4" />
             Sebelumnya
           </Button>
         )}
+
         <Button
           type="button"
-          onClick={() => onNext(responses)}
-          disabled={!allAnswered}
+          onClick={handleSubmit}
+          disabled={!allAnswered || isSubmitting}
           variant={'ghost'}
-          className="
-          2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!
-          bg-foreground/90 hover:bg-foreground/80 text-background
-          dark:bg-foreground dark:text-background 
-          disabled:dark:bg-muted/20 disabled:dark:text-white/50"
+          className={cn(
+            "2md:[&_svg]:size-4 [&_svg]:size-3.5 rounded-sm text-sm 2md:h-9 h-8!",
+            isSubmitting
+              ? "bg-red-500 text-white hover:bg-red-500 dark:bg-red-500 dark:text-white"
+              : "bg-foreground/90 hover:bg-foreground/80 text-background dark:bg-foreground dark:text-background disabled:dark:bg-muted/20 disabled:dark:text-white/50 disabled:bg-muted/45"
+          )}
         >
-          {isLastForm ? 'Selesai' : 'Selanjutnya'}
-          <ArrowRightIcon weight="bold" className="w-4 h-4" />
+          {isLastForm ? (isSubmitting ? 'Menyimpan...' : 'Selesai') : 'Selanjutnya'}
+          {isSubmitting 
+            ? <Spinner className="text-muted-foreground w-4 h-4" />
+            : <ArrowRightIcon weight="bold" className="w-4 h-4" />
+        }
         </Button>
       </div>
     </div>
