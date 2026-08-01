@@ -424,7 +424,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
                             {c.full_name ?? <span className="italic opacity-60">Tanpa nama</span>}
                           </p>
                           <p className={`text-xs truncate text-muted-foreground`}>
-                            {fmtClock(c.completed_at)}
+                            {fmtClock(c.completed_at)} • {fmtDuration(c.started_at, c.completed_at)} Menit
                           </p>
                         </div>
                       </button>
@@ -441,7 +441,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
           <div className="w-full shrink-0 border-r border-border flex flex-col">
             <div className="px-3 py-2 border-b border-border bg-muted/30">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Info Peserta</p>
-            </div>
+          </div>
             <div className="">
               {!selected ? (
                 <p className="text-xs text-muted-foreground italic text-center py-8">Pilih peserta</p>
@@ -454,7 +454,7 @@ export function SessionResponsesView({ sessionId }: { sessionId: string }) {
                     <div className="w-10 h-10 rounded-full bg-foreground/90 flex items-center justify-center text-sm font-bold text-background">
                       {getInitials(selected.full_name, selected.email)}
                     </div>
-                    <div className="text-center">
+                    <div className="text-left">
                       <p className="flex items-center  text-sm group-hover:underline underline-offset-2 font-semibold leading-tight">
                         {selected.full_name ?? "—"}
                         <span className="hidden group-hover:inline ml-2">
