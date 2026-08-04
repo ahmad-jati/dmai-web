@@ -22,6 +22,11 @@ let globalSubscribeStatus: string = ''
 // Always keep the last 'active' payload so we can fall back to it
 // when the stepper unmounts (user finishes/exits a session)
 let globalActivePayload: PresencePayload | null = null
+// Always the most recently requested payload across ALL usePresence callers
+// (PresenceTracker's 'active' and StepperExercise's 'in_session' both write here).
+// This is what actually gets tracked once the channel is ready — never a payload
+// captured in a stale subscribe() closure.
+let globalLatestPayload: PresencePayload | null = null
 
 function getOrCreateChannel(userId: string): RealtimeChannel {
   if (globalChannel) return globalChannel
@@ -30,6 +35,17 @@ function getOrCreateChannel(userId: string): RealtimeChannel {
     config: { presence: { key: userId } },
   })
   return globalChannel
+}
+
+// Records the caller's desired payload and, if the channel is already
+// subscribed, tracks it immediately. If the channel is still connecting,
+// the payload is picked up as soon as SUBSCRIBED fires (see subscribe
+// callback below) — nothing is silently dropped.
+function trackWhenReady(payload: PresencePayload) {
+  globalLatestPayload = payload
+  if (globalChannel && globalSubscribeStatus === 'SUBSCRIBED') {
+    globalChannel.track(payload)
+  }
 }
 
 // ─── usePresence ─────────────────────────────────────────────────────────────────
@@ -59,16 +75,27 @@ export function usePresence(payload: PresencePayload | null) {
       globalSubscribeStatus = 'PENDING'
       channel.subscribe((status) => {
         globalSubscribeStatus = status
-        if (status === 'SUBSCRIBED') {
-          channel.track(payload)
+        // Track whatever the most recently requested payload is at the
+        // moment we actually become SUBSCRIBED — not whichever payload
+        // happened to trigger this subscribe() call. Two usePresence
+        // instances (layout's 'active' and stepper's 'in_session') can
+        // both mount before the socket finishes connecting; without this,
+        // whichever one lost the race to initiate subscribe() would win
+        // permanently, leaving some users stuck on 'active'.
+        if (status === 'SUBSCRIBED' && globalLatestPayload) {
+          channel.track(globalLatestPayload)
         }
       })
     }
 
+    // Register this instance's payload as the latest desired state, and
+    // track it right away if the channel already happens to be ready.
+    trackWhenReady(payload)
+
     return () => {
       // When stepper (in_session) unmounts: fall back to active, don't untrack
-      if (payload.status === 'in_session' && globalChannel && globalActivePayload) {
-        globalChannel.track(globalActivePayload)
+      if (payload.status === 'in_session' && globalActivePayload) {
+        trackWhenReady(globalActivePayload)
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -76,14 +103,17 @@ export function usePresence(payload: PresencePayload | null) {
 
   // Re-track when status/session changes (e.g. layout→active, stepper→in_session)
   useEffect(() => {
-    if (!payload || !globalChannel || globalSubscribeStatus !== 'SUBSCRIBED') return
+    if (!payload || !globalChannel) return
 
     // Keep globalActivePayload fresh
     if (payload.status === 'active') {
       globalActivePayload = payload
     }
 
-    globalChannel.track(payload)
+    // Even if the channel isn't SUBSCRIBED yet, record this as the latest
+    // desired payload so the subscribe callback (or the next trackWhenReady
+    // call) picks it up instead of dropping it on the floor.
+    trackWhenReady(payload)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stableKey])
 }
@@ -96,8 +126,8 @@ export function usePresence(payload: PresencePayload | null) {
  * (e.g. showing a result screen in the same component tree).
  */
 export function markPresenceActive() {
-  if (globalChannel && globalActivePayload && globalSubscribeStatus === 'SUBSCRIBED') {
-    globalChannel.track(globalActivePayload)
+  if (globalActivePayload) {
+    trackWhenReady(globalActivePayload)
   }
 }
 
