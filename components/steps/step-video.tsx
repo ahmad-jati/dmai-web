@@ -165,7 +165,7 @@ export function StepVideo({
           )}
         </div>
 
-        <div className='flex 2md:flex-row flex-col items-center justify-center 2md:gap-2 gap-1 text-sm/4.5 text-muted-foreground font-medium max-w-2xl text-center'>
+        <div className='flex 2md:flex-row flex-col items-start justify-center 2md:gap-2 gap-1 text-sm/4.5 text-muted-foreground font-medium max-w-2xl text-left'>
           <p className="">Sumber:</p>
           <Link
             href={youtubeUrl as Route}
