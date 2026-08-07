@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { PlayIcon, ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react'
 import { Button } from '../ui/button'
+import { SpinnerSized } from '../ui/spinner'
 import Link from 'next/link'
 import { Route } from 'next'
 
@@ -15,6 +16,18 @@ type Props = {
 }
 
 const THUMB_QUALITIES = ['hqdefault', 'mqdefault', 'default'] as const
+
+const YT_ERROR_MESSAGES: Record<number, string> = {
+  2: 'Video tidak dapat dimuat karena tautan tidak valid.',
+  5: 'Video tidak dapat diputar di perangkat ini.',
+  100: 'Video tidak ditemukan. Video mungkin telah dihapus atau bersifat privat.',
+  101: 'Pemilik video tidak mengizinkan video ini diputar di luar YouTube.',
+  150: 'Pemilik video tidak mengizinkan video ini diputar di luar YouTube.',
+}
+
+function getYoutubeErrorMessage(code: number): string {
+  return YT_ERROR_MESSAGES[code] ?? 'Video tidak dapat dimuat. Silakan coba lagi.'
+}
 
 const INTRO_TITLE = 'Halo Mindful Mate'
 const INTRO_BODY = `Selamat datang di sesi DAMAI Education. Pada Episode Edukasi hari ini kita akan membahas tentang mengenali stres akademik, mindfulness, dan konsep here and now.
@@ -107,6 +120,9 @@ export function StepVideo({
 }: Props) {
   const [started, setStarted] = useState(false)
   const [completed, setCompleted] = useState(false)
+  const [videoError, setVideoError] = useState<string | null>(null)
+  const [videoLoading, setVideoLoading] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   const videoId = getYoutubeId(youtubeUrl)
@@ -115,23 +131,36 @@ export function StepVideo({
   const playerRef = useRef<YTPlayer | null>(null)
 
   useEffect(() => {
-  if (!started || !videoId || !end) return
+    if (!started || !videoId) return
 
-  function handleMessage(event: MessageEvent) {
-    if (event.origin !== 'https://www.youtube.com') return
-    try {
-      const data = JSON.parse(event.data)
-      if (data.event === 'onStateChange' && data.info === 0) {
-        setCompleted(true)
-        if (autoAdvanceOnComplete) onNext()
+    function handleMessage(event: MessageEvent) {
+      if (event.origin !== 'https://www.youtube.com') return
+      try {
+        const data = JSON.parse(event.data)
+        if (data.event === 'onError') {
+          setVideoError(getYoutubeErrorMessage(data.info))
+        } else if (data.event === 'onStateChange' && data.info === 0 && end) {
+          setCompleted(true)
+          if (autoAdvanceOnComplete) onNext()
+        }
+      } catch {
       }
-    } catch {
     }
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [started, videoId, end, autoAdvanceOnComplete, onNext])
+
+  const handlePlay = () => {
+    setStarted(true)
+    setVideoLoading(true)
   }
 
-  window.addEventListener('message', handleMessage)
-  return () => window.removeEventListener('message', handleMessage)
-}, [started, videoId, end, autoAdvanceOnComplete, onNext])
+  const handleRetry = () => {
+    setVideoError(null)
+    setVideoLoading(true)
+    setReloadKey((k) => k + 1)
+  }
 
   return (
     <div className="w-full 2md:max-w-2xl mx-auto h-full flex-1 flex justify-between flex-col gap-6">
@@ -141,11 +170,12 @@ export function StepVideo({
             
           `}
         >
-          {!started && videoId && (
-            <YoutubeThumbnail videoId={videoId} onClick={() => setStarted(true)} />
+          {!started && videoId && !videoError && (
+            <YoutubeThumbnail videoId={videoId} onClick={handlePlay} />
           )}
-          {videoId && started && (
+          {videoId && started && !videoError && (
             <iframe
+              key={reloadKey}
               ref={iframeRef}
               id="yt-step-player"
               src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&enablejsapi=1&start=${start}${
@@ -155,8 +185,23 @@ export function StepVideo({
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               loading="eager"
+              onLoad={() => setVideoLoading(false)}
               className="w-full h-full"
             />
+          )}
+          {videoLoading && !videoError && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-neutral-900">
+              <SpinnerSized size="lg" className="text-white" />
+              <p className="text-sm text-white">Video sedang dimuat...</p>
+            </div>
+          )}
+          {videoError && (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center px-6 bg-neutral-900 text-white">
+              <p className="text-sm">{videoError}</p>
+              <Button type="button" onClick={handleRetry} variant="secondary" className="rounded-full h-8 text-sm">
+                Coba Lagi
+              </Button>
+            </div>
           )}
           {!videoId && (
             <div className="w-full h-full flex items-center justify-center text-sm">
@@ -171,7 +216,7 @@ export function StepVideo({
             href={youtubeUrl as Route}
             target="_blank"
             rel="noopener noreferrer"
-            className='hover:underline underline-offset-2'
+            className='hover:underline underline-offset-2 text-pretty'
           >
             {youtubeKredit}
           </Link>
