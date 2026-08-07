@@ -216,7 +216,7 @@ export function StepVideo({
             href={youtubeUrl as Route}
             target="_blank"
             rel="noopener noreferrer"
-            className='hover:underline underline-offset-2'
+            className='hover:underline underline-offset-2 text-pretty'
           >
             {youtubeKredit}
           </Link>
