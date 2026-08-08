@@ -111,7 +111,7 @@ export function ProtectedNavbar() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant={"ghost"}
-                  className="rounded-sm px-2 py-1 [&_svg]:size-5 hover:bg-background transition-all hover:border hover:border-foreground"
+                  className="rounded-md px-2 py-1 [&_svg]:size-5 hover:bg-background transition-all hover:border hover:border-foreground"
                 >
                   <ListIcon className="text-foreground" />
                 </Button>

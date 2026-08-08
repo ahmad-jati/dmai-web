@@ -12,10 +12,15 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ConsentDialog } from "./consent-dialog";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { EyeIcon, EyeSlashIcon, SpinnerIcon } from "@phosphor-icons/react";
+
+// Samakan dengan minimum password length yang dikonfigurasi di
+// Supabase Dashboard > Authentication > Policies (default Supabase: 6).
+const MIN_PASSWORD_LENGTH = 6;
 
 export function SignUpForm({
   className,
@@ -29,9 +34,28 @@ export function SignUpForm({
   const [success, setSuccess] = useState(false);
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const isPasswordTooShort =
+    password.length > 0 && password.length < MIN_PASSWORD_LENGTH;
+
+  function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+
+    // Password kependekan sudah ditandai lewat helper text merah di bawah
+    // input (isPasswordTooShort) — cukup blokir submit-nya di sini,
+    // tanpa duplikasi pesan error yang sama di bawah form.
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      return;
+    }
+
+    // Semua field lolos validasi (required bawaan browser + panjang password)
+    // baru consent dialog ditampilkan.
+    setShowConsent(true);
+  }
+
+  const handleConsentAccept = async () => {
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
@@ -46,14 +70,16 @@ export function SignUpForm({
         },
       });
       if (error) throw error;
+      setShowConsent(false);
       setSuccess(true);
     } catch (error: unknown) {
+      setShowConsent(false);
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <>
       <Dialog open={success} onOpenChange={() => {}}>
@@ -66,18 +92,25 @@ export function SignUpForm({
           </DialogHeader>
           <DialogFooter>
             <Button
-              className="w-full bg-green"
+              className="w-full bg-sky-200/70 hover:bg-sky-300/60"
               onClick={() => router.push("/login")}
             >
-              Ke halaman Login
+              Ke halaman homepage
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      <ConsentDialog
+        open={showConsent}
+        onOpenChange={setShowConsent}
+        onAccept={handleConsentAccept}
+        isSubmitting={isLoading}
+      />
+
       <div className='flex flex-col items-center sm:gap-8 gap-4'>
         <div className="w-full">
-          <form onSubmit={handleSignUp} className="w-full flex flex-col justify-center items-center">
+          <form onSubmit={handleFormSubmit} className="w-full flex flex-col justify-center items-center">
             <div className="flex flex-col sm:gap-6 gap-4 w-full">
               <div className="grid gap-2">
                 <Label htmlFor="fullname">Nama</Label>
@@ -139,9 +172,16 @@ export function SignUpForm({
                     )}
                   </button>
                 </div>
+                <p
+                  className={`px-3 text-xs ${
+                    isPasswordTooShort ? "text-red-500" : "text-muted-foreground"
+                  }`}
+                >
+                  Minimal {MIN_PASSWORD_LENGTH} karakter
+                </p>
               </div>
 
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p className="text-sm text-center font-medium text-red-500">{error}</p>}
 
               <div className="w-full flex justify-center">
                 <Button
