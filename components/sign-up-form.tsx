@@ -66,7 +66,11 @@ export function SignUpForm({
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/protected`,
-          data: { full_name: fullname },
+          data: {
+            full_name: fullname,
+            has_consented: true,
+            consented_at: new Date().toISOString(),
+          },
         },
       });
       if (error) throw error;
@@ -92,10 +96,10 @@ export function SignUpForm({
           </DialogHeader>
           <DialogFooter>
             <Button
-              className="w-full bg-sky-200/70 hover:bg-sky-300/60"
+              className="w-full bg-green"
               onClick={() => router.push("/login")}
             >
-              Ke halaman homepage
+              Ke halaman Login
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -181,7 +185,7 @@ export function SignUpForm({
                 </p>
               </div>
 
-              {error && <p className="text-sm text-center font-medium text-red-500">{error}</p>}
+              {error && <p className="text-sm text-red-500">{error}</p>}
 
               <div className="w-full flex justify-center">
                 <Button
