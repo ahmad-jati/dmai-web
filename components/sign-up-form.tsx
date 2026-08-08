@@ -12,6 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ConsentDialog } from "./consent-dialog";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -29,9 +30,14 @@ export function SignUpForm({
   const [success, setSuccess] = useState(false);
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setShowConsent(true);
+  }
+
+  const handleConsentAccept = async () => {
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
@@ -46,14 +52,16 @@ export function SignUpForm({
         },
       });
       if (error) throw error;
+      setShowConsent(false);
       setSuccess(true);
     } catch (error: unknown) {
+      setShowConsent(false);
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <>
       <Dialog open={success} onOpenChange={() => {}}>
@@ -75,9 +83,16 @@ export function SignUpForm({
         </DialogContent>
       </Dialog>
 
+      <ConsentDialog
+        open={showConsent}
+        onOpenChange={setShowConsent}
+        onAccept={handleConsentAccept}
+        isSubmitting={isLoading}
+      />
+
       <div className='flex flex-col items-center sm:gap-8 gap-4'>
         <div className="w-full">
-          <form onSubmit={handleSignUp} className="w-full flex flex-col justify-center items-center">
+          <form onSubmit={handleFormSubmit} className="w-full flex flex-col justify-center items-center">
             <div className="flex flex-col sm:gap-6 gap-4 w-full">
               <div className="grid gap-2">
                 <Label htmlFor="fullname">Nama</Label>
