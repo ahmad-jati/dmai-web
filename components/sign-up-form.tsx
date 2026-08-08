@@ -18,6 +18,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { EyeIcon, EyeSlashIcon, SpinnerIcon } from "@phosphor-icons/react";
 
+// Samakan dengan minimum password length yang dikonfigurasi di
+// Supabase Dashboard > Authentication > Policies (default Supabase: 6).
+const MIN_PASSWORD_LENGTH = 6;
+
 export function SignUpForm({
   className,
   ...props
@@ -32,8 +36,22 @@ export function SignUpForm({
   const [showPassword, setShowPassword] = useState(false);
   const [showConsent, setShowConsent] = useState(false);
 
+  const isPasswordTooShort =
+    password.length > 0 && password.length < MIN_PASSWORD_LENGTH;
+
   function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+
+    // Password kependekan sudah ditandai lewat helper text merah di bawah
+    // input (isPasswordTooShort) — cukup blokir submit-nya di sini,
+    // tanpa duplikasi pesan error yang sama di bawah form.
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      return;
+    }
+
+    // Semua field lolos validasi (required bawaan browser + panjang password)
+    // baru consent dialog ditampilkan.
     setShowConsent(true);
   }
 
@@ -74,10 +92,10 @@ export function SignUpForm({
           </DialogHeader>
           <DialogFooter>
             <Button
-              className="w-full bg-green"
+              className="w-full bg-sky-200/70 hover:bg-sky-300/60"
               onClick={() => router.push("/login")}
             >
-              Ke halaman Login
+              Ke halaman homepage
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -154,9 +172,16 @@ export function SignUpForm({
                     )}
                   </button>
                 </div>
+                <p
+                  className={`px-3 text-xs ${
+                    isPasswordTooShort ? "text-red-500" : "text-muted-foreground"
+                  }`}
+                >
+                  Minimal {MIN_PASSWORD_LENGTH} karakter
+                </p>
               </div>
 
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p className="text-sm text-center font-medium text-red-500">{error}</p>}
 
               <div className="w-full flex justify-center">
                 <Button

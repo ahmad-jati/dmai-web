@@ -135,7 +135,7 @@ export function ConsentDialog({
             className={cn(
               "rounded-sm transition-colors",
               agreed
-                ? "bg-foreground/90 hover:bg-foreground text-background"
+                ? "bg-foreground/90 hover:bg-foreground text-background disabled:bg-foreground disabled:text-background"
                 : "bg-foreground/30 text-background/70 hover:bg-foreground/30"
             )}
             disabled={!agreed || isSubmitting}
