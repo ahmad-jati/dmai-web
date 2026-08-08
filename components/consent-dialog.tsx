@@ -65,6 +65,11 @@ interface ConsentDialogProps {
   onOpenChange: (open: boolean) => void;
   onAccept: () => void;
   isSubmitting?: boolean;
+  // false = dipakai untuk consent retroactive di homepage (user lama):
+  // tidak ada tombol X, tidak bisa ditutup lewat Escape/klik di luar dialog.
+  dismissable?: boolean;
+  acceptLabel?: string;
+  submittingLabel?: string;
 }
 
 export function ConsentDialog({
@@ -72,6 +77,9 @@ export function ConsentDialog({
   onOpenChange,
   onAccept,
   isSubmitting = false,
+  dismissable = true,
+  acceptLabel = "Setuju & Daftar",
+  submittingLabel = "Menyiapkan akun...",
 }: ConsentDialogProps) {
   const [agreed, setAgreed] = useState(false);
 
@@ -80,8 +88,17 @@ export function ConsentDialog({
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-lg">
+    <Dialog open={open} onOpenChange={dismissable ? onOpenChange : undefined}>
+      <DialogContent
+        className="flex max-h-[85vh] flex-col sm:max-w-lg"
+        showCloseButton={dismissable}
+        onEscapeKeyDown={(e) => {
+          if (!dismissable) e.preventDefault();
+        }}
+        onInteractOutside={(e) => {
+          if (!dismissable) e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Persetujuan Penggunaan Data</DialogTitle>
         </DialogHeader>
@@ -122,14 +139,6 @@ export function ConsentDialog({
         </div>
 
         <DialogFooter className="gap-2 ">
-          {/* <Button
-            variant="outline"
-            className="rounded-sm hover:bg-foreground/10"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
-            Batal
-          </Button> */}
           <Button
             variant="default"
             className={cn(
@@ -141,7 +150,7 @@ export function ConsentDialog({
             disabled={!agreed || isSubmitting}
             onClick={onAccept}
           >
-            {isSubmitting ? "Menyiapkan akun..." : "Setuju & Daftar"}
+            {isSubmitting ? submittingLabel : acceptLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
