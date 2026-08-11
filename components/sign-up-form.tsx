@@ -18,9 +18,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { EyeIcon, EyeSlashIcon, SpinnerIcon } from "@phosphor-icons/react";
 
-// Samakan dengan minimum password length yang dikonfigurasi di
-// Supabase Dashboard > Authentication > Policies (default Supabase: 6).
 const MIN_PASSWORD_LENGTH = 6;
+
+function cleanText(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
 
 export function SignUpForm({
   className,
@@ -43,15 +45,16 @@ export function SignUpForm({
     e.preventDefault();
     setError(null);
 
-    // Password kependekan sudah ditandai lewat helper text merah di bawah
-    // input (isPasswordTooShort) — cukup blokir submit-nya di sini,
-    // tanpa duplikasi pesan error yang sama di bawah form.
     if (password.length < MIN_PASSWORD_LENGTH) {
       return;
     }
 
-    // Semua field lolos validasi (required bawaan browser + panjang password)
-    // baru consent dialog ditampilkan.
+    const cleanedFullname = cleanText(fullname);
+    const cleanedEmail = cleanText(email);
+
+    setFullname(cleanedFullname);
+    setEmail(cleanedEmail);
+
     setShowConsent(true);
   }
 
@@ -60,20 +63,39 @@ export function SignUpForm({
     setIsLoading(true);
     setError(null);
 
+    const cleanedFullname = cleanText(fullname);
+    const cleanedEmail = cleanText(email);
+
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanedEmail,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/protected`,
           data: {
-            full_name: fullname,
-            has_consented: true,
-            consented_at: new Date().toISOString(),
+            full_name: cleanedFullname
           },
         },
       });
       if (error) throw error;
+
+      if (data.session && data.user) {
+        const { error: profileError } = await supabase
+          .from("user_profiles")
+          .update({
+            has_consented: true,
+            consented_at: new Date().toISOString(),
+          })
+          .eq("id", data.user.id);
+
+        if (profileError) {
+          console.error(
+            "[SignUpForm] Gagal sinkronkan has_consented ke user_profiles:",
+            profileError
+          );
+        }
+      }
+
       setShowConsent(false);
       setSuccess(true);
     } catch (error: unknown) {
